@@ -96,6 +96,7 @@ The `docker/init-data.py` script orchestrates the entire process:
 - **Error Recovery**: `docker-compose down -v` provides clean slate for troubleshooting
 - **Persistent Storage**: Data persists between container restarts via Docker volumes
 - **Organized Logging**: Logs organized by configuration with full traceability
+- **Resumable Processing**: Safe pause/resume capability with automatic continuation from interruption point
 
 ## Database Schema & Analytics
 
@@ -213,6 +214,52 @@ sql-playgrounds/
 - **Optimized Indexes**: Spatial GIST, temporal, location, and composite indexes
 - **Production Scale**: Handles millions of records efficiently based on backfill configuration
 - **Duplicate Prevention**: Hash-based system prevents any duplicate rows across backfills
+
+## Pause and Resume Capability
+
+### Safe Interruption and Continuation
+The system is designed to handle interruptions gracefully with automatic resume capability:
+
+**Pause Processing:**
+```bash
+# Safely stop containers (preserves all data and progress)
+docker-compose stop
+
+# System can be safely interrupted at any point during backfill
+```
+
+**Resume Processing:**
+```bash
+# Automatically continues from where it left off
+docker-compose up -d
+
+# Monitor continuation progress
+docker logs -f sql-playground-postgres
+```
+
+### Intelligent Resume System
+When restarted, the system automatically:
+- **🔍 Detects Completed Months**: Checks `data_processing_log` table for already-processed data
+- **⏭️ Skips Finished Data**: Already loaded months show as "Already processed (X records)"
+- **▶️ Continues From Interruption**: Resumes with the next unprocessed month
+- **🛡️ Prevents Duplicates**: Hash-based system prevents duplicate rows during resume
+- **📁 Reuses Downloads**: Existing parquet files are reused, no re-downloading needed
+
+### Example Resume Behavior
+From logs (`logs/last_12_months/log_20250924_215426.log`):
+```
+🔄 2024-10: Already processed (3,833,769 records)  ✅ Skipped
+🔄 2024-11: Already processed (3,646,369 records)  ✅ Skipped
+🔄 2024-12: Already processed (3,668,371 records)  ✅ Skipped
+🔄 2025-01: Already processed (3,475,226 records)  ✅ Skipped
+⚠️ 2025-02: Previous processing incomplete, will retry  🔄 Resumes here
+
+📥 Loading yellow_tripdata_2025-02.parquet...
+⚠️ Chunk 5/358 - 10000 duplicates skipped (hash-based)  🛡️ Duplicate protection
+⚠️ Chunk 10/358 - 10000 duplicates skipped (hash-based) 🛡️ Working as expected
+```
+
+The hash-based duplicate prevention ensures that even if processing was interrupted mid-file, no duplicate records are inserted when resuming.
 
 ## Configuration & Development
 
