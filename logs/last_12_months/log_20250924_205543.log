@@ -1,0 +1,62 @@
+2025-09-24 20:55:43,226 - INFO - 📝 Logging to file: /sql-scripts/logs/last_12_months/log_20250924_205543.log
+2025-09-24 20:55:43,227 - INFO - 🕒 Execution started at: 2025-09-24T20:55:43.227039
+2025-09-24 20:55:43,227 - INFO - ⚙️ Backfill configuration: last_12_months
+2025-09-24 20:55:43,227 - INFO - 🚀 Starting Complete NYC Taxi Database Initialization...
+2025-09-24 20:55:43,231 - INFO - ✅ PostgreSQL is ready!
+2025-09-24 20:55:43,233 - INFO - 🔧 Step 1: Database Schema Creation
+2025-09-24 20:55:43,233 - INFO - 🗃️ Executing SQL initialization scripts...
+2025-09-24 20:55:43,235 - INFO - 📄 Found 2 SQL scripts to execute
+2025-09-24 20:55:43,240 - INFO - 🔧 Executing: 00-postgis-setup.sql
+2025-09-24 20:55:43,243 - INFO - ✅ Completed: 00-postgis-setup.sql
+2025-09-24 20:55:43,243 - INFO - 🔧 Executing: 01-nyc-taxi-schema.sql
+2025-09-24 20:55:43,262 - INFO - ✅ Completed: 01-nyc-taxi-schema.sql
+2025-09-24 20:55:43,263 - INFO - ✅ All SQL scripts executed successfully!
+2025-09-24 20:55:43,263 - INFO - 📍 Step 2: Loading Taxi Zone Reference Data
+2025-09-24 20:55:43,263 - INFO - 📍 Loading taxi zone reference data...
+2025-09-24 20:55:43,264 - INFO - 🧹 Cleaning dictionary tables for fresh data load...
+2025-09-24 20:55:43,289 - INFO - ✅ Dictionary tables cleaned
+2025-09-24 20:55:43,290 - INFO - 📥 Downloading taxi zone reference data...
+2025-09-24 20:55:43,290 - INFO - 📥 Downloading taxi zone reference data...
+2025-09-24 20:55:43,292 - INFO - 📥 Downloading taxi_zone_lookup.csv...
+2025-09-24 20:55:43,406 - INFO - ✅ Downloaded: taxi_zone_lookup.csv
+2025-09-24 20:55:43,407 - INFO - 📥 Downloading taxi_zones.zip...
+2025-09-24 20:55:43,543 - INFO - ✅ Downloaded: taxi_zones.zip
+2025-09-24 20:55:43,591 - INFO - ✅ Extracted shapefile components
+2025-09-24 20:55:43,593 - INFO - 🗑️ Cleaned up ZIP file
+2025-09-24 20:55:43,600 - INFO - ✅ All taxi zone reference data files are available
+2025-09-24 20:55:43,618 - INFO - ✅ Loaded 263 taxi zones from CSV
+2025-09-24 20:55:43,620 - INFO - 🗺️ Loading taxi zone shapes...
+2025-09-24 20:55:43,855 - INFO - ✅ Loaded 263 taxi zone shapes
+2025-09-24 20:55:43,855 - INFO - 📚 Reloading lookup tables...
+2025-09-24 20:55:43,861 - INFO - ✅ Lookup tables reloaded
+2025-09-24 20:55:43,862 - INFO - 🚕 Step 3: Loading Complete Trip Data
+2025-09-24 20:55:43,862 - INFO - 🚕 Loading trip data...
+2025-09-24 20:55:43,862 - INFO - 🔄 Backfill mode enabled: last_12_months
+2025-09-24 20:55:43,862 - INFO - 📅 Backfill months: 12 months from (2024, 10) to (2025, 9)
+2025-09-24 20:55:43,864 - INFO - 📅 Processing 2024-10...
+2025-09-24 20:55:43,868 - INFO - 📥 Downloading yellow_tripdata_2024-10.parquet from NYC TLC...
+2025-09-24 20:55:44,842 - INFO - 📥 Progress: 16.3% (10,485,760/64,346,071 bytes)
+2025-09-24 20:55:45,765 - INFO - 📥 Progress: 32.6% (20,971,520/64,346,071 bytes)
+2025-09-24 20:55:46,694 - INFO - 📥 Progress: 48.9% (31,457,280/64,346,071 bytes)
+2025-09-24 20:55:47,617 - INFO - 📥 Progress: 65.2% (41,943,040/64,346,071 bytes)
+2025-09-24 20:55:48,547 - INFO - 📥 Progress: 81.5% (52,428,800/64,346,071 bytes)
+2025-09-24 20:55:49,471 - INFO - 📥 Progress: 97.8% (62,914,560/64,346,071 bytes)
+2025-09-24 20:55:49,598 - INFO - ✅ Downloaded: yellow_tripdata_2024-10.parquet (64,346,071 bytes)
+2025-09-24 20:55:49,603 - INFO - 📝 Started processing log for 2024-10
+2025-09-24 20:55:49,603 - INFO - 📥 Loading yellow_tripdata_2024-10.parquet...
+2025-09-24 20:55:49,981 - INFO - 📊 File contains 3,833,771 rows
+2025-09-24 20:55:50,560 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-24 20:56:54,979 - WARNING - ⚠️ Found 2 hash collisions within batch - removing duplicates
+2025-09-24 20:56:56,049 - INFO - ✅ Generated 3,833,769 unique row hashes
+2025-09-24 20:57:04,321 - INFO - 📥 yellow_tripdata_2024-10.parquet: Loaded 50,000 rows (5/384 chunks)
+2025-09-24 20:57:14,587 - INFO - 📥 yellow_tripdata_2024-10.parquet: Loaded 100,000 rows (10/384 chunks)
+2025-09-24 20:57:24,952 - INFO - 📥 yellow_tripdata_2024-10.parquet: Loaded 150,000 rows (15/384 chunks)
+2025-09-24 20:57:34,034 - INFO - 📥 yellow_tripdata_2024-10.parquet: Loaded 200,000 rows (20/384 chunks)
+2025-09-24 20:57:44,104 - INFO - 📥 yellow_tripdata_2024-10.parquet: Loaded 250,000 rows (25/384 chunks)
+2025-09-24 20:57:54,072 - INFO - 📥 yellow_tripdata_2024-10.parquet: Loaded 300,000 rows (30/384 chunks)
+2025-09-24 20:58:03,056 - INFO - 📥 yellow_tripdata_2024-10.parquet: Loaded 350,000 rows (35/384 chunks)
+2025-09-24 20:58:13,044 - INFO - 📥 yellow_tripdata_2024-10.parquet: Loaded 400,000 rows (40/384 chunks)
+2025-09-24 20:58:23,174 - INFO - 📥 yellow_tripdata_2024-10.parquet: Loaded 450,000 rows (45/384 chunks)
+2025-09-24 20:58:32,114 - INFO - 📥 yellow_tripdata_2024-10.parquet: Loaded 500,000 rows (50/384 chunks)
+2025-09-24 20:58:42,221 - INFO - 📥 yellow_tripdata_2024-10.parquet: Loaded 550,000 rows (55/384 chunks)
+2025-09-24 20:58:52,235 - INFO - 📥 yellow_tripdata_2024-10.parquet: Loaded 600,000 rows (60/384 chunks)

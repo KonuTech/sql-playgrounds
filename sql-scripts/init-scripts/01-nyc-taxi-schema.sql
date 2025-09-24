@@ -40,7 +40,10 @@ CREATE TABLE yellow_taxi_trips (
     total_amount DECIMAL(8,2),          -- Total amount charged to passengers (does not include cash tips)
     congestion_surcharge DECIMAL(8,2),  -- Total amount collected in trip for NYS congestion surcharge
     airport_fee DECIMAL(8,2),           -- $1.25 for pick up only at LaGuardia and John F. Kennedy Airports
-    cbd_congestion_fee DECIMAL(8,2)     -- CBD (Central Business District) congestion fee
+    cbd_congestion_fee DECIMAL(8,2),     -- CBD (Central Business District) congestion fee
+
+    -- Hash-based duplicate prevention (ultimate protection)
+    row_hash VARCHAR(64) UNIQUE          -- SHA-256 hash of all row values prevents any duplicate row
 );
 
 -- Taxi Zone Lookup table (complete reference data from NYC TLC)
@@ -83,6 +86,23 @@ CREATE TABLE payment_type_lookup (
 CREATE TABLE vendor_lookup (
     vendorid INTEGER PRIMARY KEY,
     vendor_name VARCHAR(100)
+);
+
+-- Data Processing Tracking table
+-- Tracks which months have been successfully processed to prevent duplicates
+CREATE TABLE data_processing_log (
+    id SERIAL PRIMARY KEY,
+    data_year INTEGER NOT NULL,
+    data_month INTEGER NOT NULL,
+    file_name VARCHAR(200) NOT NULL,
+    records_loaded BIGINT NOT NULL DEFAULT 0,
+    processing_started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    processing_completed_at TIMESTAMP,
+    backfill_config VARCHAR(100),
+    status VARCHAR(20) DEFAULT 'in_progress',
+    CONSTRAINT unique_month_processing UNIQUE (data_year, data_month),
+    CONSTRAINT valid_month CHECK (data_month BETWEEN 1 AND 12),
+    CONSTRAINT valid_status CHECK (status IN ('in_progress', 'completed', 'failed'))
 );
 
 -- Insert reference data

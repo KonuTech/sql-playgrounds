@@ -78,37 +78,48 @@ uv add package-name
 
 ### Data Flow Architecture
 1. **Raw Data Sources**:
-   - **Local files**: Host-mounted `data/yellow/` and `data/zones/` directories
+   - **Unified data location**: `/sql-scripts/data/` (single consolidated location)
    - **Remote data**: NYC TLC Trip Record Data (automatically downloaded via backfill)
    - **URL Pattern**: `https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_YYYY-MM.parquet`
-   - **Available data**: 2009-2025 (monthly files, ~59MB/3.47M+ records per month)
-2. **Custom Docker Container**: PostgreSQL 17 + PostGIS 3.5 + Python 3.9 environment
+   - **Available data**: 2020-2025 (monthly files, ~59MB/3.47M+ records per month)
+   - **Reference data**: `https://d37ci6vzurychx.cloudfront.net/misc/taxi_zone_lookup.csv`
+   - **Shapefile data**: `https://d37ci6vzurychx.cloudfront.net/misc/taxi_zones.zip`
+2. **Custom Docker Container**: PostgreSQL 17 + PostGIS 3.5 + Python 3.11 environment
    - **Single initialization script**: `docker/init-data.py` handles complete setup
    - **Custom entrypoint**: Starts PostgreSQL, then runs initialization after DB is ready
-   - **All dependencies embedded**: numpy, pandas, geopandas, pyarrow, psycopg2, sqlalchemy, requests
+   - **All dependencies embedded**: numpy, pandas, geopandas, pyarrow, psycopg2, sqlalchemy, requests, zipfile
    - **Backfill capability**: Automatic download and loading of multiple months
 3. **Automated Data Processing** (during container startup):
+   - **Dictionary table cleaning**: All reference tables cleaned before each backfill
    - SQL schema creation: `sql-scripts/init-scripts/` executed in order
+   - **Unified data download**: CSV and shapefile ZIP downloaded to single location
    - CSV processing: taxi zone lookup table (263 zones)
-   - Shapefile processing: PostGIS geometry conversion with CRS transformation (EPSG:2263)
+   - Shapefile processing: ZIP extraction + PostGIS geometry conversion (EPSG:2263)
    - **Backfill processing**: Downloads missing parquet files from NYC TLC
    - Parquet processing: chunked loading (10K rows/chunk) with data type conversion
-   - Progress tracking: real-time logging of download/loading status
+   - **Lookup table reloading**: Rate codes, payment types, and vendor tables refreshed
+   - Progress tracking: real-time logging of download/loading status with dual logging
 4. **Query Interface**: PGAdmin 4 web interface with pre-loaded analytical queries
 
 ### Database Schema
 - **Primary Schema**: `nyc_taxi` with PostGIS spatial extensions enabled
-- **Main Table**: `yellow_taxi_trips` (20 columns, lowercase names) - 3.47M+ records
+- **Main Table**: `yellow_taxi_trips` (21 columns, lowercase names) - 3.47M+ records
   - All numeric columns use appropriate DECIMAL precision (e.g., `ratecodeid DECIMAL(4,1)`)
   - Column names converted to lowercase during data loading for consistency
+  - **Hash-Based ID**: `row_hash VARCHAR(64) UNIQUE` - SHA-256 hash of all row values for ultimate duplicate prevention
 - **Reference Tables** (automatically populated):
   - `taxi_zone_lookup`: 263 NYC taxi zones (locationid, borough, zone, service_zone)
   - `taxi_zone_shapes`: PostGIS MULTIPOLYGON geometries (EPSG:2263 coordinate system)
   - `vendor_lookup`, `payment_type_lookup`, `rate_code_lookup`: Lookup tables for codes
+  - **`data_processing_log`**: Tracks processed months to prevent duplicate loading
 - **Performance Optimizations**:
   - Spatial GIST index on geometry column
   - Time-series indexes on pickup/dropoff datetime
   - Composite indexes for common query patterns (location+datetime, vendor+datetime)
+- **Data Integrity**:
+  - Automatic duplicate detection and skipping
+  - Processing status tracking (in_progress, completed, failed)
+  - Safe re-runs without data duplication
 
 ### Container Architecture
 - **Base Image**: `postgis/postgis:17-3.5` (PostgreSQL 17 + PostGIS 3.5)
@@ -120,8 +131,8 @@ uv add package-name
 - **Volume Mappings**:
   - `postgres_data`: PostgreSQL data persistence
   - `pgadmin_data`: PGAdmin settings persistence
-  - Host data files mounted read-only to `/sql-scripts/data/`
-  - SQL scripts mounted to `/sql-scripts/` for container access
+  - `./sql-scripts:/sql-scripts`: SQL scripts and unified data location
+  - `./logs:/sql-scripts/logs`: Persistent logging with organized folder structure
 
 ## Key Integration Points
 
@@ -129,15 +140,23 @@ uv add package-name
 **Critical Functions**:
 - `wait_for_postgres()`: Ensures DB is ready before data loading
 - `execute_sql_scripts()`: Runs all SQL files in `sql-scripts/init-scripts/` in order
-- `load_taxi_zones()`: Processes CSV + shapefiles with CRS conversion
-- `load_trip_data()`: Chunked parquet loading with progress tracking
+- `download_taxi_zone_data()`: Downloads CSV and shapefile ZIP to unified location
+- `load_taxi_zones()`: Dictionary table cleaning + CSV/shapefile processing + lookup table reloading
+- `load_trip_data()`: Backfill processing with automatic downloads and chunked loading
 - `verify_data_load()`: Final data integrity checks with sample queries
+
+**Dictionary Table Management**:
+- **Clean-and-reload pattern**: All reference tables (except `yellow_taxi_trips`) are cleaned before each backfill
+- **Tables cleaned**: `taxi_zone_lookup`, `taxi_zone_shapes`, `rate_code_lookup`, `payment_type_lookup`, `vendor_lookup`
+- **Automatic reloading**: Lookup tables repopulated after cleaning
+- **Trip data preservation**: Only `yellow_taxi_trips` maintains data across runs
 
 **Error Handling**:
 - Column name case sensitivity: converts all to lowercase
 - Numeric precision: schema uses DECIMAL(4,1) for ratecodeid, DECIMAL(4,1) for passenger_count
 - NULL value handling: drops invalid taxi zone records, fills numeric NULLs with 0
 - Chunked loading: 10K rows per chunk to manage memory usage
+- Hash-based duplicate prevention: SHA-256 hashes prevent any duplicate rows
 
 ### Environment Configuration
 `.env` file controls all service parameters:
@@ -175,18 +194,56 @@ BACKFILL_MONTHS=                    # Empty: Load only existing local files
 - **Numeric overflow**: Schema precision too small → Fixed by using `DECIMAL(4,1)` for ratecodeid/passenger_count
 - **PostgreSQL timing**: Initialization runs before DB ready → Fixed with custom entrypoint + wait logic
 - **NULL values**: Invalid taxi zone records → Fixed by dropping NULLs in required fields
+- **Duplicate data**: Re-running system would create duplicates → Fixed with composite UNIQUE constraint and processing tracking
 
 **Data Validation**:
 - **Trip data**: 3,475,226 records (verified via `len(df)` check)
 - **Zone data**: 263 zones after NULL cleanup (originally 265)
 - **Geospatial**: CRS conversion from shapefile CRS to EPSG:2263 (NYC State Plane)
+- **Duplicate Prevention**: Hash-based unique constraint prevents ANY duplicate row, processing log prevents month re-processing
 
-### File Dependencies
-**Critical files that must exist**:
-- `data/yellow/yellow_tripdata_2025-01.parquet`: Main dataset (59MB)
-- `data/zones/taxi_zone_lookup.csv`: Zone reference table
-- `data/zones/taxi_zones.shp` (+ .dbf, .shx, .prj): Shapefile components
-- `sql-scripts/init-scripts/01-nyc-taxi-schema.sql`: Schema must use lowercase column names
+### Duplicate Prevention System
+**Four-Layer Protection**:
+1. **Processing Tracking**: `data_processing_log` table tracks completed months
+2. **Month-Level Skipping**: Already processed months automatically skipped
+3. **Hash-Based Prevention**: SHA-256 hash of all row values prevents ANY duplicate row
+4. **Graceful Error Handling**: Duplicate chunks logged as warnings, not errors
+
+**Hash-Based System**:
+- **SHA-256 Hash**: Calculated from all 20 data columns in deterministic manner
+- **Collision Detection**: Within-batch hash collision detection and removal
+- **Ultimate Protection**: Even minor data variations create different hashes
+- **Performance**: Hash index allows fast duplicate detection at database level
+
+**Safe Re-runs**: System can be restarted multiple times without data duplication or corruption
+
+### Clean Initialization Pipeline
+**Dictionary Table Pattern**: All tables except `yellow_taxi_trips` are treated as dictionary/reference tables:
+1. **🧹 Clean**: TRUNCATE all reference tables at start of each backfill
+2. **📥 Download**: Fresh download of CSV and shapefile ZIP from official sources
+3. **📊 Load**: Process and load reference data into cleaned tables
+4. **📚 Reload**: Repopulate lookup tables (rate codes, payment types, vendors)
+5. **🚕 Process**: Load trip data (preserved across runs due to processing log tracking)
+
+**Benefits**:
+- **No duplicate key errors**: Reference tables always clean before loading
+- **Fresh reference data**: Always uses latest official NYC TLC data
+- **Preserved trip data**: Only new months are processed, existing data remains
+- **Consistent state**: Every initialization produces identical reference tables
+
+### Unified Data System
+**Data Storage Location**: All data files organized in `/sql-scripts/data/` with logical subdirectories:
+
+**Zone Data**: `/sql-scripts/data/zones/`
+- **Zone CSV**: `taxi_zone_lookup.csv` (downloaded during each initialization)
+- **Shapefile components**: `taxi_zones.{shp,dbf,shx,prj,sbn,sbx}` (extracted from ZIP during initialization)
+
+**Trip Data**: `/sql-scripts/data/yellow/`
+- **Trip data**: `yellow_tripdata_YYYY-MM.parquet` files (automatically downloaded via backfill)
+
+**Schema files**: `sql-scripts/init-scripts/01-nyc-taxi-schema.sql` (must use lowercase column names)
+
+**No Manual Data Management Required**: System automatically downloads all required data files from official NYC TLC sources into organized subdirectories
 
 ### Production Deployment Notes
 - **First startup**: Takes 30-45 minutes to load 3.47M records
