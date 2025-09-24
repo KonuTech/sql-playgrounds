@@ -1,0 +1,49 @@
+# Custom PostgreSQL image with Python data loading capabilities
+FROM postgis/postgis:17-3.5
+
+# Install Python and required system packages
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-venv \
+    gdal-bin \
+    libgdal-dev \
+    proj-bin \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create virtual environment for Python packages
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Upgrade pip and install Python dependencies
+RUN pip install --upgrade pip
+
+# Install geospatial and data processing packages
+RUN pip install \
+    pandas==2.3.2 \
+    pyarrow==21.0.0 \
+    geopandas==1.1.1 \
+    psycopg2-binary==2.9.10 \
+    sqlalchemy==2.0.43 \
+    geoalchemy2==0.18.0
+
+# Create directory for initialization scripts and data
+RUN mkdir -p /docker-entrypoint-initdb.d/data
+
+# Copy data files to container (these will be mounted at runtime)
+# The actual data files will be mounted from host
+
+# Copy the Python initialization script
+COPY docker/init-data.py /docker-entrypoint-initdb.d/99-init-data.py
+RUN chmod +x /docker-entrypoint-initdb.d/99-init-data.py
+
+# Create a shell script wrapper to run the complete initialization
+RUN echo '#!/bin/bash' > /docker-entrypoint-initdb.d/99-complete-init.sh && \
+    echo 'echo "🚀 Starting Complete NYC Taxi Database Initialization..."' >> /docker-entrypoint-initdb.d/99-complete-init.sh && \
+    echo 'echo "This will create schema, load zones, and import 3.4M+ trip records"' >> /docker-entrypoint-initdb.d/99-complete-init.sh && \
+    echo 'python3 /docker-entrypoint-initdb.d/99-init-data.py' >> /docker-entrypoint-initdb.d/99-complete-init.sh && \
+    chmod +x /docker-entrypoint-initdb.d/99-complete-init.sh
+
+# Set environment variables for initialization
+ENV INIT_LOAD_ALL_DATA=true
+ENV PYTHONPATH=/opt/venv/lib/python3.11/site-packages

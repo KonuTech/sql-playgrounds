@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  postgres:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.postgres
+    container_name: sql-playground-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-playground}
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin123}
+      INIT_LOAD_ALL_DATA: "true"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql-scripts:/sql-scripts
+      # Mount data files for initialization
+      - ./data/zones/taxi_zone_lookup.csv:/sql-scripts/data/taxi_zone_lookup.csv:ro
+      - ./data/zones/taxi_zones.shp:/sql-scripts/data/taxi_zones.shp:ro
+      - ./data/zones/taxi_zones.dbf:/sql-scripts/data/taxi_zones.dbf:ro
+      - ./data/zones/taxi_zones.shx:/sql-scripts/data/taxi_zones.shx:ro
+      - ./data/zones/taxi_zones.prj:/sql-scripts/data/taxi_zones.prj:ro
+      - ./data/yellow/yellow_tripdata_2025-01.parquet:/sql-scripts/data/yellow_tripdata_2025-01.parquet:ro
+    networks:
+      - sql-playground-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: sql-playground-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "${PGADMIN_PORT:-8080}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./sql-scripts/reports-scripts:/var/lib/pgadmin/storage/sql-scripts
+    networks:
+      - sql-playground-network
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  sql-playground-network:
+    driver: bridge
