@@ -26,7 +26,8 @@ RUN pip install \
     geopandas==0.14.4 \
     psycopg2-binary==2.9.10 \
     sqlalchemy==2.0.43 \
-    geoalchemy2==0.17.1
+    geoalchemy2==0.17.1 \
+    requests==2.31.0
 
 # Create directory for initialization scripts and data
 RUN mkdir -p /docker-entrypoint-initdb.d/data

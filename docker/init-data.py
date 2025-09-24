@@ -20,10 +20,54 @@ from sqlalchemy import create_engine, text
 from geoalchemy2 import Geometry
 from shapely.geometry import MultiPolygon, Polygon
 import logging
+import requests
+from datetime import datetime, timedelta
+from urllib.parse import urlparse
+from pathlib import Path
 
 # Setup logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Create logs directory structure
+base_log_dir = '/sql-scripts/logs'
+os.makedirs(base_log_dir, exist_ok=True)
+
+# Get backfill configuration for folder structure
+backfill_config = os.getenv('BACKFILL_MONTHS', 'default')
+if not backfill_config:
+    backfill_config = 'default'
+
+# Create subdirectory based on BACKFILL_MONTHS
+log_subdir = os.path.join(base_log_dir, backfill_config)
+os.makedirs(log_subdir, exist_ok=True)
+
+# Generate log filename with execution timestamp
+execution_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+log_filename = f'log_{execution_timestamp}.log'
+log_filepath = os.path.join(log_subdir, log_filename)
+
+# Configure dual logging: console + file
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Console handler (existing behavior)
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(console_formatter)
+
+# File handler (new)
+file_handler = logging.FileHandler(log_filepath, mode='w', encoding='utf-8')
+file_handler.setLevel(logging.INFO)
+file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(file_formatter)
+
+# Add both handlers to logger
+logger.addHandler(console_handler)
+logger.addHandler(file_handler)
+
+# Initial log entry
+logger.info(f"📝 Logging to file: {log_filepath}")
+logger.info(f"🕒 Execution started at: {datetime.now().isoformat()}")
+logger.info(f"⚙️ Backfill configuration: {backfill_config}")
 
 def wait_for_postgres(host='localhost', port=5432, database='playground',
                       user='admin', password='admin123', max_attempts=30):
@@ -207,22 +251,97 @@ def load_taxi_zones(engine):
         logger.error(f"❌ Error loading taxi zones: {str(e)}")
         return False
 
-def load_trip_data(engine, load_all=True):
-    """Load trip data from parquet file"""
-    if load_all:
-        logger.info("🚕 Loading ALL trip data from parquet file...")
-    else:
-        logger.info("🚕 Loading trip data...")
+def download_taxi_data(year, month, data_dir='/sql-scripts/data'):
+    """Download taxi data for a specific year and month"""
+    url = f"https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_{year:04d}-{month:02d}.parquet"
+    filename = f"yellow_tripdata_{year:04d}-{month:02d}.parquet"
+    file_path = os.path.join(data_dir, filename)
+
+    # Check if file already exists
+    if os.path.exists(file_path):
+        logger.info(f"📂 File already exists: {filename}")
+        return file_path
+
+    logger.info(f"📥 Downloading {filename} from NYC TLC...")
 
     try:
-        parquet_path = '/sql-scripts/data/yellow_tripdata_2025-01.parquet'
-        if not os.path.exists(parquet_path):
-            logger.warning(f"⚠️ Trip data parquet not found at {parquet_path}")
-            return False
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
 
-        # Read entire parquet file
-        df = pd.read_parquet(parquet_path)
-        logger.info(f"📊 Loading all {len(df):,} rows from parquet file")
+        # Get file size for progress tracking
+        total_size = int(response.headers.get('content-length', 0))
+
+        with open(file_path, 'wb') as f:
+            downloaded = 0
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+                downloaded += len(chunk)
+                if total_size > 0:
+                    progress = (downloaded / total_size) * 100
+                    if downloaded % (1024 * 1024 * 10) == 0:  # Log every 10MB
+                        logger.info(f"📥 Progress: {progress:.1f}% ({downloaded:,}/{total_size:,} bytes)")
+
+        logger.info(f"✅ Downloaded: {filename} ({os.path.getsize(file_path):,} bytes)")
+        return file_path
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"❌ Failed to download {filename}: {str(e)}")
+        return None
+    except Exception as e:
+        logger.error(f"❌ Error downloading {filename}: {str(e)}")
+        return None
+
+def get_backfill_months(backfill_config):
+    """Parse backfill configuration and return list of (year, month) tuples"""
+    months = []
+
+    if backfill_config == 'all':
+        # Load all available data from 2020 to current month
+        current_date = datetime.now()
+        for year in range(2020, current_date.year + 1):
+            end_month = current_date.month if year == current_date.year else 12
+            for month in range(1, end_month + 1):
+                months.append((year, month))
+    elif backfill_config.startswith('last_'):
+        # Parse formats like 'last_6_months', 'last_12_months'
+        try:
+            num_months = int(backfill_config.split('_')[1])
+            current_date = datetime.now()
+            for i in range(num_months):
+                date = current_date - timedelta(days=30 * i)  # Approximate month
+                months.append((date.year, date.month))
+        except (IndexError, ValueError):
+            logger.error(f"❌ Invalid backfill format: {backfill_config}")
+    elif ',' in backfill_config:
+        # Parse comma-separated list like '2024-01,2024-02,2024-03'
+        for month_str in backfill_config.split(','):
+            try:
+                year, month = month_str.strip().split('-')
+                months.append((int(year), int(month)))
+            except ValueError:
+                logger.error(f"❌ Invalid month format: {month_str}")
+    else:
+        # Parse single month like '2024-01'
+        try:
+            year, month = backfill_config.split('-')
+            months.append((int(year), int(month)))
+        except ValueError:
+            logger.error(f"❌ Invalid backfill format: {backfill_config}")
+
+    # Remove duplicates and sort
+    months = sorted(list(set(months)))
+    logger.info(f"📅 Backfill months: {len(months)} months from {months[0] if months else 'none'} to {months[-1] if months else 'none'}")
+    return months
+
+def load_single_parquet_file(engine, file_path, chunk_size=10000):
+    """Load a single parquet file into the database"""
+    try:
+        filename = os.path.basename(file_path)
+        logger.info(f"📥 Loading {filename}...")
+
+        # Read parquet file
+        df = pd.read_parquet(file_path)
+        logger.info(f"📊 File contains {len(df):,} rows")
 
         # Convert column names to lowercase to match database schema
         df.columns = df.columns.str.lower()
@@ -243,7 +362,6 @@ def load_trip_data(engine, load_all=True):
         df['store_and_fwd_flag'] = df['store_and_fwd_flag'].fillna('N')
 
         # Load in chunks
-        chunk_size = 10000
         total_chunks = len(df) // chunk_size + (1 if len(df) % chunk_size else 0)
 
         for i, chunk_start in enumerate(range(0, len(df), chunk_size)):
@@ -260,14 +378,74 @@ def load_trip_data(engine, load_all=True):
             )
 
             if (i + 1) % 5 == 0 or i == total_chunks - 1:
-                logger.info(f"📥 Loaded {chunk_end:,} rows ({i+1}/{total_chunks} chunks)")
+                logger.info(f"📥 {filename}: Loaded {chunk_end:,} rows ({i+1}/{total_chunks} chunks)")
 
-        logger.info(f"✅ Trip data loading completed: {len(df):,} rows")
-        return True
+        logger.info(f"✅ {filename}: Completed loading {len(df):,} rows")
+        return len(df)
 
     except Exception as e:
-        logger.error(f"❌ Error loading trip data: {str(e)}")
-        return False
+        logger.error(f"❌ Error loading {filename}: {str(e)}")
+        return 0
+
+def load_trip_data(engine, load_all=True):
+    """Load trip data - either from existing files or via backfill download"""
+    logger.info("🚕 Loading trip data...")
+
+    # Check for backfill configuration
+    backfill_config = os.getenv('BACKFILL_MONTHS', '')
+
+    total_rows = 0
+
+    if backfill_config:
+        logger.info(f"🔄 Backfill mode enabled: {backfill_config}")
+
+        # Get months to download
+        months_to_load = get_backfill_months(backfill_config)
+
+        if not months_to_load:
+            logger.warning("⚠️ No valid months found in backfill configuration")
+            return False
+
+        # Ensure data directory exists
+        data_dir = '/sql-scripts/data'
+        os.makedirs(data_dir, exist_ok=True)
+
+        # Download and load each month
+        for year, month in months_to_load:
+            logger.info(f"📅 Processing {year}-{month:02d}...")
+
+            # Download file
+            file_path = download_taxi_data(year, month, data_dir)
+            if not file_path:
+                logger.warning(f"⚠️ Skipping {year}-{month:02d} due to download failure")
+                continue
+
+            # Load file
+            chunk_size = int(os.getenv('DATA_CHUNK_SIZE', 10000))
+            rows_loaded = load_single_parquet_file(engine, file_path, chunk_size)
+            total_rows += rows_loaded
+
+            logger.info(f"✅ {year}-{month:02d}: {rows_loaded:,} rows loaded (total: {total_rows:,})")
+
+        logger.info(f"🎉 Backfill completed: {total_rows:,} total rows loaded from {len(months_to_load)} months")
+        return total_rows > 0
+
+    else:
+        # Original single-file loading logic
+        try:
+            parquet_path = '/sql-scripts/data/yellow_tripdata_2025-01.parquet'
+            if not os.path.exists(parquet_path):
+                logger.warning(f"⚠️ Trip data parquet not found at {parquet_path}")
+                return False
+
+            chunk_size = int(os.getenv('DATA_CHUNK_SIZE', 10000))
+            rows_loaded = load_single_parquet_file(engine, parquet_path, chunk_size)
+            return rows_loaded > 0
+
+        except Exception as e:
+            logger.error(f"❌ Error in single-file loading: {str(e)}")
+            return False
+
 
 def verify_data_load(engine):
     """Verify that data was loaded correctly"""

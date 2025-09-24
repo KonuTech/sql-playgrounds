@@ -28,15 +28,32 @@ docker ps
 
 ### Data Management
 ```bash
-# All data loads automatically during Docker initialization
-# No manual data loading commands needed
+# Basic single-month loading (default)
+docker-compose up -d --build
 
-# To modify data loading behavior, edit docker/init-data.py
-# Then rebuild the container:
+# Backfill specific months - edit .env file before starting:
+# BACKFILL_MONTHS=2024-01,2024-02,2024-03
+docker-compose down -v && docker-compose up -d --build
+
+# Backfill last 6 months - edit .env file:
+# BACKFILL_MONTHS=last_6_months
+docker-compose down -v && docker-compose up -d --build
+
+# Backfill all available data (2020-present) - WARNING: Very large!
+# BACKFILL_MONTHS=all
 docker-compose down -v && docker-compose up -d --build
 
 # Check current data status
 docker exec sql-playground-postgres psql -U admin -d playground -c "SELECT COUNT(*) FROM nyc_taxi.yellow_taxi_trips;"
+
+# Monitor download/loading progress (console logs)
+docker logs -f sql-playground-postgres
+
+# Monitor file logs (persistent, organized by configuration)
+tail -f logs/$BACKFILL_MONTHS/log_*.log
+
+# Example: Monitor logs for last_12_months configuration
+tail -f logs/last_12_months/log_*.log
 ```
 
 ### Python Development (Local)
@@ -52,20 +69,31 @@ uv add package-name
 
 ## Architecture Overview
 
+### Logging System
+- **Dual Logging**: Both console (Docker logs) and persistent file logging
+- **Organized Structure**: Logs stored in `./logs/$BACKFILL_MONTHS/` directories
+- **Timestamped Files**: Each execution creates `log_YYYYMMDD_HHMMSS.log`
+- **Full Traceability**: Complete record of downloads, data loading, and errors
+- **Host Access**: Logs accessible from host filesystem for analysis and monitoring
+
 ### Data Flow Architecture
-1. **Raw Data Sources** (host-mounted into container):
-   - NYC taxi trip parquet files: `data/yellow/yellow_tripdata_2025-01.parquet` (59MB, 3.47M+ records)
-   - NYC taxi zone reference data: `data/zones/` (CSV + shapefiles, 263 zones)
+1. **Raw Data Sources**:
+   - **Local files**: Host-mounted `data/yellow/` and `data/zones/` directories
+   - **Remote data**: NYC TLC Trip Record Data (automatically downloaded via backfill)
+   - **URL Pattern**: `https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_YYYY-MM.parquet`
+   - **Available data**: 2009-2025 (monthly files, ~59MB/3.47M+ records per month)
 2. **Custom Docker Container**: PostgreSQL 17 + PostGIS 3.5 + Python 3.9 environment
    - **Single initialization script**: `docker/init-data.py` handles complete setup
    - **Custom entrypoint**: Starts PostgreSQL, then runs initialization after DB is ready
-   - **All dependencies embedded**: numpy, pandas, geopandas, pyarrow, psycopg2, sqlalchemy
+   - **All dependencies embedded**: numpy, pandas, geopandas, pyarrow, psycopg2, sqlalchemy, requests
+   - **Backfill capability**: Automatic download and loading of multiple months
 3. **Automated Data Processing** (during container startup):
    - SQL schema creation: `sql-scripts/init-scripts/` executed in order
    - CSV processing: taxi zone lookup table (263 zones)
    - Shapefile processing: PostGIS geometry conversion with CRS transformation (EPSG:2263)
+   - **Backfill processing**: Downloads missing parquet files from NYC TLC
    - Parquet processing: chunked loading (10K rows/chunk) with data type conversion
-   - Progress tracking: real-time logging of loading status
+   - Progress tracking: real-time logging of download/loading status
 4. **Query Interface**: PGAdmin 4 web interface with pre-loaded analytical queries
 
 ### Database Schema
@@ -121,7 +149,16 @@ POSTGRES_PORT=5432
 PGADMIN_EMAIL=admin@admin.com
 PGADMIN_PASSWORD=admin123
 PGADMIN_PORT=8080
+DATA_CHUNK_SIZE=10000
 INIT_LOAD_ALL_DATA=true
+
+# Backfill Configuration Options:
+BACKFILL_MONTHS=                    # Empty: Load only existing local files
+# BACKFILL_MONTHS=2024-01           # Single month
+# BACKFILL_MONTHS=2024-01,2024-02   # Specific months (comma-separated)
+# BACKFILL_MONTHS=last_6_months     # Last 6 months
+# BACKFILL_MONTHS=last_12_months    # Last 12 months
+# BACKFILL_MONTHS=all               # All data (2020-2025, WARNING: Very large!)
 ```
 
 ### SQL Script Execution Order
