@@ -4,16 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Docker-based SQL playground featuring PostgreSQL 17 and PGAdmin with real NYC Yellow Taxi data (3.4+ million records). The architecture centers around a two-service Docker setup with volume-based data persistence and Python-based data loading utilities.
+This is a Docker-based SQL playground featuring PostgreSQL 17 + PostGIS 3.5 and PGAdmin with real NYC Yellow Taxi data (3.47+ million records per month). The architecture uses a custom PostgreSQL Docker image with embedded Python data loading that runs a single comprehensive initialization script during container startup.
 
 ## Common Commands
 
 ### Environment Management
 ```bash
-# Start the full environment with automatic data loading
+# Start the full environment (includes automatic data loading on first run)
 docker-compose up -d --build
 
-# Monitor data loading progress (first startup only)
+# Monitor data loading progress (first startup takes ~30-45 minutes)
 docker logs -f sql-playground-postgres
 
 # Stop all services
@@ -21,114 +21,162 @@ docker-compose down
 
 # Full rebuild (clears all data and reloads from source files)
 docker-compose down -v && docker-compose up -d --build
+
+# Check container status
+docker ps
 ```
 
-### Manual Data Loading (Optional)
+### Data Management
 ```bash
-# Data loads automatically during Docker startup, but manual loading is available:
+# All data loads automatically during Docker initialization
+# No manual data loading commands needed
 
-# Load reference data only
-uv run python python-scripts/load_reference_data.py
+# To modify data loading behavior, edit docker/init-data.py
+# Then rebuild the container:
+docker-compose down -v && docker-compose up -d --build
 
-# Load trip data with custom parameters
-uv run python python-scripts/load_taxi_data.py --max-rows 1000000
-
-# Load full dataset manually
-uv run python python-scripts/load_taxi_data.py
+# Check current data status
+docker exec sql-playground-postgres psql -U admin -d playground -c "SELECT COUNT(*) FROM nyc_taxi.yellow_taxi_trips;"
 ```
 
-### Python Development
+### Python Development (Local)
 ```bash
-# Install dependencies
+# Install dependencies (for local development only)
 uv sync
 
 # Add new dependencies
 uv add package-name
 
-# Run Python scripts
-uv run python python-scripts/script_name.py
+# Python environment is embedded in Docker - no local Python needed for normal operation
 ```
 
 ## Architecture Overview
 
 ### Data Flow Architecture
-1. **Raw Data Sources**:
-   - NYC taxi trip parquet files stored in `data/yellow/` (59MB, 3.4M+ records)
-   - NYC taxi zone reference data stored in `data/zones/` (CSV + shapefiles, 265 zones)
-2. **Single-Script Initialization**: Custom PostgreSQL Docker image with Python environment
-   - Complete initialization via `docker/init-data.py` (runs SQL scripts + data loading)
-   - Executes SQL scripts from `sql-scripts/init-scripts/` in proper order
-   - PostGIS-enabled geospatial processing with CRS conversion
-3. **Data Processing**: Built-in ETL during initialization:
-   - Complete parquet file processing (chunked loading for memory efficiency)
-   - Shapefile-to-PostGIS conversion with geometry validation
-   - Reference data normalization and foreign key establishment
-4. **Query Interface**: PGAdmin provides web-based SQL execution with pre-loaded analytical queries
+1. **Raw Data Sources** (host-mounted into container):
+   - NYC taxi trip parquet files: `data/yellow/yellow_tripdata_2025-01.parquet` (59MB, 3.47M+ records)
+   - NYC taxi zone reference data: `data/zones/` (CSV + shapefiles, 263 zones)
+2. **Custom Docker Container**: PostgreSQL 17 + PostGIS 3.5 + Python 3.9 environment
+   - **Single initialization script**: `docker/init-data.py` handles complete setup
+   - **Custom entrypoint**: Starts PostgreSQL, then runs initialization after DB is ready
+   - **All dependencies embedded**: numpy, pandas, geopandas, pyarrow, psycopg2, sqlalchemy
+3. **Automated Data Processing** (during container startup):
+   - SQL schema creation: `sql-scripts/init-scripts/` executed in order
+   - CSV processing: taxi zone lookup table (263 zones)
+   - Shapefile processing: PostGIS geometry conversion with CRS transformation (EPSG:2263)
+   - Parquet processing: chunked loading (10K rows/chunk) with data type conversion
+   - Progress tracking: real-time logging of loading status
+4. **Query Interface**: PGAdmin 4 web interface with pre-loaded analytical queries
 
 ### Database Schema
-- **Primary Schema**: `nyc_taxi` schema with PostGIS-enabled geospatial support
-- **Main Table**: `yellow_taxi_trips` (20 columns) matching NYC TLC official format exactly
-- **Reference Tables**: Complete NYC taxi zone data with geometry:
-  - `taxi_zone_lookup`: 265 official taxi zones with borough and service zone info
-  - `taxi_zone_shapes`: PostGIS geometry table with polygon boundaries (EPSG:2263)
-  - `vendor_lookup`, `payment_type_lookup`, `rate_code_lookup`: Supporting reference data
-- **Indexing Strategy**: Spatial GIST indexes plus optimized indexes for time-series, location queries, and payment analytics
+- **Primary Schema**: `nyc_taxi` with PostGIS spatial extensions enabled
+- **Main Table**: `yellow_taxi_trips` (20 columns, lowercase names) - 3.47M+ records
+  - All numeric columns use appropriate DECIMAL precision (e.g., `ratecodeid DECIMAL(4,1)`)
+  - Column names converted to lowercase during data loading for consistency
+- **Reference Tables** (automatically populated):
+  - `taxi_zone_lookup`: 263 NYC taxi zones (locationid, borough, zone, service_zone)
+  - `taxi_zone_shapes`: PostGIS MULTIPOLYGON geometries (EPSG:2263 coordinate system)
+  - `vendor_lookup`, `payment_type_lookup`, `rate_code_lookup`: Lookup tables for codes
+- **Performance Optimizations**:
+  - Spatial GIST index on geometry column
+  - Time-series indexes on pickup/dropoff datetime
+  - Composite indexes for common query patterns (location+datetime, vendor+datetime)
 
-### Volume Mapping Strategy
-- **Database Persistence**: `postgres_data` volume for PostgreSQL data
-- **PGAdmin Config**: `pgadmin_data` volume for user settings
-- **Init Scripts**: `./sql-scripts/init-scripts/` → `/docker-entrypoint-initdb.d` (auto-executed)
-- **Report Scripts**: `./sql-scripts/reports-scripts/` → PGAdmin storage (user accessible)
-- **All SQL Scripts**: `./sql-scripts/` → `/sql-scripts` (PostgreSQL access)
+### Container Architecture
+- **Base Image**: `postgis/postgis:17-3.5` (PostgreSQL 17 + PostGIS 3.5)
+- **Python Environment**: Virtual environment at `/opt/venv` with data processing packages
+- **Custom Entrypoint**: `/usr/local/bin/custom-entrypoint.sh`
+  - Starts PostgreSQL in background
+  - Waits for DB readiness, then runs `/usr/local/bin/init-taxi-data.py`
+  - Keeps PostgreSQL running in foreground
+- **Volume Mappings**:
+  - `postgres_data`: PostgreSQL data persistence
+  - `pgadmin_data`: PGAdmin settings persistence
+  - Host data files mounted read-only to `/sql-scripts/data/`
+  - SQL scripts mounted to `/sql-scripts/` for container access
 
 ## Key Integration Points
 
+### Initialization Process (`docker/init-data.py`)
+**Critical Functions**:
+- `wait_for_postgres()`: Ensures DB is ready before data loading
+- `execute_sql_scripts()`: Runs all SQL files in `sql-scripts/init-scripts/` in order
+- `load_taxi_zones()`: Processes CSV + shapefiles with CRS conversion
+- `load_trip_data()`: Chunked parquet loading with progress tracking
+- `verify_data_load()`: Final data integrity checks with sample queries
+
+**Error Handling**:
+- Column name case sensitivity: converts all to lowercase
+- Numeric precision: schema uses DECIMAL(4,1) for ratecodeid, DECIMAL(4,1) for passenger_count
+- NULL value handling: drops invalid taxi zone records, fills numeric NULLs with 0
+- Chunked loading: 10K rows per chunk to manage memory usage
+
 ### Environment Configuration
-All services use variables from `.env` file with sensible defaults:
-- PostgreSQL: Database name, user, password, port
-- PGAdmin: Email, password, port
-- Data loading: Chunk size, test row limits
+`.env` file controls all service parameters:
+```
+POSTGRES_DB=playground
+POSTGRES_USER=admin
+POSTGRES_PASSWORD=admin123
+POSTGRES_PORT=5432
+PGADMIN_EMAIL=admin@admin.com
+PGADMIN_PASSWORD=admin123
+PGADMIN_PORT=8080
+INIT_LOAD_ALL_DATA=true
+```
 
-### Python-Database Integration
-**Trip Data Loading** (`load_taxi_data.py`):
-- Parquet file validation and chunk processing
-- SQLAlchemy-based connection management
-- Data type conversion for PostgreSQL compatibility
-- Progress tracking for large dataset loads
+### SQL Script Execution Order
+1. `00-postgis-setup.sql`: PostGIS extensions and spatial reference systems
+2. `01-nyc-taxi-schema.sql`: Complete schema with lowercase column names
+3. Python data loading via `docker/init-data.py`
+4. Analytical queries available in `sql-scripts/reports-scripts/`
 
-**Reference Data Loading** (`load_reference_data.py`):
-- CSV loading for taxi zone lookup table
-- Shapefile processing with geopandas and PostGIS integration
-- CRS conversion to NYC State Plane (EPSG:2263)
-- Geometry validation and MULTIPOLYGON conversion
+## Critical Implementation Details
 
-### SQL Script Organization
-- **Init Scripts**: Database schema, indexes, reference data (executed once)
-- **Report Scripts**: Analytical queries accessible via PGAdmin interface
-- Schema changes require container restart to take effect
+### Data Loading Challenges & Solutions
+**Common Issues During Initialization**:
+- **Column case mismatch**: Parquet has `VendorID`, schema expects `vendorid` → Fixed by `df.columns = df.columns.str.lower()`
+- **Numeric overflow**: Schema precision too small → Fixed by using `DECIMAL(4,1)` for ratecodeid/passenger_count
+- **PostgreSQL timing**: Initialization runs before DB ready → Fixed with custom entrypoint + wait logic
+- **NULL values**: Invalid taxi zone records → Fixed by dropping NULLs in required fields
 
-## Data Model Specifics
+**Data Validation**:
+- **Trip data**: 3,475,226 records (verified via `len(df)` check)
+- **Zone data**: 263 zones after NULL cleanup (originally 265)
+- **Geospatial**: CRS conversion from shapefile CRS to EPSG:2263 (NYC State Plane)
 
-### NYC Taxi Data Schema
-- 20 columns matching official NYC TLC format
-- Key fields: VendorID, pickup/dropoff timestamps, location IDs, financial data
-- New 2025 field: `cbd_congestion_fee`
-- Optimized for analytical queries on 3.4M+ records
+### File Dependencies
+**Critical files that must exist**:
+- `data/yellow/yellow_tripdata_2025-01.parquet`: Main dataset (59MB)
+- `data/zones/taxi_zone_lookup.csv`: Zone reference table
+- `data/zones/taxi_zones.shp` (+ .dbf, .shx, .prj): Shapefile components
+- `sql-scripts/init-scripts/01-nyc-taxi-schema.sql`: Schema must use lowercase column names
 
-### Performance Considerations
-- Composite indexes on datetime + vendor, location + datetime combinations
-- Chunked loading (10K rows default) for memory management
-- Date-based partitioning ready (implementation pending)
+### Production Deployment Notes
+- **First startup**: Takes 30-45 minutes to load 3.47M records
+- **Subsequent startups**: Instant (data persisted in `postgres_data` volume)
+- **Memory usage**: 10K row chunks prevent memory overflow during loading
+- **Error recovery**: `docker-compose down -v` forces complete reload
 
 ## Access Points
 
 ### PGAdmin Web Interface
-- URL: http://localhost:8080
-- Credentials: admin@admin.com / admin123
-- PostgreSQL connection: host=postgres, port=5432, db=playground, user=admin
+- **URL**: http://localhost:8080
+- **Login**: admin@admin.com / admin123
+- **Database Connection**: host=postgres, port=5432, db=playground, user=admin/admin123
+- **Schema**: nyc_taxi
+- **Pre-loaded queries**: Available in mounted `/var/lib/pgadmin/storage/sql-scripts/`
 
 ### Direct Database Access
-- Host: localhost:5432
-- Database: playground
-- Schema: nyc_taxi
-- Main table: yellow_taxi_trips
+```bash
+# Command line access
+docker exec -it sql-playground-postgres psql -U admin -d playground
+
+# Quick data check
+docker exec sql-playground-postgres psql -U admin -d playground -c "SELECT COUNT(*) FROM nyc_taxi.yellow_taxi_trips;"
+```
+
+### Sample Analytical Queries
+- **Trip volume by hour**: Joins trips with taxi zone lookup for borough analysis
+- **Geospatial analysis**: ST_Area calculations on taxi zone polygons
+- **Cross-borough trips**: Origin-destination analysis using zone lookups
+- **Payment analysis**: Credit card vs cash patterns by time and location

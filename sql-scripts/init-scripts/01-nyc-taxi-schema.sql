@@ -11,23 +11,23 @@ SET search_path = nyc_taxi, public;
 -- This table structure exactly matches the NYC TLC Yellow Taxi data format (20 columns)
 CREATE TABLE yellow_taxi_trips (
     -- Trip identifiers
-    VendorID INTEGER,                    -- Provider that provided the record (1= Creative Mobile Technologies, 2= VeriFone Inc.)
+    vendorid INTEGER,                    -- Provider that provided the record (1= Creative Mobile Technologies, 2= VeriFone Inc.)
 
     -- Trip timing
     tpep_pickup_datetime TIMESTAMP,      -- Date and time when the meter was engaged
     tpep_dropoff_datetime TIMESTAMP,     -- Date and time when the meter was disengaged
 
     -- Passenger information
-    passenger_count DECIMAL(3,1),        -- Number of passengers in the vehicle (can be fractional)
+    passenger_count DECIMAL(4,1),        -- Number of passengers in the vehicle (can be fractional)
 
     -- Trip distance
     trip_distance DECIMAL(8,2),          -- Trip distance in miles
 
     -- Location and rate information
-    RatecodeID DECIMAL(2,1),             -- Rate code in effect at the end of the trip
+    ratecodeid DECIMAL(4,1),             -- Rate code in effect at the end of the trip
     store_and_fwd_flag VARCHAR(1),       -- Y= store and forward trip, N= not a store and forward trip
-    PULocationID INTEGER,                -- TLC Taxi Zone where the taximeter was engaged
-    DOLocationID INTEGER,                -- TLC Taxi Zone where the taximeter was disengaged
+    pulocationid INTEGER,                -- TLC Taxi Zone where the taximeter was engaged
+    dolocationid INTEGER,                -- TLC Taxi Zone where the taximeter was disengaged
 
     -- Payment information
     payment_type BIGINT,                 -- Payment method (1= Credit card, 2= Cash, 3= No charge, 4= Dispute, 5= Unknown, 6= Voided trip)
@@ -39,7 +39,7 @@ CREATE TABLE yellow_taxi_trips (
     improvement_surcharge DECIMAL(8,2),  -- $0.30 improvement surcharge assessed trips at the flag drop
     total_amount DECIMAL(8,2),          -- Total amount charged to passengers (does not include cash tips)
     congestion_surcharge DECIMAL(8,2),  -- Total amount collected in trip for NYS congestion surcharge
-    Airport_fee DECIMAL(8,2),           -- $1.25 for pick up only at LaGuardia and John F. Kennedy Airports
+    airport_fee DECIMAL(8,2),           -- $1.25 for pick up only at LaGuardia and John F. Kennedy Airports
     cbd_congestion_fee DECIMAL(8,2)     -- CBD (Central Business District) congestion fee
 );
 
@@ -112,16 +112,16 @@ INSERT INTO vendor_lookup (vendorid, vendor_name) VALUES
 -- Indexes for performance optimization on real NYC taxi data
 CREATE INDEX idx_yellow_taxi_pickup_datetime ON yellow_taxi_trips (tpep_pickup_datetime);
 CREATE INDEX idx_yellow_taxi_dropoff_datetime ON yellow_taxi_trips (tpep_dropoff_datetime);
-CREATE INDEX idx_yellow_taxi_pickup_location ON yellow_taxi_trips (PULocationID);
-CREATE INDEX idx_yellow_taxi_dropoff_location ON yellow_taxi_trips (DOLocationID);
+CREATE INDEX idx_yellow_taxi_pickup_location ON yellow_taxi_trips (pulocationid);
+CREATE INDEX idx_yellow_taxi_dropoff_location ON yellow_taxi_trips (dolocationid);
 CREATE INDEX idx_yellow_taxi_payment_type ON yellow_taxi_trips (payment_type);
-CREATE INDEX idx_yellow_taxi_vendor ON yellow_taxi_trips (VendorID);
+CREATE INDEX idx_yellow_taxi_vendor ON yellow_taxi_trips (vendorid);
 CREATE INDEX idx_yellow_taxi_trip_distance ON yellow_taxi_trips (trip_distance);
 CREATE INDEX idx_yellow_taxi_total_amount ON yellow_taxi_trips (total_amount);
 
 -- Composite indexes for common analytical queries
-CREATE INDEX idx_yellow_taxi_datetime_vendor ON yellow_taxi_trips (tpep_pickup_datetime, VendorID);
-CREATE INDEX idx_yellow_taxi_location_datetime ON yellow_taxi_trips (PULocationID, tpep_pickup_datetime);
+CREATE INDEX idx_yellow_taxi_datetime_vendor ON yellow_taxi_trips (tpep_pickup_datetime, vendorid);
+CREATE INDEX idx_yellow_taxi_location_datetime ON yellow_taxi_trips (pulocationid, tpep_pickup_datetime);
 CREATE INDEX idx_yellow_taxi_date_payment ON yellow_taxi_trips (DATE(tpep_pickup_datetime), payment_type);
 
 -- Partitioning by month for better performance (if using PostgreSQL 10+)

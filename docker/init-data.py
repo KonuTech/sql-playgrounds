@@ -31,17 +31,28 @@ def wait_for_postgres(host='localhost', port=5432, database='playground',
     attempt = 0
     while attempt < max_attempts:
         try:
+            # Try to connect to the database
             conn = psycopg2.connect(
                 host=host, port=port, database=database,
-                user=user, password=password
+                user=user, password=password,
+                connect_timeout=5
             )
+            # Test that we can actually execute a query
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1")
+                cur.fetchone()
             conn.close()
             logger.info("✅ PostgreSQL is ready!")
             return True
-        except psycopg2.OperationalError:
+        except (psycopg2.OperationalError, psycopg2.DatabaseError) as e:
             attempt += 1
-            logger.info(f"⏳ Waiting for PostgreSQL... (attempt {attempt}/{max_attempts})")
-            time.sleep(2)
+            if attempt <= 10:
+                # Log more frequently in the beginning
+                logger.info(f"⏳ Waiting for PostgreSQL... (attempt {attempt}/{max_attempts})")
+            elif attempt % 5 == 0:
+                # Then log every 5th attempt
+                logger.info(f"⏳ Waiting for PostgreSQL... (attempt {attempt}/{max_attempts})")
+            time.sleep(3)
 
     logger.error("❌ PostgreSQL not available after maximum attempts")
     return False
@@ -135,6 +146,12 @@ def load_taxi_zones(engine):
         zones_df = pd.read_csv(zones_csv_path)
         zones_df.columns = zones_df.columns.str.lower()
 
+        # Handle NULL values - drop rows where zone or borough is NULL
+        zones_df = zones_df.dropna(subset=['zone', 'borough'])
+
+        # Fill remaining NULLs in service_zone with 'Unknown'
+        zones_df['service_zone'] = zones_df['service_zone'].fillna('Unknown')
+
         # Load to database
         zones_df.to_sql(
             'taxi_zone_lookup',
@@ -207,14 +224,17 @@ def load_trip_data(engine, load_all=True):
         df = pd.read_parquet(parquet_path)
         logger.info(f"📊 Loading all {len(df):,} rows from parquet file")
 
+        # Convert column names to lowercase to match database schema
+        df.columns = df.columns.str.lower()
+
         # Clean and prepare data
         df['tpep_pickup_datetime'] = pd.to_datetime(df['tpep_pickup_datetime'])
         df['tpep_dropoff_datetime'] = pd.to_datetime(df['tpep_dropoff_datetime'])
 
         # Fill nulls
-        numeric_cols = ['passenger_count', 'trip_distance', 'RatecodeID', 'fare_amount',
+        numeric_cols = ['passenger_count', 'trip_distance', 'ratecodeid', 'fare_amount',
                        'extra', 'mta_tax', 'tip_amount', 'tolls_amount', 'improvement_surcharge',
-                       'total_amount', 'congestion_surcharge', 'Airport_fee', 'cbd_congestion_fee']
+                       'total_amount', 'congestion_surcharge', 'airport_fee', 'cbd_congestion_fee']
 
         for col in numeric_cols:
             if col in df.columns:
@@ -256,36 +276,36 @@ def verify_data_load(engine):
     try:
         with engine.connect() as conn:
             # Check taxi zones
-            result = conn.execute("SELECT COUNT(*) FROM nyc_taxi.taxi_zone_lookup")
+            result = conn.execute(text("SELECT COUNT(*) FROM nyc_taxi.taxi_zone_lookup"))
             zone_count = result.fetchone()[0]
             logger.info(f"📍 Taxi zones: {zone_count:,}")
 
             # Check shapes (if available)
             try:
-                result = conn.execute("SELECT COUNT(*) FROM nyc_taxi.taxi_zone_shapes")
+                result = conn.execute(text("SELECT COUNT(*) FROM nyc_taxi.taxi_zone_shapes"))
                 shape_count = result.fetchone()[0]
                 logger.info(f"🗺️ Taxi zone shapes: {shape_count:,}")
             except:
                 logger.info("🗺️ Taxi zone shapes: Not available")
 
             # Check trips
-            result = conn.execute("SELECT COUNT(*) FROM nyc_taxi.yellow_taxi_trips")
+            result = conn.execute(text("SELECT COUNT(*) FROM nyc_taxi.yellow_taxi_trips"))
             trip_count = result.fetchone()[0]
             logger.info(f"🚕 Trip records: {trip_count:,}")
 
             if trip_count > 0:
                 # Show sample data with zone names
-                result = conn.execute("""
+                result = conn.execute(text("""
                     SELECT
                         DATE(yt.tpep_pickup_datetime) as trip_date,
                         COUNT(*) as trips,
                         pickup_zone.borough as pickup_borough
                     FROM nyc_taxi.yellow_taxi_trips yt
-                    JOIN nyc_taxi.taxi_zone_lookup pickup_zone ON yt.PULocationID = pickup_zone.locationid
+                    JOIN nyc_taxi.taxi_zone_lookup pickup_zone ON yt.pulocationid = pickup_zone.locationid
                     GROUP BY DATE(yt.tpep_pickup_datetime), pickup_zone.borough
                     ORDER BY trips DESC
                     LIMIT 5
-                """)
+                """))
 
                 logger.info("📊 Top trip patterns:")
                 for row in result.fetchall():

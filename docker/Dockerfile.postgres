@@ -18,14 +18,15 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Upgrade pip and install Python dependencies
 RUN pip install --upgrade pip
 
-# Install geospatial and data processing packages
+# Install geospatial and data processing packages (compatible with Python 3.9)
 RUN pip install \
-    pandas==2.3.2 \
-    pyarrow==21.0.0 \
-    geopandas==1.1.1 \
+    numpy==1.24.4 \
+    pandas==1.5.3 \
+    pyarrow==10.0.1 \
+    geopandas==0.14.4 \
     psycopg2-binary==2.9.10 \
     sqlalchemy==2.0.43 \
-    geoalchemy2==0.18.0
+    geoalchemy2==0.17.1
 
 # Create directory for initialization scripts and data
 RUN mkdir -p /docker-entrypoint-initdb.d/data
@@ -33,17 +34,30 @@ RUN mkdir -p /docker-entrypoint-initdb.d/data
 # Copy data files to container (these will be mounted at runtime)
 # The actual data files will be mounted from host
 
-# Copy the Python initialization script
-COPY docker/init-data.py /docker-entrypoint-initdb.d/99-init-data.py
-RUN chmod +x /docker-entrypoint-initdb.d/99-init-data.py
+# Copy the Python initialization script to a different location
+COPY docker/init-data.py /usr/local/bin/init-taxi-data.py
+RUN chmod +x /usr/local/bin/init-taxi-data.py
 
-# Create a shell script wrapper to run the complete initialization
-RUN echo '#!/bin/bash' > /docker-entrypoint-initdb.d/99-complete-init.sh && \
-    echo 'echo "🚀 Starting Complete NYC Taxi Database Initialization..."' >> /docker-entrypoint-initdb.d/99-complete-init.sh && \
-    echo 'echo "This will create schema, load zones, and import 3.4M+ trip records"' >> /docker-entrypoint-initdb.d/99-complete-init.sh && \
-    echo 'python3 /docker-entrypoint-initdb.d/99-init-data.py' >> /docker-entrypoint-initdb.d/99-complete-init.sh && \
-    chmod +x /docker-entrypoint-initdb.d/99-complete-init.sh
+# Create a custom entrypoint that runs after PostgreSQL is started
+RUN echo '#!/bin/bash' > /usr/local/bin/custom-entrypoint.sh && \
+    echo 'set -e' >> /usr/local/bin/custom-entrypoint.sh && \
+    echo '' >> /usr/local/bin/custom-entrypoint.sh && \
+    echo '# Start PostgreSQL normally' >> /usr/local/bin/custom-entrypoint.sh && \
+    echo '/usr/local/bin/docker-entrypoint.sh postgres &' >> /usr/local/bin/custom-entrypoint.sh && \
+    echo 'POSTGRES_PID=$!' >> /usr/local/bin/custom-entrypoint.sh && \
+    echo '' >> /usr/local/bin/custom-entrypoint.sh && \
+    echo '# Wait for PostgreSQL to be ready and then run initialization' >> /usr/local/bin/custom-entrypoint.sh && \
+    echo 'sleep 10' >> /usr/local/bin/custom-entrypoint.sh && \
+    echo 'echo "🔄 Running NYC Taxi data initialization..."' >> /usr/local/bin/custom-entrypoint.sh && \
+    echo 'python3 /usr/local/bin/init-taxi-data.py' >> /usr/local/bin/custom-entrypoint.sh && \
+    echo '' >> /usr/local/bin/custom-entrypoint.sh && \
+    echo '# Keep PostgreSQL running' >> /usr/local/bin/custom-entrypoint.sh && \
+    echo 'wait $POSTGRES_PID' >> /usr/local/bin/custom-entrypoint.sh && \
+    chmod +x /usr/local/bin/custom-entrypoint.sh
 
 # Set environment variables for initialization
 ENV INIT_LOAD_ALL_DATA=true
 ENV PYTHONPATH=/opt/venv/lib/python3.11/site-packages
+
+# Use custom entrypoint
+ENTRYPOINT ["/usr/local/bin/custom-entrypoint.sh"]
