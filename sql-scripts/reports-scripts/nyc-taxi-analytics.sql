@@ -2,13 +2,17 @@
 -- Sample queries to explore the NYC taxi dataset
 
 -- 1. Basic Data Overview
-SELECT 'Total Trips' as metric, COUNT(*) as value
+SELECT 'Total Trips' as metric, COUNT(*)::text as value
 FROM nyc_taxi.yellow_taxi_trips
+
 UNION ALL
+
 SELECT 'Date Range' as metric,
        MIN(tpep_pickup_datetime)::text || ' to ' || MAX(tpep_pickup_datetime)::text as value
 FROM nyc_taxi.yellow_taxi_trips
+
 UNION ALL
+
 SELECT 'Total Revenue' as metric, '$' || ROUND(SUM(total_amount), 2)::text as value
 FROM nyc_taxi.yellow_taxi_trips;
 
@@ -42,7 +46,7 @@ FROM nyc_taxi.yellow_taxi_trips
 GROUP BY payment_type
 ORDER BY trip_count DESC;
 
--- 4. Top Revenue Generating Trips
+-- 4. Top Revenue Generating Trips - possible erroneous data inputs 
 SELECT
     tpep_pickup_datetime,
     trip_distance,
@@ -153,7 +157,7 @@ GROUP BY
     END
 ORDER BY trip_count DESC;
 
--- 10. Long Distance Trips (Over 20 miles)
+-- 10. Long Distance Trips (Over 20 miles) - possible erroneous data inputs 
 SELECT
     tpep_pickup_datetime,
     trip_distance,
@@ -165,4 +169,4 @@ SELECT
 FROM nyc_taxi.yellow_taxi_trips
 WHERE trip_distance > 20
 ORDER BY trip_distance DESC
-LIMIT 50;
+LIMIT 4000;
