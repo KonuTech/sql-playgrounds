@@ -2,7 +2,7 @@
 
 ## 🎯 **Perfect for SQL Technical Interviews & Learning**
 
-This playground is an **ideal resource for SQL technical interviews and database skill development**. It features **real-world production data** (3.4M+ records per month) and **comprehensive technical interview questions** covering all levels from mid to senior database engineering roles.
+This playground is an **ideal resource for SQL technical interviews and database skill development**. It features **real-world production data** (3-5 million records per month) and **comprehensive technical interview questions** covering all levels from mid to senior database engineering roles.
 
 ### 📚 **Complete Technical Interview Guide**
 - **15 detailed interview questions** with full answers covering data modeling, ETL, performance optimization, complex analytics, geospatial analysis, data quality, and system architecture
