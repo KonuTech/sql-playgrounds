@@ -131,36 +131,43 @@ SELECT EXTRACT(HOUR FROM yt.tpep_pickup_datetime) as hour,
 FROM nyc_taxi.yellow_taxi_trips yt
 JOIN nyc_taxi.taxi_zone_lookup pickup_zone ON yt.pulocationid = pickup_zone.locationid
 GROUP BY hour ORDER BY hour;
-
+```
+![Analytics Query Results 1](docs/pictures/Clipboard_09-25-2025_01.jpg)
+```sql
 -- Geospatial: Largest taxi zones by area (PostGIS spatial functions)
-SELECT zone, borough,
+SELECT tzl.zone, tzl.borough,
        ROUND((ST_Area(geometry) / 43560)::numeric, 2) as area_acres
 FROM nyc_taxi.taxi_zone_shapes tzs
 JOIN nyc_taxi.taxi_zone_lookup tzl ON tzs.locationid = tzl.locationid
 ORDER BY ST_Area(geometry) DESC LIMIT 10;
 
--- Cross-borough trip analysis with corrected column names
-SELECT pickup_zone.borough as pickup_borough,
-       dropoff_zone.borough as dropoff_borough,
-       COUNT(*) as trip_count,
-       AVG(yt.fare_amount) as avg_fare
+-- Cross-borough trip analysis with concatenated boroughs
+SELECT 
+       pickup_zone.borough || ' → ' || dropoff_zone.borough AS trip_route,
+       COUNT(*) AS trip_count,
+       AVG(yt.fare_amount) AS avg_fare
 FROM nyc_taxi.yellow_taxi_trips yt
-JOIN nyc_taxi.taxi_zone_lookup pickup_zone ON yt.pulocationid = pickup_zone.locationid
-JOIN nyc_taxi.taxi_zone_lookup dropoff_zone ON yt.dolocationid = dropoff_zone.locationid
+JOIN nyc_taxi.taxi_zone_lookup pickup_zone 
+     ON yt.pulocationid = pickup_zone.locationid
+JOIN nyc_taxi.taxi_zone_lookup dropoff_zone 
+     ON yt.dolocationid = dropoff_zone.locationid
 GROUP BY pickup_zone.borough, dropoff_zone.borough
 ORDER BY trip_count DESC;
 
 -- Financial analysis: Payment patterns by borough
-SELECT pickup_zone.borough,
-       ptl.payment_type_desc,
-       COUNT(*) as trips,
-       AVG(yt.total_amount) as avg_total
+SELECT 
+       pickup_zone.borough || ' - ' || ptl.payment_type_desc AS borough_payment_type,
+       COUNT(*) AS trips,
+       AVG(yt.total_amount) AS avg_total
 FROM nyc_taxi.yellow_taxi_trips yt
-JOIN nyc_taxi.taxi_zone_lookup pickup_zone ON yt.pulocationid = pickup_zone.locationid
-JOIN nyc_taxi.payment_type_lookup ptl ON yt.payment_type = ptl.payment_type
+JOIN nyc_taxi.taxi_zone_lookup pickup_zone 
+     ON yt.pulocationid = pickup_zone.locationid
+JOIN nyc_taxi.payment_type_lookup ptl 
+     ON yt.payment_type = ptl.payment_type
 GROUP BY pickup_zone.borough, ptl.payment_type_desc
-ORDER BY pickup_zone.borough, trips DESC;
+ORDER BY avg_total DESC;
 ```
+![Analytics Query Results 2](docs/pictures/Clipboard_09-25-2025_02.jpg)
 
 ## Project Structure
 
