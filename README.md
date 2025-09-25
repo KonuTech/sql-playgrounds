@@ -66,7 +66,7 @@ A production-ready Docker-based SQL playground featuring PostgreSQL 17 + PostGIS
 The system features a **flexible backfill system** that automatically downloads and loads data from official NYC TLC sources:
 
 **Data Sources:**
-- **Trip Data**: NYC Yellow Taxi records (2020-2025, ~3.47M records per month)
+- **Trip Data**: NYC Yellow Taxi records (2020-2025, 3-5M records per month)
 - **Zone Data**: 263 official NYC TLC taxi zones with lookup table and PostGIS geometries
 - **Reference Data**: Vendors, payment types, rate codes with proper relationships
 
@@ -330,7 +330,7 @@ uv add package-name
 ### NYC Yellow Taxi Trip Records
 **Source**: [NYC TLC Trip Record Data](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
 - **Format**: Official parquet files (updated monthly by NYC TLC)
-- **Available Data**: 2020-2025 (monthly files, ~59MB/3.47M+ records per month)
+- **Available Data**: 2020-2025 (monthly files, ~60MB/3-5M records per month)
 - **Auto-Download**: System automatically downloads configured months from official sources
 - **Coverage**: Complete months of taxi trip data from NYC Taxi & Limousine Commission
 

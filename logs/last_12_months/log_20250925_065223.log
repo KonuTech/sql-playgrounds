@@ -1,0 +1,549 @@
+2025-09-25 06:52:23,791 - INFO - 📝 Logging to file: /sql-scripts/logs/last_12_months/log_20250925_065223.log
+2025-09-25 06:52:23,791 - INFO - 🕒 Execution started at: 2025-09-25T06:52:23.791786
+2025-09-25 06:52:23,792 - INFO - ⚙️ Backfill configuration: last_12_months
+2025-09-25 06:52:23,792 - INFO - 🚀 Starting Complete NYC Taxi Database Initialization...
+2025-09-25 06:52:23,811 - INFO - ✅ PostgreSQL is ready!
+2025-09-25 06:52:23,816 - INFO - 🔧 Step 1: Database Schema Creation
+2025-09-25 06:52:23,816 - INFO - 🗃️ Executing SQL initialization scripts...
+2025-09-25 06:52:23,818 - INFO - 📄 Found 2 SQL scripts to execute
+2025-09-25 06:52:23,835 - INFO - 🔧 Executing: 00-postgis-setup.sql
+2025-09-25 06:52:23,841 - INFO - ✅ Completed: 00-postgis-setup.sql
+2025-09-25 06:52:23,841 - INFO - 🔧 Executing: 01-nyc-taxi-schema.sql
+2025-09-25 06:52:23,845 - WARNING - ⚠️ Block execution failed for 01-nyc-taxi-schema.sql, trying statement by statement: (psycopg2.errors.DuplicateTable) relation "yellow_taxi_trips" already exists
+
+[SQL: CREATE SCHEMA IF NOT EXISTS nyc_taxi;
+SET search_path = nyc_taxi, public;
+CREATE TABLE yellow_taxi_trips (
+    vendorid INTEGER,                    -- Provider that provided the record (1= Creative Mobile Technologies, 2= VeriFone Inc.)
+    tpep_pickup_datetime TIMESTAMP,      -- Date and time when the meter was engaged
+    tpep_dropoff_datetime TIMESTAMP,     -- Date and time when the meter was disengaged
+    passenger_count DECIMAL(4,1),        -- Number of passengers in the vehicle (can be fractional)
+    trip_distance DECIMAL(8,2),          -- Trip distance in miles
+    ratecodeid DECIMAL(4,1),             -- Rate code in effect at the end of the trip
+    store_and_fwd_flag VARCHAR(1),       -- Y= store and forward trip, N= not a store and forward trip
+    pulocationid INTEGER,                -- TLC Taxi Zone where the taximeter was engaged
+    dolocationid INTEGER,                -- TLC Taxi Zone where the taximeter was disengaged
+    payment_type BIGINT,                 -- Payment method (1= Credit card, 2= Cash, 3= No charge, 4= Dispute, 5= Unknown, 6= Voided trip)
+    fare_amount DECIMAL(8,2),           -- Time-and-distance fare calculated by the meter
+    extra DECIMAL(8,2),                 -- Miscellaneous extras and surcharges ($0.50 and $1 rush hour and overnight charges)
+    mta_tax DECIMAL(8,2),               -- $0.50 MTA tax that is automatically triggered based on the metered rate in use
+    tip_amount DECIMAL(8,2),            -- Tip amount (automatically populated for credit card tips, cash tips not included)
+    tolls_amount DECIMAL(8,2),          -- Total amount of all tolls paid in trip
+    improvement_surcharge DECIMAL(8,2),  -- $0.30 improvement surcharge assessed trips at the flag drop
+    total_amount DECIMAL(8,2),          -- Total amount charged to passengers (does not include cash tips)
+    congestion_surcharge DECIMAL(8,2),  -- Total amount collected in trip for NYS congestion surcharge
+    airport_fee DECIMAL(8,2),           -- $1.25 for pick up only at LaGuardia and John F. Kennedy Airports
+    cbd_congestion_fee DECIMAL(8,2),     -- CBD (Central Business District) congestion fee
+    row_hash VARCHAR(64) UNIQUE          -- SHA-256 hash of all row values prevents any duplicate row
+);
+CREATE TABLE taxi_zone_lookup (
+    locationid INTEGER PRIMARY KEY,
+    borough VARCHAR(50) NOT NULL,
+    zone VARCHAR(100) NOT NULL,
+    service_zone VARCHAR(50) NOT NULL
+);
+CREATE TABLE taxi_zone_shapes (
+    objectid INTEGER PRIMARY KEY,
+    locationid INTEGER NOT NULL,
+    zone VARCHAR(100) NOT NULL,
+    borough VARCHAR(50) NOT NULL,
+    shape_leng DECIMAL(15,6),
+    shape_area DECIMAL(15,6),
+    geometry GEOMETRY(MULTIPOLYGON, 2263), -- NYC State Plane coordinate system
+    FOREIGN KEY (locationid) REFERENCES taxi_zone_lookup(locationid)
+);
+CREATE INDEX idx_taxi_zone_shapes_geometry ON taxi_zone_shapes USING GIST (geometry);
+CREATE TABLE rate_code_lookup (
+    ratecodeid INTEGER PRIMARY KEY,
+    rate_code_desc VARCHAR(50)
+);
+CREATE TABLE payment_type_lookup (
+    payment_type INTEGER PRIMARY KEY,
+    payment_type_desc VARCHAR(50)
+);
+CREATE TABLE vendor_lookup (
+    vendorid INTEGER PRIMARY KEY,
+    vendor_name VARCHAR(100)
+);
+CREATE TABLE data_processing_log (
+    id SERIAL PRIMARY KEY,
+    data_year INTEGER NOT NULL,
+    data_month INTEGER NOT NULL,
+    file_name VARCHAR(200) NOT NULL,
+    records_loaded BIGINT NOT NULL DEFAULT 0,
+    processing_started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    processing_completed_at TIMESTAMP,
+    backfill_config VARCHAR(100),
+    status VARCHAR(20) DEFAULT 'in_progress',
+    CONSTRAINT unique_month_processing UNIQUE (data_year, data_month),
+    CONSTRAINT valid_month CHECK (data_month BETWEEN 1 AND 12),
+    CONSTRAINT valid_status CHECK (status IN ('in_progress', 'completed', 'failed'))
+);
+INSERT INTO rate_code_lookup (ratecodeid, rate_code_desc) VALUES
+(1, 'Standard rate'),
+(2, 'JFK'),
+(3, 'Newark'),
+(4, 'Nassau or Westchester'),
+(5, 'Negotiated fare'),
+(6, 'Group ride');
+INSERT INTO payment_type_lookup (payment_type, payment_type_desc) VALUES
+(1, 'Credit card'),
+(2, 'Cash'),
+(3, 'No charge'),
+(4, 'Dispute'),
+(5, 'Unknown'),
+(6, 'Voided trip');
+INSERT INTO vendor_lookup (vendorid, vendor_name) VALUES
+(1, 'Creative Mobile Technologies'),
+(2, 'VeriFone Inc.');
+CREATE INDEX idx_yellow_taxi_pickup_datetime ON yellow_taxi_trips (tpep_pickup_datetime);
+CREATE INDEX idx_yellow_taxi_dropoff_datetime ON yellow_taxi_trips (tpep_dropoff_datetime);
+CREATE INDEX idx_yellow_taxi_pickup_location ON yellow_taxi_trips (pulocationid);
+CREATE INDEX idx_yellow_taxi_dropoff_location ON yellow_taxi_trips (dolocationid);
+CREATE INDEX idx_yellow_taxi_payment_type ON yellow_taxi_trips (payment_type);
+CREATE INDEX idx_yellow_taxi_vendor ON yellow_taxi_trips (vendorid);
+CREATE INDEX idx_yellow_taxi_trip_distance ON yellow_taxi_trips (trip_distance);
+CREATE INDEX idx_yellow_taxi_total_amount ON yellow_taxi_trips (total_amount);
+CREATE INDEX idx_yellow_taxi_datetime_vendor ON yellow_taxi_trips (tpep_pickup_datetime, vendorid);
+CREATE INDEX idx_yellow_taxi_location_datetime ON yellow_taxi_trips (pulocationid, tpep_pickup_datetime);
+CREATE INDEX idx_yellow_taxi_date_payment ON yellow_taxi_trips (DATE(tpep_pickup_datetime), payment_type);]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-09-25 06:52:23,847 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 2: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: SET search_path = nyc_taxi, public]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-25 06:52:23,847 - ERROR - Statement was: SET search_path = nyc_taxi, public...
+2025-09-25 06:52:23,847 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 12: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO payment_type_lookup (payment_type, payment_type_desc) VALUES
+(1, 'Credit card'),
+(2, 'Cash'),
+(3, 'No charge'),
+(4, 'Dispute'),
+(5, 'Unknown'),
+(6, 'Voided trip')]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-25 06:52:23,848 - ERROR - Statement was: INSERT INTO payment_type_lookup (payment_type, payment_type_desc) VALUES
+(1, 'Credit card'),
+(2, 'Ca...
+2025-09-25 06:52:23,848 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 13: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO vendor_lookup (vendorid, vendor_name) VALUES
+(1, 'Creative Mobile Technologies'),
+(2, 'VeriFone Inc.')]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-25 06:52:23,849 - ERROR - Statement was: INSERT INTO vendor_lookup (vendorid, vendor_name) VALUES
+(1, 'Creative Mobile Technologies'),
+(2, 'V...
+2025-09-25 06:52:23,849 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 15: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: CREATE INDEX idx_yellow_taxi_dropoff_datetime ON yellow_taxi_trips (tpep_dropoff_datetime)]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-25 06:52:23,850 - ERROR - Statement was: CREATE INDEX idx_yellow_taxi_dropoff_datetime ON yellow_taxi_trips (tpep_dropoff_datetime)...
+2025-09-25 06:52:23,850 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 16: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: CREATE INDEX idx_yellow_taxi_pickup_location ON yellow_taxi_trips (pulocationid)]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-25 06:52:23,850 - ERROR - Statement was: CREATE INDEX idx_yellow_taxi_pickup_location ON yellow_taxi_trips (pulocationid)...
+2025-09-25 06:52:23,851 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 17: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: CREATE INDEX idx_yellow_taxi_dropoff_location ON yellow_taxi_trips (dolocationid)]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-25 06:52:23,851 - ERROR - Statement was: CREATE INDEX idx_yellow_taxi_dropoff_location ON yellow_taxi_trips (dolocationid)...
+2025-09-25 06:52:23,852 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 18: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: CREATE INDEX idx_yellow_taxi_payment_type ON yellow_taxi_trips (payment_type)]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-25 06:52:23,852 - ERROR - Statement was: CREATE INDEX idx_yellow_taxi_payment_type ON yellow_taxi_trips (payment_type)...
+2025-09-25 06:52:23,853 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 19: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: CREATE INDEX idx_yellow_taxi_vendor ON yellow_taxi_trips (vendorid)]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-25 06:52:23,853 - ERROR - Statement was: CREATE INDEX idx_yellow_taxi_vendor ON yellow_taxi_trips (vendorid)...
+2025-09-25 06:52:23,854 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 20: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: CREATE INDEX idx_yellow_taxi_trip_distance ON yellow_taxi_trips (trip_distance)]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-25 06:52:23,854 - ERROR - Statement was: CREATE INDEX idx_yellow_taxi_trip_distance ON yellow_taxi_trips (trip_distance)...
+2025-09-25 06:52:23,855 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 21: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: CREATE INDEX idx_yellow_taxi_total_amount ON yellow_taxi_trips (total_amount)]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-25 06:52:23,855 - ERROR - Statement was: CREATE INDEX idx_yellow_taxi_total_amount ON yellow_taxi_trips (total_amount)...
+2025-09-25 06:52:23,855 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 23: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: CREATE INDEX idx_yellow_taxi_location_datetime ON yellow_taxi_trips (pulocationid, tpep_pickup_datetime)]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-25 06:52:23,856 - ERROR - Statement was: CREATE INDEX idx_yellow_taxi_location_datetime ON yellow_taxi_trips (pulocationid, tpep_pickup_datet...
+2025-09-25 06:52:23,856 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 24: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: CREATE INDEX idx_yellow_taxi_date_payment ON yellow_taxi_trips (DATE(tpep_pickup_datetime), payment_type)]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-25 06:52:23,857 - ERROR - Statement was: CREATE INDEX idx_yellow_taxi_date_payment ON yellow_taxi_trips (DATE(tpep_pickup_datetime), payment_...
+2025-09-25 06:52:23,857 - INFO - ✅ Completed: 01-nyc-taxi-schema.sql
+2025-09-25 06:52:23,857 - INFO - ✅ All SQL scripts executed successfully!
+2025-09-25 06:52:23,858 - INFO - 📍 Step 2: Loading Taxi Zone Reference Data
+2025-09-25 06:52:23,858 - INFO - 📍 Loading taxi zone reference data...
+2025-09-25 06:52:23,858 - INFO - 🧹 Cleaning dictionary tables for fresh data load...
+2025-09-25 06:52:23,915 - INFO - ✅ Dictionary tables cleaned
+2025-09-25 06:52:23,915 - INFO - 📥 Downloading taxi zone reference data...
+2025-09-25 06:52:23,916 - INFO - 📥 Downloading taxi zone reference data...
+2025-09-25 06:52:23,918 - INFO - 📥 Downloading taxi_zone_lookup.csv...
+2025-09-25 06:52:24,044 - INFO - ✅ Downloaded: taxi_zone_lookup.csv
+2025-09-25 06:52:24,044 - INFO - 📥 Downloading taxi_zones.zip...
+2025-09-25 06:52:24,180 - INFO - ✅ Downloaded: taxi_zones.zip
+2025-09-25 06:52:24,255 - INFO - ✅ Extracted shapefile components
+2025-09-25 06:52:24,257 - INFO - 🗑️ Cleaned up ZIP file
+2025-09-25 06:52:24,263 - INFO - ✅ All taxi zone reference data files are available
+2025-09-25 06:52:24,289 - INFO - ✅ Loaded 263 taxi zones from CSV
+2025-09-25 06:52:24,291 - INFO - 🗺️ Loading taxi zone shapes...
+2025-09-25 06:52:24,699 - INFO - ✅ Loaded 263 taxi zone shapes
+2025-09-25 06:52:24,700 - INFO - 📚 Reloading lookup tables...
+2025-09-25 06:52:24,704 - INFO - ✅ Lookup tables reloaded
+2025-09-25 06:52:24,705 - INFO - 🚕 Step 3: Loading Complete Trip Data
+2025-09-25 06:52:24,705 - INFO - 🚕 Loading trip data...
+2025-09-25 06:52:24,705 - INFO - 🔄 Backfill mode enabled: last_12_months
+2025-09-25 06:52:24,705 - INFO - 📅 Backfill months: 12 months from (2024, 10) to (2025, 9)
+2025-09-25 06:52:24,707 - INFO - 📅 Processing 2024-10...
+2025-09-25 06:52:24,709 - INFO - 🔄 2024-10: Already processed (3,833,769 records at 2025-09-24 21:09:35.418274)
+2025-09-25 06:52:24,709 - INFO - 📅 Processing 2024-11...
+2025-09-25 06:52:24,710 - INFO - 🔄 2024-11: Already processed (3,646,369 records at 2025-09-24 21:22:56.675782)
+2025-09-25 06:52:24,711 - INFO - 📅 Processing 2024-12...
+2025-09-25 06:52:24,711 - INFO - 🔄 2024-12: Already processed (3,668,371 records at 2025-09-24 21:36:31.917994)
+2025-09-25 06:52:24,712 - INFO - 📅 Processing 2025-01...
+2025-09-25 06:52:24,712 - INFO - 🔄 2025-01: Already processed (3,475,226 records at 2025-09-24 21:50:09.299623)
+2025-09-25 06:52:24,713 - INFO - 📅 Processing 2025-02...
+2025-09-25 06:52:24,713 - WARNING - ⚠️ 2025-02: Previous processing incomplete, will retry
+2025-09-25 06:52:24,721 - INFO - 📂 File already exists: yellow_tripdata_2025-02.parquet
+2025-09-25 06:52:24,726 - INFO - 📝 Started processing log for 2025-02
+2025-09-25 06:52:24,726 - INFO - 📥 Loading yellow_tripdata_2025-02.parquet...
+2025-09-25 06:52:25,368 - INFO - 📊 File contains 3,577,543 rows
+2025-09-25 06:52:25,966 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-25 06:53:30,615 - INFO - ✅ Generated 3,577,543 unique row hashes
+2025-09-25 06:53:41,367 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 5/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:53:52,400 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 10/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:54:03,405 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 15/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:54:14,403 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 20/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:54:26,384 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 25/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:54:37,988 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 30/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:54:49,754 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 35/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:55:01,674 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 40/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:55:13,534 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 45/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:55:25,506 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 50/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:55:37,297 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 55/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:55:49,089 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 60/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:56:01,030 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 65/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:56:12,705 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 70/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:56:24,449 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 75/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:56:36,078 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 80/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:56:47,616 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 85/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:56:59,470 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 90/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:57:11,235 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 95/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:57:23,349 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 100/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:57:35,092 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 105/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:57:46,775 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 110/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:57:58,869 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 115/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:58:10,985 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 120/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:58:23,073 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 125/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:58:35,085 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 130/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:58:47,084 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 135/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:58:58,787 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 140/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:59:09,836 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 145/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:59:20,871 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 150/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:59:32,096 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 155/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:59:43,390 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 160/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 06:59:54,686 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 165/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 07:00:05,766 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 170/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 07:00:16,963 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 175/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 07:00:28,383 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 180/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 07:00:40,276 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 185/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 07:00:52,370 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 190/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 07:01:03,998 - WARNING - ⚠️ yellow_tripdata_2025-02.parquet: Chunk 195/358 - 10000 duplicates skipped (hash-based)
+2025-09-25 07:01:18,883 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 2,000,000 rows (200/358 chunks)
+2025-09-25 07:01:36,421 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 2,050,000 rows (205/358 chunks)
+2025-09-25 07:01:51,112 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 2,100,000 rows (210/358 chunks)
+2025-09-25 07:02:06,598 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 2,150,000 rows (215/358 chunks)
+2025-09-25 07:02:20,181 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 2,200,000 rows (220/358 chunks)
+2025-09-25 07:02:33,623 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 2,250,000 rows (225/358 chunks)
+2025-09-25 07:02:45,991 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 2,300,000 rows (230/358 chunks)
+2025-09-25 07:02:57,256 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 2,350,000 rows (235/358 chunks)
+2025-09-25 07:03:08,511 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 2,400,000 rows (240/358 chunks)
+2025-09-25 07:03:19,529 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 2,450,000 rows (245/358 chunks)
+2025-09-25 07:03:31,269 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 2,500,000 rows (250/358 chunks)
+2025-09-25 07:03:42,377 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 2,550,000 rows (255/358 chunks)
+2025-09-25 07:03:53,627 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 2,600,000 rows (260/358 chunks)
+2025-09-25 07:04:05,475 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 2,650,000 rows (265/358 chunks)
+2025-09-25 07:04:17,543 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 2,700,000 rows (270/358 chunks)
+2025-09-25 07:04:30,228 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 2,750,000 rows (275/358 chunks)
+2025-09-25 07:04:43,181 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 2,800,000 rows (280/358 chunks)
+2025-09-25 07:04:55,263 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 2,850,000 rows (285/358 chunks)
+2025-09-25 07:05:07,380 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 2,900,000 rows (290/358 chunks)
+2025-09-25 07:05:19,620 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 2,950,000 rows (295/358 chunks)
+2025-09-25 07:05:31,913 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 3,000,000 rows (300/358 chunks)
+2025-09-25 07:05:44,145 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 3,050,000 rows (305/358 chunks)
+2025-09-25 07:05:55,261 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 3,100,000 rows (310/358 chunks)
+2025-09-25 07:06:06,626 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 3,150,000 rows (315/358 chunks)
+2025-09-25 07:06:17,800 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 3,200,000 rows (320/358 chunks)
+2025-09-25 07:06:29,034 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 3,250,000 rows (325/358 chunks)
+2025-09-25 07:06:40,092 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 3,300,000 rows (330/358 chunks)
+2025-09-25 07:06:51,521 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 3,350,000 rows (335/358 chunks)
+2025-09-25 07:07:02,744 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 3,400,000 rows (340/358 chunks)
+2025-09-25 07:07:13,624 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 3,450,000 rows (345/358 chunks)
+2025-09-25 07:07:24,872 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 3,500,000 rows (350/358 chunks)
+2025-09-25 07:07:35,797 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 3,550,000 rows (355/358 chunks)
+2025-09-25 07:07:41,693 - INFO - 📥 yellow_tripdata_2025-02.parquet: Loaded 3,577,543 rows (358/358 chunks)
+2025-09-25 07:07:41,693 - INFO - ✅ yellow_tripdata_2025-02.parquet: Loaded 1,587,543 new rows, skipped 1,990,000 duplicates
+2025-09-25 07:07:41,756 - INFO - ✅ Completed processing log for 2025-02: 1,587,543 records
+2025-09-25 07:07:41,756 - INFO - ✅ 2025-02: 1,587,543 rows loaded (total: 1,587,543)
+2025-09-25 07:07:41,757 - INFO - 📅 Processing 2025-03...
+2025-09-25 07:07:41,761 - INFO - 📥 Downloading yellow_tripdata_2025-03.parquet from NYC TLC...
+2025-09-25 07:07:42,884 - INFO - 📥 Progress: 15.0% (10,485,760/69,964,745 bytes)
+2025-09-25 07:07:43,852 - INFO - 📥 Progress: 30.0% (20,971,520/69,964,745 bytes)
+2025-09-25 07:07:44,822 - INFO - 📥 Progress: 45.0% (31,457,280/69,964,745 bytes)
+2025-09-25 07:07:45,794 - INFO - 📥 Progress: 59.9% (41,943,040/69,964,745 bytes)
+2025-09-25 07:07:46,773 - INFO - 📥 Progress: 74.9% (52,428,800/69,964,745 bytes)
+2025-09-25 07:07:47,737 - INFO - 📥 Progress: 89.9% (62,914,560/69,964,745 bytes)
+2025-09-25 07:07:48,402 - INFO - ✅ Downloaded: yellow_tripdata_2025-03.parquet (69,964,745 bytes)
+2025-09-25 07:07:48,436 - INFO - 📝 Started processing log for 2025-03
+2025-09-25 07:07:48,436 - INFO - 📥 Loading yellow_tripdata_2025-03.parquet...
+2025-09-25 07:07:48,852 - INFO - 📊 File contains 4,145,257 rows
+2025-09-25 07:07:49,522 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-25 07:09:01,964 - INFO - ✅ Generated 4,145,257 unique row hashes
+2025-09-25 07:09:12,603 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 50,000 rows (5/415 chunks)
+2025-09-25 07:09:23,577 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 100,000 rows (10/415 chunks)
+2025-09-25 07:09:34,645 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 150,000 rows (15/415 chunks)
+2025-09-25 07:09:45,120 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 200,000 rows (20/415 chunks)
+2025-09-25 07:09:55,867 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 250,000 rows (25/415 chunks)
+2025-09-25 07:10:06,970 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 300,000 rows (30/415 chunks)
+2025-09-25 07:10:18,105 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 350,000 rows (35/415 chunks)
+2025-09-25 07:10:28,694 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 400,000 rows (40/415 chunks)
+2025-09-25 07:10:39,426 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 450,000 rows (45/415 chunks)
+2025-09-25 07:10:49,907 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 500,000 rows (50/415 chunks)
+2025-09-25 07:11:00,989 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 550,000 rows (55/415 chunks)
+2025-09-25 07:11:12,183 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 600,000 rows (60/415 chunks)
+2025-09-25 07:11:23,467 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 650,000 rows (65/415 chunks)
+2025-09-25 07:11:34,322 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 700,000 rows (70/415 chunks)
+2025-09-25 07:11:45,346 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 750,000 rows (75/415 chunks)
+2025-09-25 07:11:56,433 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 800,000 rows (80/415 chunks)
+2025-09-25 07:12:07,308 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 850,000 rows (85/415 chunks)
+2025-09-25 07:12:18,101 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 900,000 rows (90/415 chunks)
+2025-09-25 07:12:28,866 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 950,000 rows (95/415 chunks)
+2025-09-25 07:12:39,585 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 1,000,000 rows (100/415 chunks)
+2025-09-25 07:12:50,150 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 1,050,000 rows (105/415 chunks)
+2025-09-25 07:13:00,892 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 1,100,000 rows (110/415 chunks)
+2025-09-25 07:13:11,831 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 1,150,000 rows (115/415 chunks)
+2025-09-25 07:13:22,093 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 1,200,000 rows (120/415 chunks)
+2025-09-25 07:13:32,919 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 1,250,000 rows (125/415 chunks)
+2025-09-25 07:13:43,669 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 1,300,000 rows (130/415 chunks)
+2025-09-25 07:13:54,469 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 1,350,000 rows (135/415 chunks)
+2025-09-25 07:14:05,138 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 1,400,000 rows (140/415 chunks)
+2025-09-25 07:14:16,016 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 1,450,000 rows (145/415 chunks)
+2025-09-25 07:14:26,814 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 1,500,000 rows (150/415 chunks)
+2025-09-25 07:14:37,485 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 1,550,000 rows (155/415 chunks)
+2025-09-25 07:14:48,184 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 1,600,000 rows (160/415 chunks)
+2025-09-25 07:14:58,962 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 1,650,000 rows (165/415 chunks)
+2025-09-25 07:15:09,708 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 1,700,000 rows (170/415 chunks)
+2025-09-25 07:15:20,549 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 1,750,000 rows (175/415 chunks)
+2025-09-25 07:15:32,178 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 1,800,000 rows (180/415 chunks)
+2025-09-25 07:15:42,710 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 1,850,000 rows (185/415 chunks)
+2025-09-25 07:15:53,443 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 1,900,000 rows (190/415 chunks)
+2025-09-25 07:16:04,210 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 1,950,000 rows (195/415 chunks)
+2025-09-25 07:16:14,950 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 2,000,000 rows (200/415 chunks)
+2025-09-25 07:16:25,646 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 2,050,000 rows (205/415 chunks)
+2025-09-25 07:16:36,431 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 2,100,000 rows (210/415 chunks)
+2025-09-25 07:16:46,784 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 2,150,000 rows (215/415 chunks)
+2025-09-25 07:16:57,714 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 2,200,000 rows (220/415 chunks)
+2025-09-25 07:17:08,598 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 2,250,000 rows (225/415 chunks)
+2025-09-25 07:17:19,327 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 2,300,000 rows (230/415 chunks)
+2025-09-25 07:17:30,266 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 2,350,000 rows (235/415 chunks)
+2025-09-25 07:17:41,119 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 2,400,000 rows (240/415 chunks)
+2025-09-25 07:17:51,566 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 2,450,000 rows (245/415 chunks)
+2025-09-25 07:18:02,721 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 2,500,000 rows (250/415 chunks)
+2025-09-25 07:18:13,515 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 2,550,000 rows (255/415 chunks)
+2025-09-25 07:18:24,520 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 2,600,000 rows (260/415 chunks)
+2025-09-25 07:18:35,613 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 2,650,000 rows (265/415 chunks)
+2025-09-25 07:18:47,987 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 2,700,000 rows (270/415 chunks)
+2025-09-25 07:18:59,751 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 2,750,000 rows (275/415 chunks)
+2025-09-25 07:19:11,693 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 2,800,000 rows (280/415 chunks)
+2025-09-25 07:19:22,954 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 2,850,000 rows (285/415 chunks)
+2025-09-25 07:19:33,597 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 2,900,000 rows (290/415 chunks)
+2025-09-25 07:19:45,935 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 2,950,000 rows (295/415 chunks)
+2025-09-25 07:19:58,036 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 3,000,000 rows (300/415 chunks)
+2025-09-25 07:20:09,691 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 3,050,000 rows (305/415 chunks)
+2025-09-25 07:20:20,421 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 3,100,000 rows (310/415 chunks)
+2025-09-25 07:20:32,266 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 3,150,000 rows (315/415 chunks)
+2025-09-25 07:20:44,179 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 3,200,000 rows (320/415 chunks)
+2025-09-25 07:20:57,454 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 3,250,000 rows (325/415 chunks)
+2025-09-25 07:21:08,804 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 3,300,000 rows (330/415 chunks)
+2025-09-25 07:21:20,206 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 3,350,000 rows (335/415 chunks)
+2025-09-25 07:21:32,110 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 3,400,000 rows (340/415 chunks)
+2025-09-25 07:21:45,614 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 3,450,000 rows (345/415 chunks)
+2025-09-25 07:21:57,161 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 3,500,000 rows (350/415 chunks)
+2025-09-25 07:22:08,803 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 3,550,000 rows (355/415 chunks)
+2025-09-25 07:22:21,331 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 3,600,000 rows (360/415 chunks)
+2025-09-25 07:22:32,690 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 3,650,000 rows (365/415 chunks)
+2025-09-25 07:22:43,920 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 3,700,000 rows (370/415 chunks)
+2025-09-25 07:22:55,921 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 3,750,000 rows (375/415 chunks)
+2025-09-25 07:23:07,457 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 3,800,000 rows (380/415 chunks)
+2025-09-25 07:23:19,039 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 3,850,000 rows (385/415 chunks)
+2025-09-25 07:23:30,352 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 3,900,000 rows (390/415 chunks)
+2025-09-25 07:23:41,568 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 3,950,000 rows (395/415 chunks)
+2025-09-25 07:23:52,559 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 4,000,000 rows (400/415 chunks)
+2025-09-25 07:24:04,527 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 4,050,000 rows (405/415 chunks)
+2025-09-25 07:24:16,543 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 4,100,000 rows (410/415 chunks)
+2025-09-25 07:24:26,817 - INFO - 📥 yellow_tripdata_2025-03.parquet: Loaded 4,145,257 rows (415/415 chunks)
+2025-09-25 07:24:26,817 - INFO - ✅ yellow_tripdata_2025-03.parquet: Completed loading 4,145,257 rows
+2025-09-25 07:24:26,893 - INFO - ✅ Completed processing log for 2025-03: 4,145,257 records
+2025-09-25 07:24:26,894 - INFO - ✅ 2025-03: 4,145,257 rows loaded (total: 5,732,800)
+2025-09-25 07:24:26,894 - INFO - 📅 Processing 2025-04...
+2025-09-25 07:24:26,898 - INFO - 📥 Downloading yellow_tripdata_2025-04.parquet from NYC TLC...
+2025-09-25 07:24:27,969 - INFO - 📥 Progress: 15.6% (10,485,760/67,352,824 bytes)
+2025-09-25 07:24:28,926 - INFO - 📥 Progress: 31.1% (20,971,520/67,352,824 bytes)
+2025-09-25 07:24:29,875 - INFO - 📥 Progress: 46.7% (31,457,280/67,352,824 bytes)
+2025-09-25 07:24:30,985 - INFO - 📥 Progress: 62.3% (41,943,040/67,352,824 bytes)
+2025-09-25 07:24:31,935 - INFO - 📥 Progress: 77.8% (52,428,800/67,352,824 bytes)
+2025-09-25 07:24:32,887 - INFO - 📥 Progress: 93.4% (62,914,560/67,352,824 bytes)
+2025-09-25 07:24:33,308 - INFO - ✅ Downloaded: yellow_tripdata_2025-04.parquet (67,352,824 bytes)
+2025-09-25 07:24:33,312 - INFO - 📝 Started processing log for 2025-04
+2025-09-25 07:24:33,313 - INFO - 📥 Loading yellow_tripdata_2025-04.parquet...
+2025-09-25 07:24:33,747 - INFO - 📊 File contains 3,970,553 rows
+2025-09-25 07:24:34,392 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-25 07:25:43,971 - INFO - ✅ Generated 3,970,553 unique row hashes
+2025-09-25 07:25:54,325 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 50,000 rows (5/398 chunks)
+2025-09-25 07:26:05,330 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 100,000 rows (10/398 chunks)
+2025-09-25 07:26:16,402 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 150,000 rows (15/398 chunks)
+2025-09-25 07:26:27,862 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 200,000 rows (20/398 chunks)
+2025-09-25 07:26:38,911 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 250,000 rows (25/398 chunks)
+2025-09-25 07:26:50,220 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 300,000 rows (30/398 chunks)
+2025-09-25 07:27:01,280 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 350,000 rows (35/398 chunks)
+2025-09-25 07:27:12,867 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 400,000 rows (40/398 chunks)
+2025-09-25 07:27:23,734 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 450,000 rows (45/398 chunks)
+2025-09-25 07:27:34,345 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 500,000 rows (50/398 chunks)
+2025-09-25 07:27:45,085 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 550,000 rows (55/398 chunks)
+2025-09-25 07:27:55,868 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 600,000 rows (60/398 chunks)
+2025-09-25 07:28:06,652 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 650,000 rows (65/398 chunks)
+2025-09-25 07:28:17,417 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 700,000 rows (70/398 chunks)
+2025-09-25 07:28:28,407 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 750,000 rows (75/398 chunks)
+2025-09-25 07:28:39,454 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 800,000 rows (80/398 chunks)
+2025-09-25 07:28:50,246 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 850,000 rows (85/398 chunks)
+2025-09-25 07:29:01,203 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 900,000 rows (90/398 chunks)
+2025-09-25 07:29:12,136 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 950,000 rows (95/398 chunks)
+2025-09-25 07:29:23,004 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 1,000,000 rows (100/398 chunks)
+2025-09-25 07:29:33,888 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 1,050,000 rows (105/398 chunks)
+2025-09-25 07:29:45,138 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 1,100,000 rows (110/398 chunks)
+2025-09-25 07:29:55,956 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 1,150,000 rows (115/398 chunks)
+2025-09-25 07:30:06,977 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 1,200,000 rows (120/398 chunks)
+2025-09-25 07:30:17,757 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 1,250,000 rows (125/398 chunks)
+2025-09-25 07:30:28,764 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 1,300,000 rows (130/398 chunks)
+2025-09-25 07:30:39,888 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 1,350,000 rows (135/398 chunks)
+2025-09-25 07:30:51,019 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 1,400,000 rows (140/398 chunks)
+2025-09-25 07:31:01,718 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 1,450,000 rows (145/398 chunks)
+2025-09-25 07:31:12,667 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 1,500,000 rows (150/398 chunks)
+2025-09-25 07:31:23,762 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 1,550,000 rows (155/398 chunks)
+2025-09-25 07:31:34,779 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 1,600,000 rows (160/398 chunks)
+2025-09-25 07:31:45,317 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 1,650,000 rows (165/398 chunks)
+2025-09-25 07:31:56,476 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 1,700,000 rows (170/398 chunks)
+2025-09-25 07:32:07,235 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 1,750,000 rows (175/398 chunks)
+2025-09-25 07:32:18,115 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 1,800,000 rows (180/398 chunks)
+2025-09-25 07:32:29,020 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 1,850,000 rows (185/398 chunks)
+2025-09-25 07:32:39,992 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 1,900,000 rows (190/398 chunks)
+2025-09-25 07:32:51,056 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 1,950,000 rows (195/398 chunks)
+2025-09-25 07:33:01,061 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 2,000,000 rows (200/398 chunks)
+2025-09-25 07:33:12,211 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 2,050,000 rows (205/398 chunks)
+2025-09-25 07:33:24,135 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 2,100,000 rows (210/398 chunks)
+2025-09-25 07:33:34,957 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 2,150,000 rows (215/398 chunks)
+2025-09-25 07:33:45,605 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 2,200,000 rows (220/398 chunks)
+2025-09-25 07:33:56,410 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 2,250,000 rows (225/398 chunks)
+2025-09-25 07:34:07,142 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 2,300,000 rows (230/398 chunks)
+2025-09-25 07:34:18,165 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 2,350,000 rows (235/398 chunks)
+2025-09-25 07:34:29,073 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 2,400,000 rows (240/398 chunks)
+2025-09-25 07:34:39,184 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 2,450,000 rows (245/398 chunks)
+2025-09-25 07:34:50,207 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 2,500,000 rows (250/398 chunks)
+2025-09-25 07:35:00,870 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 2,550,000 rows (255/398 chunks)
+2025-09-25 07:35:11,326 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 2,600,000 rows (260/398 chunks)
+2025-09-25 07:35:21,774 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 2,650,000 rows (265/398 chunks)
+2025-09-25 07:35:32,295 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 2,700,000 rows (270/398 chunks)
+2025-09-25 07:35:43,317 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 2,750,000 rows (275/398 chunks)
+2025-09-25 07:35:54,119 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 2,800,000 rows (280/398 chunks)
+2025-09-25 07:36:04,845 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 2,850,000 rows (285/398 chunks)
+2025-09-25 07:36:15,404 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 2,900,000 rows (290/398 chunks)
+2025-09-25 07:36:25,924 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 2,950,000 rows (295/398 chunks)
+2025-09-25 07:36:36,654 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 3,000,000 rows (300/398 chunks)
+2025-09-25 07:36:48,176 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 3,050,000 rows (305/398 chunks)
+2025-09-25 07:36:58,511 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 3,100,000 rows (310/398 chunks)
+2025-09-25 07:37:09,812 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 3,150,000 rows (315/398 chunks)
+2025-09-25 07:37:20,430 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 3,200,000 rows (320/398 chunks)
+2025-09-25 07:37:31,484 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 3,250,000 rows (325/398 chunks)
+2025-09-25 07:37:42,572 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 3,300,000 rows (330/398 chunks)
+2025-09-25 07:37:52,822 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 3,350,000 rows (335/398 chunks)
+2025-09-25 07:38:04,198 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 3,400,000 rows (340/398 chunks)
+2025-09-25 07:38:16,588 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 3,450,000 rows (345/398 chunks)
+2025-09-25 07:38:28,334 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 3,500,000 rows (350/398 chunks)
+2025-09-25 07:38:38,617 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 3,550,000 rows (355/398 chunks)
+2025-09-25 07:38:50,184 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 3,600,000 rows (360/398 chunks)
+2025-09-25 07:39:01,705 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 3,650,000 rows (365/398 chunks)
+2025-09-25 07:39:12,399 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 3,700,000 rows (370/398 chunks)
+2025-09-25 07:39:22,920 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 3,750,000 rows (375/398 chunks)
+2025-09-25 07:39:34,011 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 3,800,000 rows (380/398 chunks)
+2025-09-25 07:39:45,625 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 3,850,000 rows (385/398 chunks)
+2025-09-25 07:39:56,322 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 3,900,000 rows (390/398 chunks)
+2025-09-25 07:40:08,877 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 3,950,000 rows (395/398 chunks)
+2025-09-25 07:40:13,274 - INFO - 📥 yellow_tripdata_2025-04.parquet: Loaded 3,970,553 rows (398/398 chunks)
+2025-09-25 07:40:13,274 - INFO - ✅ yellow_tripdata_2025-04.parquet: Completed loading 3,970,553 rows
+2025-09-25 07:40:13,351 - INFO - ✅ Completed processing log for 2025-04: 3,970,553 records
+2025-09-25 07:40:13,351 - INFO - ✅ 2025-04: 3,970,553 rows loaded (total: 9,703,353)
+2025-09-25 07:40:13,352 - INFO - 📅 Processing 2025-05...
+2025-09-25 07:40:13,356 - INFO - 📥 Downloading yellow_tripdata_2025-05.parquet from NYC TLC...
+2025-09-25 07:40:14,822 - INFO - 📥 Progress: 13.5% (10,485,760/77,837,865 bytes)
+2025-09-25 07:40:15,797 - INFO - 📥 Progress: 26.9% (20,971,520/77,837,865 bytes)
+2025-09-25 07:40:16,795 - INFO - 📥 Progress: 40.4% (31,457,280/77,837,865 bytes)
+2025-09-25 07:40:17,755 - INFO - 📥 Progress: 53.9% (41,943,040/77,837,865 bytes)
+2025-09-25 07:40:18,734 - INFO - 📥 Progress: 67.4% (52,428,800/77,837,865 bytes)
+2025-09-25 07:40:19,541 - INFO - 📥 Progress: 80.8% (62,914,560/77,837,865 bytes)
+2025-09-25 07:40:20,492 - INFO - 📥 Progress: 94.3% (73,400,320/77,837,865 bytes)
+2025-09-25 07:40:20,894 - INFO - ✅ Downloaded: yellow_tripdata_2025-05.parquet (77,837,865 bytes)
+2025-09-25 07:40:20,900 - INFO - 📝 Started processing log for 2025-05
+2025-09-25 07:40:20,901 - INFO - 📥 Loading yellow_tripdata_2025-05.parquet...
+2025-09-25 07:40:21,379 - INFO - 📊 File contains 4,591,845 rows
+2025-09-25 07:40:22,123 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-25 07:41:42,182 - INFO - ✅ Generated 4,591,845 unique row hashes
+2025-09-25 07:41:52,459 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 50,000 rows (5/460 chunks)
+2025-09-25 07:42:03,168 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 100,000 rows (10/460 chunks)
+2025-09-25 07:42:13,737 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 150,000 rows (15/460 chunks)
+2025-09-25 07:42:24,152 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 200,000 rows (20/460 chunks)
+2025-09-25 07:42:34,750 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 250,000 rows (25/460 chunks)
+2025-09-25 07:42:45,328 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 300,000 rows (30/460 chunks)
+2025-09-25 07:42:55,778 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 350,000 rows (35/460 chunks)
+2025-09-25 07:43:06,361 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 400,000 rows (40/460 chunks)
+2025-09-25 07:43:16,953 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 450,000 rows (45/460 chunks)
+2025-09-25 07:43:27,394 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 500,000 rows (50/460 chunks)
+2025-09-25 07:43:38,271 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 550,000 rows (55/460 chunks)
+2025-09-25 07:43:48,775 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 600,000 rows (60/460 chunks)
+2025-09-25 07:43:59,892 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 650,000 rows (65/460 chunks)
+2025-09-25 07:44:09,966 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 700,000 rows (70/460 chunks)
+2025-09-25 07:44:20,658 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 750,000 rows (75/460 chunks)
+2025-09-25 07:44:31,403 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 800,000 rows (80/460 chunks)
+2025-09-25 07:44:42,049 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 850,000 rows (85/460 chunks)
+2025-09-25 07:44:52,476 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 900,000 rows (90/460 chunks)
+2025-09-25 07:45:02,748 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 950,000 rows (95/460 chunks)
+2025-09-25 07:45:13,529 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 1,000,000 rows (100/460 chunks)
+2025-09-25 07:45:24,377 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 1,050,000 rows (105/460 chunks)
+2025-09-25 07:45:35,040 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 1,100,000 rows (110/460 chunks)
+2025-09-25 07:45:45,647 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 1,150,000 rows (115/460 chunks)
+2025-09-25 07:45:56,072 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 1,200,000 rows (120/460 chunks)
+2025-09-25 07:46:06,705 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 1,250,000 rows (125/460 chunks)
+2025-09-25 07:46:17,449 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 1,300,000 rows (130/460 chunks)
+2025-09-25 07:46:28,653 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 1,350,000 rows (135/460 chunks)
+2025-09-25 07:46:39,357 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 1,400,000 rows (140/460 chunks)
+2025-09-25 07:46:49,714 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 1,450,000 rows (145/460 chunks)
+2025-09-25 07:47:00,331 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 1,500,000 rows (150/460 chunks)
+2025-09-25 07:47:11,225 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 1,550,000 rows (155/460 chunks)
+2025-09-25 07:47:21,558 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 1,600,000 rows (160/460 chunks)
+2025-09-25 07:47:31,955 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 1,650,000 rows (165/460 chunks)
+2025-09-25 07:47:42,780 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 1,700,000 rows (170/460 chunks)
+2025-09-25 07:47:52,961 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 1,750,000 rows (175/460 chunks)
+2025-09-25 07:48:03,400 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 1,800,000 rows (180/460 chunks)
+2025-09-25 07:48:14,105 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 1,850,000 rows (185/460 chunks)
+2025-09-25 07:48:24,235 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 1,900,000 rows (190/460 chunks)
+2025-09-25 07:48:34,614 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 1,950,000 rows (195/460 chunks)
+2025-09-25 07:48:45,296 - INFO - 📥 yellow_tripdata_2025-05.parquet: Loaded 2,000,000 rows (200/460 chunks)
