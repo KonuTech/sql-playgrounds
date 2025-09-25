@@ -1,6 +1,34 @@
 # SQL Playgrounds with NYC Taxi Data
 
-A production-ready Docker-based SQL playground featuring PostgreSQL 17 + PostGIS 3.5 and PGAdmin with authentic NYC Yellow Taxi trip data. Features automated data backfill system that can load multiple months (3.47+ million records per month) with single-command deployment and unified data management.
+## 🎯 **Perfect for SQL Technical Interviews & Learning**
+
+This playground is an **ideal resource for SQL technical interviews and database skill development**. It features **real-world production data** (3.4M+ records per month) and **comprehensive technical interview questions** covering all levels from mid to senior database engineering roles.
+
+### 📚 **Complete Technical Interview Guide**
+- **15 detailed interview questions** with full answers covering data modeling, ETL, performance optimization, complex analytics, geospatial analysis, data quality, and system architecture
+- **Production-ready scenarios** based on real NYC taxi data challenges
+- **Multi-level difficulty** suitable for mid to senior SQL developers
+- **Complete documentation**: [`docs/interviews/sql-interview-questions.md`](docs/interviews/sql-interview-questions.md)
+
+### 🚀 **Interview Question Categories**
+- **Data Modeling & Schema Design**: Normalization, dimensional modeling, partitioning strategies
+- **Data Ingestion & ETL**: Duplicate prevention, pipeline design, error handling
+- **Performance & Optimization**: Index strategies, query optimization, execution plans
+- **Complex Queries & Analytics**: Window functions, time series analysis, business intelligence
+- **Geospatial & PostGIS**: Spatial analysis, geometric operations, location-based queries
+- **Data Quality & Integrity**: Data validation, anomaly detection, cleaning strategies
+- **System Architecture & Scalability**: High availability, monitoring, production deployment
+
+### 💡 **Why This Playground for Interviews?**
+- **Real Production Data**: 3.4M+ authentic NYC taxi records, not synthetic datasets
+- **Complex Schema**: 21-column fact table with geospatial dimensions and lookup tables
+- **Production Challenges**: Data quality issues, performance optimization, scale considerations
+- **Complete ETL Pipeline**: Hash-based duplicate prevention, chunked processing, error recovery
+- **Advanced Features**: PostGIS spatial analysis, time-series data, multi-borough analytics
+
+---
+
+A production-ready Docker-based SQL playground featuring PostgreSQL 17 + PostGIS 3.5 and PGAdmin with authentic NYC Yellow Taxi trip data. Features automated data backfill system that can load multiple months (3-5 million records per month) with single-command deployment and unified data management.
 
 ## Features
 
@@ -66,7 +94,7 @@ A production-ready Docker-based SQL playground featuring PostgreSQL 17 + PostGIS
 The system features a **flexible backfill system** that automatically downloads and loads data from official NYC TLC sources:
 
 **Data Sources:**
-- **Trip Data**: NYC Yellow Taxi records (2020-2025, 3-5M records per month)
+- **Trip Data**: NYC Yellow Taxi records (2020-2025, 3-5 M records per month)
 - **Zone Data**: 263 official NYC TLC taxi zones with lookup table and PostGIS geometries
 - **Reference Data**: Vendors, payment types, rate codes with proper relationships
 
@@ -511,7 +539,7 @@ LIMIT 4000;
 ### NYC Yellow Taxi Trip Records
 **Source**: [NYC TLC Trip Record Data](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
 - **Format**: Official parquet files (updated monthly by NYC TLC)
-- **Available Data**: 2020-2025 (monthly files, ~60MB/3-5M records per month)
+- **Available Data**: 2020-2025 (monthly files, ~60MB/3-5 M records per month)
 - **Auto-Download**: System automatically downloads configured months from official sources
 - **Coverage**: Complete months of taxi trip data from NYC Taxi & Limousine Commission
 
