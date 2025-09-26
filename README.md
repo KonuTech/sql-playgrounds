@@ -434,10 +434,11 @@ SELECT
         ELSE '20+ miles'
     END as distance_range,
     COUNT(*) as trip_count,
+	ROUND(AVG(trip_distance),2) AS avg_distance,
     ROUND(AVG(total_amount), 2) as avg_fare,
     ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 2) as percentage
 FROM nyc_taxi.yellow_taxi_trips
-WHERE trip_distance > 0
+WHERE trip_distance > 0 AND trip_distance < 500
 GROUP BY
     CASE
         WHEN trip_distance <= 1 THEN '0-1 miles'

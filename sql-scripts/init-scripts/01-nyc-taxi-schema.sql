@@ -127,7 +127,6 @@ INSERT INTO vendor_lookup (vendorid, vendor_name) VALUES
 (2, 'VeriFone Inc.');
 
 -- Taxi zone data will be loaded from CSV and shapefile via Python script
--- Use: uv run python python-scripts/load_reference_data.py
 
 -- Indexes for performance optimization on real NYC taxi data
 CREATE INDEX idx_yellow_taxi_pickup_datetime ON yellow_taxi_trips (tpep_pickup_datetime);

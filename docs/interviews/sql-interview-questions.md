@@ -266,8 +266,9 @@ ORDER BY revenue DESC;
 -- Supporting indexes
 CREATE INDEX idx_trips_recent_valid ON yellow_taxi_trips
 (tpep_pickup_datetime, pulocationid)
-WHERE tpep_pickup_datetime >= CURRENT_DATE - INTERVAL '30 days'
-  AND total_amount > 0;
+WHERE
+-- tpep_pickup_datetime >= CURRENT_DATE - INTERVAL '30 days'AND
+total_amount > 0;
 ```
 
 ---
@@ -334,7 +335,8 @@ WITH daily_trips AS (
         EXTRACT(DOW FROM tpep_pickup_datetime) as day_of_week
     FROM yellow_taxi_trips
     WHERE tpep_pickup_datetime >= CURRENT_DATE - INTERVAL '90 days'
-    GROUP BY DATE(tpep_pickup_datetime)
+    GROUP BY DATE(tpep_pickup_datetime),
+    EXTRACT(DOW FROM tpep_pickup_datetime)
 ),
 rolling_stats AS (
     SELECT

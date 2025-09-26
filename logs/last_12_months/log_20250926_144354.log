@@ -1,0 +1,248 @@
+2025-09-26 14:43:54,574 - INFO - 📝 Logging to file: /sql-scripts/logs/last_12_months/log_20250926_144354.log
+2025-09-26 14:43:54,575 - INFO - 🕒 Execution started at: 2025-09-26T14:43:54.575214
+2025-09-26 14:43:54,575 - INFO - ⚙️ Backfill configuration: last_12_months
+2025-09-26 14:43:54,575 - INFO - 🚀 Starting Complete NYC Taxi Database Initialization...
+2025-09-26 14:43:54,593 - INFO - ✅ PostgreSQL is ready!
+2025-09-26 14:43:54,596 - INFO - 🔧 Step 1: Database Schema Creation
+2025-09-26 14:43:54,596 - INFO - 🗃️ Executing SQL initialization scripts...
+2025-09-26 14:43:54,599 - INFO - 📄 Found 2 SQL scripts to execute
+2025-09-26 14:43:54,614 - INFO - 🔧 Executing: 00-postgis-setup.sql
+2025-09-26 14:43:54,619 - INFO - ✅ Completed: 00-postgis-setup.sql
+2025-09-26 14:43:54,620 - INFO - 🔧 Executing: 01-nyc-taxi-schema.sql
+2025-09-26 14:43:54,623 - WARNING - ⚠️ Block execution failed for 01-nyc-taxi-schema.sql, trying statement by statement: (psycopg2.errors.DuplicateTable) relation "yellow_taxi_trips" already exists
+
+[SQL: CREATE SCHEMA IF NOT EXISTS nyc_taxi;
+SET search_path = nyc_taxi, public;
+CREATE TABLE yellow_taxi_trips (
+    vendorid INTEGER,                    -- Provider that provided the record (1= Creative Mobile Technologies, 2= VeriFone Inc.)
+    tpep_pickup_datetime TIMESTAMP,      -- Date and time when the meter was engaged
+    tpep_dropoff_datetime TIMESTAMP,     -- Date and time when the meter was disengaged
+    passenger_count DECIMAL(4,1),        -- Number of passengers in the vehicle (can be fractional)
+    trip_distance DECIMAL(8,2),          -- Trip distance in miles
+    ratecodeid DECIMAL(4,1),             -- Rate code in effect at the end of the trip
+    store_and_fwd_flag VARCHAR(1),       -- Y= store and forward trip, N= not a store and forward trip
+    pulocationid INTEGER,                -- TLC Taxi Zone where the taximeter was engaged
+    dolocationid INTEGER,                -- TLC Taxi Zone where the taximeter was disengaged
+    payment_type BIGINT,                 -- Payment method (1= Credit card, 2= Cash, 3= No charge, 4= Dispute, 5= Unknown, 6= Voided trip)
+    fare_amount DECIMAL(8,2),           -- Time-and-distance fare calculated by the meter
+    extra DECIMAL(8,2),                 -- Miscellaneous extras and surcharges ($0.50 and $1 rush hour and overnight charges)
+    mta_tax DECIMAL(8,2),               -- $0.50 MTA tax that is automatically triggered based on the metered rate in use
+    tip_amount DECIMAL(8,2),            -- Tip amount (automatically populated for credit card tips, cash tips not included)
+    tolls_amount DECIMAL(8,2),          -- Total amount of all tolls paid in trip
+    improvement_surcharge DECIMAL(8,2),  -- $0.30 improvement surcharge assessed trips at the flag drop
+    total_amount DECIMAL(8,2),          -- Total amount charged to passengers (does not include cash tips)
+    congestion_surcharge DECIMAL(8,2),  -- Total amount collected in trip for NYS congestion surcharge
+    airport_fee DECIMAL(8,2),           -- $1.25 for pick up only at LaGuardia and John F. Kennedy Airports
+    cbd_congestion_fee DECIMAL(8,2),     -- CBD (Central Business District) congestion fee
+    row_hash VARCHAR(64) UNIQUE          -- SHA-256 hash of all row values prevents any duplicate row
+);
+CREATE TABLE taxi_zone_lookup (
+    locationid INTEGER PRIMARY KEY,
+    borough VARCHAR(50) NOT NULL,
+    zone VARCHAR(100) NOT NULL,
+    service_zone VARCHAR(50) NOT NULL
+);
+CREATE TABLE taxi_zone_shapes (
+    objectid INTEGER PRIMARY KEY,
+    locationid INTEGER NOT NULL,
+    zone VARCHAR(100) NOT NULL,
+    borough VARCHAR(50) NOT NULL,
+    shape_leng DECIMAL(15,6),
+    shape_area DECIMAL(15,6),
+    geometry GEOMETRY(MULTIPOLYGON, 2263), -- NYC State Plane coordinate system
+    FOREIGN KEY (locationid) REFERENCES taxi_zone_lookup(locationid)
+);
+CREATE INDEX idx_taxi_zone_shapes_geometry ON taxi_zone_shapes USING GIST (geometry);
+CREATE TABLE rate_code_lookup (
+    ratecodeid INTEGER PRIMARY KEY,
+    rate_code_desc VARCHAR(50)
+);
+CREATE TABLE payment_type_lookup (
+    payment_type INTEGER PRIMARY KEY,
+    payment_type_desc VARCHAR(50)
+);
+CREATE TABLE vendor_lookup (
+    vendorid INTEGER PRIMARY KEY,
+    vendor_name VARCHAR(100)
+);
+CREATE TABLE data_processing_log (
+    id SERIAL PRIMARY KEY,
+    data_year INTEGER NOT NULL,
+    data_month INTEGER NOT NULL,
+    file_name VARCHAR(200) NOT NULL,
+    records_loaded BIGINT NOT NULL DEFAULT 0,
+    processing_started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    processing_completed_at TIMESTAMP,
+    backfill_config VARCHAR(100),
+    status VARCHAR(20) DEFAULT 'in_progress',
+    CONSTRAINT unique_month_processing UNIQUE (data_year, data_month),
+    CONSTRAINT valid_month CHECK (data_month BETWEEN 1 AND 12),
+    CONSTRAINT valid_status CHECK (status IN ('in_progress', 'completed', 'failed'))
+);
+INSERT INTO rate_code_lookup (ratecodeid, rate_code_desc) VALUES
+(1, 'Standard rate'),
+(2, 'JFK'),
+(3, 'Newark'),
+(4, 'Nassau or Westchester'),
+(5, 'Negotiated fare'),
+(6, 'Group ride');
+INSERT INTO payment_type_lookup (payment_type, payment_type_desc) VALUES
+(1, 'Credit card'),
+(2, 'Cash'),
+(3, 'No charge'),
+(4, 'Dispute'),
+(5, 'Unknown'),
+(6, 'Voided trip');
+INSERT INTO vendor_lookup (vendorid, vendor_name) VALUES
+(1, 'Creative Mobile Technologies'),
+(2, 'VeriFone Inc.');
+CREATE INDEX idx_yellow_taxi_pickup_datetime ON yellow_taxi_trips (tpep_pickup_datetime);
+CREATE INDEX idx_yellow_taxi_dropoff_datetime ON yellow_taxi_trips (tpep_dropoff_datetime);
+CREATE INDEX idx_yellow_taxi_pickup_location ON yellow_taxi_trips (pulocationid);
+CREATE INDEX idx_yellow_taxi_dropoff_location ON yellow_taxi_trips (dolocationid);
+CREATE INDEX idx_yellow_taxi_payment_type ON yellow_taxi_trips (payment_type);
+CREATE INDEX idx_yellow_taxi_vendor ON yellow_taxi_trips (vendorid);
+CREATE INDEX idx_yellow_taxi_trip_distance ON yellow_taxi_trips (trip_distance);
+CREATE INDEX idx_yellow_taxi_total_amount ON yellow_taxi_trips (total_amount);
+CREATE INDEX idx_yellow_taxi_datetime_vendor ON yellow_taxi_trips (tpep_pickup_datetime, vendorid);
+CREATE INDEX idx_yellow_taxi_location_datetime ON yellow_taxi_trips (pulocationid, tpep_pickup_datetime);
+CREATE INDEX idx_yellow_taxi_date_payment ON yellow_taxi_trips (DATE(tpep_pickup_datetime), payment_type);]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-09-26 14:43:54,624 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 2: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: SET search_path = nyc_taxi, public]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-26 14:43:54,624 - ERROR - Statement was: SET search_path = nyc_taxi, public...
+2025-09-26 14:43:54,625 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 12: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO payment_type_lookup (payment_type, payment_type_desc) VALUES
+(1, 'Credit card'),
+(2, 'Cash'),
+(3, 'No charge'),
+(4, 'Dispute'),
+(5, 'Unknown'),
+(6, 'Voided trip')]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-26 14:43:54,625 - ERROR - Statement was: INSERT INTO payment_type_lookup (payment_type, payment_type_desc) VALUES
+(1, 'Credit card'),
+(2, 'Ca...
+2025-09-26 14:43:54,625 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 13: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO vendor_lookup (vendorid, vendor_name) VALUES
+(1, 'Creative Mobile Technologies'),
+(2, 'VeriFone Inc.')]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-26 14:43:54,626 - ERROR - Statement was: INSERT INTO vendor_lookup (vendorid, vendor_name) VALUES
+(1, 'Creative Mobile Technologies'),
+(2, 'V...
+2025-09-26 14:43:54,626 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 15: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: CREATE INDEX idx_yellow_taxi_dropoff_datetime ON yellow_taxi_trips (tpep_dropoff_datetime)]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-26 14:43:54,626 - ERROR - Statement was: CREATE INDEX idx_yellow_taxi_dropoff_datetime ON yellow_taxi_trips (tpep_dropoff_datetime)...
+2025-09-26 14:43:54,627 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 16: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: CREATE INDEX idx_yellow_taxi_pickup_location ON yellow_taxi_trips (pulocationid)]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-26 14:43:54,627 - ERROR - Statement was: CREATE INDEX idx_yellow_taxi_pickup_location ON yellow_taxi_trips (pulocationid)...
+2025-09-26 14:43:54,627 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 17: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: CREATE INDEX idx_yellow_taxi_dropoff_location ON yellow_taxi_trips (dolocationid)]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-26 14:43:54,628 - ERROR - Statement was: CREATE INDEX idx_yellow_taxi_dropoff_location ON yellow_taxi_trips (dolocationid)...
+2025-09-26 14:43:54,628 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 18: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: CREATE INDEX idx_yellow_taxi_payment_type ON yellow_taxi_trips (payment_type)]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-26 14:43:54,628 - ERROR - Statement was: CREATE INDEX idx_yellow_taxi_payment_type ON yellow_taxi_trips (payment_type)...
+2025-09-26 14:43:54,629 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 19: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: CREATE INDEX idx_yellow_taxi_vendor ON yellow_taxi_trips (vendorid)]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-26 14:43:54,629 - ERROR - Statement was: CREATE INDEX idx_yellow_taxi_vendor ON yellow_taxi_trips (vendorid)...
+2025-09-26 14:43:54,629 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 20: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: CREATE INDEX idx_yellow_taxi_trip_distance ON yellow_taxi_trips (trip_distance)]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-26 14:43:54,629 - ERROR - Statement was: CREATE INDEX idx_yellow_taxi_trip_distance ON yellow_taxi_trips (trip_distance)...
+2025-09-26 14:43:54,630 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 21: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: CREATE INDEX idx_yellow_taxi_total_amount ON yellow_taxi_trips (total_amount)]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-26 14:43:54,630 - ERROR - Statement was: CREATE INDEX idx_yellow_taxi_total_amount ON yellow_taxi_trips (total_amount)...
+2025-09-26 14:43:54,630 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 23: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: CREATE INDEX idx_yellow_taxi_location_datetime ON yellow_taxi_trips (pulocationid, tpep_pickup_datetime)]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-26 14:43:54,631 - ERROR - Statement was: CREATE INDEX idx_yellow_taxi_location_datetime ON yellow_taxi_trips (pulocationid, tpep_pickup_datet...
+2025-09-26 14:43:54,631 - ERROR - ❌ Error in 01-nyc-taxi-schema.sql statement 24: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: CREATE INDEX idx_yellow_taxi_date_payment ON yellow_taxi_trips (DATE(tpep_pickup_datetime), payment_type)]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+2025-09-26 14:43:54,631 - ERROR - Statement was: CREATE INDEX idx_yellow_taxi_date_payment ON yellow_taxi_trips (DATE(tpep_pickup_datetime), payment_...
+2025-09-26 14:43:54,631 - INFO - ✅ Completed: 01-nyc-taxi-schema.sql
+2025-09-26 14:43:54,632 - INFO - ✅ All SQL scripts executed successfully!
+2025-09-26 14:43:54,632 - INFO - 📍 Step 2: Loading Taxi Zone Reference Data
+2025-09-26 14:43:54,632 - INFO - 📍 Loading taxi zone reference data...
+2025-09-26 14:43:54,632 - INFO - 🧹 Cleaning dictionary tables for fresh data load...
+2025-09-26 14:43:54,682 - INFO - ✅ Dictionary tables cleaned
+2025-09-26 14:43:54,682 - INFO - 📥 Downloading taxi zone reference data...
+2025-09-26 14:43:54,683 - INFO - 📥 Downloading taxi zone reference data...
+2025-09-26 14:43:54,685 - INFO - 📥 Downloading taxi_zone_lookup.csv...
+2025-09-26 14:43:54,834 - INFO - ✅ Downloaded: taxi_zone_lookup.csv
+2025-09-26 14:43:54,834 - INFO - 📥 Downloading taxi_zones.zip...
+2025-09-26 14:43:55,786 - INFO - ✅ Downloaded: taxi_zones.zip
+2025-09-26 14:43:55,857 - INFO - ✅ Extracted shapefile components
+2025-09-26 14:43:55,859 - INFO - 🗑️ Cleaned up ZIP file
+2025-09-26 14:43:55,865 - INFO - ✅ All taxi zone reference data files are available
+2025-09-26 14:43:55,890 - INFO - ✅ Loaded 263 taxi zones from CSV
+2025-09-26 14:43:55,892 - INFO - 🗺️ Loading taxi zone shapes...
+2025-09-26 14:43:56,248 - INFO - ✅ Loaded 263 taxi zone shapes
+2025-09-26 14:43:56,248 - INFO - 📚 Reloading lookup tables...
+2025-09-26 14:43:56,252 - INFO - ✅ Lookup tables reloaded
+2025-09-26 14:43:56,252 - INFO - 🚕 Step 3: Loading Complete Trip Data
+2025-09-26 14:43:56,253 - INFO - 🚕 Loading trip data...
+2025-09-26 14:43:56,253 - INFO - 🔄 Backfill mode enabled: last_12_months
+2025-09-26 14:43:56,253 - INFO - 📅 Backfill months: 12 months from (2024, 10) to (2025, 9)
+2025-09-26 14:43:56,254 - INFO - 📅 Processing 2024-10...
+2025-09-26 14:43:56,256 - INFO - 🔄 2024-10: Already processed (3,833,769 records at 2025-09-24 21:09:35.418274)
+2025-09-26 14:43:56,257 - INFO - 📅 Processing 2024-11...
+2025-09-26 14:43:56,257 - INFO - 🔄 2024-11: Already processed (3,646,369 records at 2025-09-24 21:22:56.675782)
+2025-09-26 14:43:56,258 - INFO - 📅 Processing 2024-12...
+2025-09-26 14:43:56,258 - INFO - 🔄 2024-12: Already processed (3,668,371 records at 2025-09-24 21:36:31.917994)
+2025-09-26 14:43:56,258 - INFO - 📅 Processing 2025-01...
+2025-09-26 14:43:56,259 - INFO - 🔄 2025-01: Already processed (3,475,226 records at 2025-09-24 21:50:09.299623)
+2025-09-26 14:43:56,259 - INFO - 📅 Processing 2025-02...
+2025-09-26 14:43:56,260 - INFO - 🔄 2025-02: Already processed (1,587,543 records at 2025-09-25 07:07:41.753917)
+2025-09-26 14:43:56,260 - INFO - 📅 Processing 2025-03...
+2025-09-26 14:43:56,261 - INFO - 🔄 2025-03: Already processed (4,145,257 records at 2025-09-25 07:24:26.888725)
+2025-09-26 14:43:56,261 - INFO - 📅 Processing 2025-04...
+2025-09-26 14:43:56,262 - INFO - 🔄 2025-04: Already processed (3,970,553 records at 2025-09-25 07:40:13.348522)
+2025-09-26 14:43:56,262 - INFO - 📅 Processing 2025-05...
+2025-09-26 14:43:56,262 - INFO - 🔄 2025-05: Already processed (4,591,845 records at 2025-09-25 07:58:11.930157)
+2025-09-26 14:43:56,263 - INFO - 📅 Processing 2025-06...
+2025-09-26 14:43:56,263 - INFO - 🔄 2025-06: Already processed (4,322,960 records at 2025-09-25 08:15:07.666442)
+2025-09-26 14:43:56,263 - INFO - 📅 Processing 2025-07...
+2025-09-26 14:43:56,264 - INFO - 🔄 2025-07: Already processed (3,898,962 records at 2025-09-25 08:30:24.585282)
+2025-09-26 14:43:56,264 - INFO - 📅 Processing 2025-08...
+2025-09-26 14:43:56,265 - INFO - 🔄 2025-08: Already processed (3,574,091 records at 2025-09-25 08:44:24.964066)
+2025-09-26 14:43:56,265 - INFO - 📅 Processing 2025-09...
+2025-09-26 14:43:56,269 - INFO - 📥 Downloading yellow_tripdata_2025-09.parquet from NYC TLC...
+2025-09-26 14:43:56,687 - ERROR - ❌ Failed to download yellow_tripdata_2025-09.parquet: 403 Client Error: Forbidden for url: https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2025-09.parquet
+2025-09-26 14:43:56,689 - WARNING - ⚠️ Skipping 2025-09 due to download failure
+2025-09-26 14:43:56,689 - INFO - 🎉 Backfill completed: 0 total rows loaded from processed months
+2025-09-26 14:43:56,689 - WARNING - ⚠️ Failed to load trip data, continuing without it
+2025-09-26 14:43:56,689 - INFO - 🔍 Step 4: Data Verification
+2025-09-26 14:43:56,689 - INFO - 🔍 Verifying data load...
+2025-09-26 14:43:56,691 - INFO - 📍 Taxi zones: 263
+2025-09-26 14:43:56,692 - INFO - 🗺️ Taxi zone shapes: 263
+2025-09-26 14:44:04,323 - INFO - 🚕 Trip records: 42,704,946
+2025-09-26 14:44:10,180 - INFO - 📊 Top trip patterns:
+2025-09-26 14:44:10,181 - INFO -    2025-05-17 - Manhattan: 152,855 trips
+2025-09-26 14:44:10,181 - INFO -    2025-06-05 - Manhattan: 152,113 trips
+2025-09-26 14:44:10,181 - INFO -    2025-06-12 - Manhattan: 147,043 trips
+2025-09-26 14:44:10,182 - INFO -    2025-05-15 - Manhattan: 146,984 trips
+2025-09-26 14:44:10,182 - INFO -    2025-05-08 - Manhattan: 146,426 trips
+2025-09-26 14:44:10,182 - INFO - ✅ Data verification completed successfully!
+2025-09-26 14:44:10,183 - INFO - 🎉 Complete database initialization finished successfully!
+2025-09-26 14:44:10,183 - INFO - 🌟 Your NYC Taxi playground is ready with 3.4M+ records!
