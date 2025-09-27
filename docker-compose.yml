@@ -33,7 +33,6 @@ services:
       - "${PGADMIN_PORT:-8080}:80"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
-      - ./sql-scripts/reports-scripts:/var/lib/pgadmin/storage/sql-scripts
     networks:
       - sql-playground-network
     depends_on:

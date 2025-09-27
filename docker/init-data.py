@@ -298,10 +298,134 @@ def load_taxi_zones(engine):
             """))
         logger.info("✅ Lookup tables reloaded")
 
+        # Populate star schema dimensions
+        logger.info("🌟 Populating star schema dimensions...")
+        if not populate_star_schema_dimensions(engine):
+            logger.warning("⚠️ Failed to populate star schema dimensions")
+            return False
+
         return True
 
     except Exception as e:
         logger.error(f"❌ Error loading taxi zones: {str(e)}")
+        return False
+
+def populate_star_schema_dimensions(engine):
+    """Populate star schema dimension tables from normalized data"""
+    logger.info("🌟 Starting star schema dimension population...")
+
+    try:
+        start_time = time.time()
+        with engine.begin() as conn:
+            # Populate location dimension from existing data
+            logger.info("📍 Populating dim_locations...")
+            conn.execute(text("""
+                INSERT INTO nyc_taxi.dim_locations (
+                    locationid, zone, borough, service_zone, zone_type,
+                    is_airport, is_manhattan, is_high_demand, business_district
+                )
+                SELECT DISTINCT
+                    tzl.locationid,
+                    tzl.zone,
+                    tzl.borough,
+                    tzl.service_zone,
+                    CASE
+                        WHEN tzl.zone ILIKE '%airport%' OR tzl.service_zone = 'EWR' THEN 'Airport'
+                        WHEN tzl.borough = 'Manhattan' AND tzl.zone ILIKE '%midtown%' THEN 'Manhattan Core'
+                        WHEN tzl.borough = 'Manhattan' THEN 'Manhattan'
+                        ELSE 'Outer Borough'
+                    END as zone_type,
+                    (tzl.zone ILIKE '%airport%' OR tzl.service_zone = 'EWR'),
+                    (tzl.borough = 'Manhattan'),
+                    FALSE, -- Will be updated based on trip volume analysis
+                    (tzl.zone ILIKE '%financial%' OR tzl.zone ILIKE '%midtown%' OR tzl.zone ILIKE '%times square%')
+                FROM nyc_taxi.taxi_zone_lookup tzl
+                ON CONFLICT (locationid) DO NOTHING
+            """))
+
+            # Populate vendor dimension
+            logger.info("🚗 Populating dim_vendor...")
+            conn.execute(text("""
+                INSERT INTO nyc_taxi.dim_vendor (vendorid, vendor_name, vendor_type)
+                SELECT DISTINCT
+                    vl.vendorid,
+                    vl.vendor_name,
+                    'Technology Provider'
+                FROM nyc_taxi.vendor_lookup vl
+                ON CONFLICT (vendorid) DO NOTHING
+            """))
+
+            # Populate payment type dimension
+            logger.info("💳 Populating dim_payment_type...")
+            conn.execute(text("""
+                INSERT INTO nyc_taxi.dim_payment_type (
+                    payment_type, payment_type_desc, is_electronic, allows_tips
+                )
+                SELECT DISTINCT
+                    ptl.payment_type,
+                    ptl.payment_type_desc,
+                    ptl.payment_type NOT IN (2), -- Cash is not electronic
+                    ptl.payment_type IN (1, 3, 4) -- Credit card, No charge, Dispute allow tips
+                FROM nyc_taxi.payment_type_lookup ptl
+                ON CONFLICT (payment_type) DO NOTHING
+            """))
+
+            # Populate rate code dimension
+            logger.info("📊 Populating dim_rate_code...")
+            conn.execute(text("""
+                INSERT INTO nyc_taxi.dim_rate_code (
+                    ratecodeid, rate_code_desc, is_metered, is_airport_rate, is_negotiated
+                )
+                SELECT DISTINCT
+                    rcl.ratecodeid,
+                    rcl.rate_code_desc,
+                    rcl.ratecodeid IN (1), -- Only standard rate is metered
+                    rcl.ratecodeid IN (2, 3), -- JFK, Newark are airport rates
+                    rcl.ratecodeid IN (5, 6) -- Negotiated and group ride
+                FROM nyc_taxi.rate_code_lookup rcl
+                ON CONFLICT (ratecodeid) DO NOTHING
+            """))
+
+            # Record quality metrics for dimension population while connection is still active
+            processing_time_ms = int((time.time() - start_time) * 1000)
+
+            # Record metrics for each dimension table using the active connection
+            for table_name in ['dim_locations', 'dim_vendor', 'dim_payment_type', 'dim_rate_code']:
+                try:
+                    result = conn.execute(text(f"SELECT COUNT(*) FROM nyc_taxi.{table_name}"))
+                    row_count = result.fetchone()[0]
+
+                    record_quality_metrics(engine, {
+                        'operation_type': 'dimension_load',
+                        'target_table': table_name,
+                        'rows_attempted': row_count,  # For dimensions, attempted = inserted since we use ON CONFLICT
+                        'rows_inserted': row_count,
+                        'rows_duplicates': 0,
+                        'rows_invalid': 0,
+                        'processing_duration_ms': processing_time_ms // 4,  # Divide by number of tables
+                        'batch_id': 'dimension_initialization'
+                    })
+                except Exception as metric_error:
+                    logger.warning(f"⚠️ Could not record metrics for {table_name}: {str(metric_error)}")
+
+        logger.info("✅ Star schema dimensions populated successfully!")
+        return True
+
+    except Exception as e:
+        logger.error(f"❌ Error populating star schema dimensions: {str(e)}")
+        # Record failure metrics
+        processing_time_ms = int((time.time() - start_time) * 1000)
+        record_quality_metrics(engine, {
+            'operation_type': 'dimension_load_failed',
+            'target_table': 'all_dimensions',
+            'rows_attempted': 0,
+            'rows_inserted': 0,
+            'rows_duplicates': 0,
+            'rows_invalid': 0,
+            'processing_duration_ms': processing_time_ms,
+            'error_message_sample': str(e)[:200],
+            'batch_id': 'dimension_initialization'
+        })
         return False
 
 def download_taxi_zone_data(data_dir='/sql-scripts/data'):
@@ -590,7 +714,7 @@ def get_backfill_months(backfill_config):
     return months
 
 def load_single_parquet_file(engine, file_path, chunk_size=10000):
-    """Load a single parquet file into the database with duplicate handling"""
+    """Load a single parquet file into both normalized and star schema tables with invalid row handling"""
     filename = os.path.basename(file_path)
 
     try:
@@ -607,6 +731,8 @@ def load_single_parquet_file(engine, file_path, chunk_size=10000):
         df['tpep_pickup_datetime'] = pd.to_datetime(df['tpep_pickup_datetime'])
         df['tpep_dropoff_datetime'] = pd.to_datetime(df['tpep_dropoff_datetime'])
 
+        # Keep all historical data - don't filter by year
+
         # Fill nulls
         numeric_cols = ['passenger_count', 'trip_distance', 'ratecodeid', 'fare_amount',
                        'extra', 'mta_tax', 'tip_amount', 'tolls_amount', 'improvement_surcharge',
@@ -615,24 +741,136 @@ def load_single_parquet_file(engine, file_path, chunk_size=10000):
         for col in numeric_cols:
             if col in df.columns:
                 df[col] = df[col].fillna(0)
+            else:
+                # Add missing columns with 0 values (e.g., cbd_congestion_fee not in older data)
+                df[col] = 0
 
         df['store_and_fwd_flag'] = df['store_and_fwd_flag'].fillna('N')
 
-        # Add row hash for duplicate prevention (before chunking)
-        df = add_row_hash_column(df)
+        # Hash generation moved to per-chunk processing for better performance and duplicate detection
 
-        # Load in chunks with upsert logic
+        # Load in chunks with error handling for invalid rows
         total_chunks = len(df) // chunk_size + (1 if len(df) % chunk_size else 0)
         loaded_rows = 0
+        star_loaded_rows = 0
         duplicate_rows = 0
+        invalid_rows = 0
 
         for i, chunk_start in enumerate(range(0, len(df), chunk_size)):
             chunk_end = min(chunk_start + chunk_size, len(df))
             chunk_df = df.iloc[chunk_start:chunk_end]
 
+            # Process chunk with individual row error handling
+            chunk_results = load_chunk_with_error_handling(engine, chunk_df, filename, i + 1)
+
+            loaded_rows += chunk_results['loaded']
+            star_loaded_rows += chunk_results['star_loaded']
+            duplicate_rows += chunk_results['duplicates']
+            invalid_rows += chunk_results['invalid']
+
+            if (i + 1) % 5 == 0 or i == total_chunks - 1:
+                logger.info(f"📥 {filename}: Processed {chunk_end:,} rows - Loaded: {loaded_rows:,} normalized, {star_loaded_rows:,} star, {duplicate_rows:,} duplicates, {invalid_rows:,} invalid ({i+1}/{total_chunks} chunks)")
+
+        # Final summary
+        total_processed = loaded_rows + duplicate_rows + invalid_rows
+        logger.info(f"✅ {filename}: Completed - {loaded_rows:,} loaded to normalized, {star_loaded_rows:,} to star schema, {duplicate_rows:,} duplicates, {invalid_rows:,} invalid rows")
+
+        return loaded_rows
+
+    except Exception as e:
+        logger.error(f"❌ Error loading {filename}: {str(e)}")
+        return 0
+
+def load_chunk_with_error_handling(engine, chunk_df, filename, chunk_number):
+    """Load a chunk with individual row error handling and quality monitoring"""
+    results = {'loaded': 0, 'star_loaded': 0, 'duplicates': 0, 'invalid': 0}
+    start_time = time.time()
+
+    try:
+        # Add hash generation for this chunk
+        chunk_df = add_row_hash_column(chunk_df)
+
+        # First attempt: try to load the entire chunk
+        chunk_df.to_sql(
+            'yellow_taxi_trips',
+            engine,
+            schema='nyc_taxi',
+            if_exists='append',
+            index=False,
+            method='multi'
+        )
+        results['loaded'] = len(chunk_df)
+
+        # Load to star schema
+        star_rows = load_chunk_to_star_schema(engine, chunk_df)
+        results['star_loaded'] = star_rows
+
+        # Record successful quality metrics
+        processing_time_ms = int((time.time() - start_time) * 1000)
+        record_quality_metrics(engine, {
+            'source_file': filename,
+            'operation_type': 'chunk_insert',
+            'target_table': 'yellow_taxi_trips',
+            'chunk_number': chunk_number,
+            'rows_attempted': len(chunk_df),
+            'rows_inserted': results['loaded'],
+            'rows_duplicates': 0,
+            'rows_invalid': 0,
+            'processing_duration_ms': processing_time_ms,
+            'min_date_value': chunk_df['tpep_pickup_datetime'].min().date() if not chunk_df['tpep_pickup_datetime'].isna().all() else None,
+            'max_date_value': chunk_df['tpep_pickup_datetime'].max().date() if not chunk_df['tpep_pickup_datetime'].isna().all() else None,
+            'avg_numeric_value': float(chunk_df['total_amount'].mean()) if 'total_amount' in chunk_df.columns and not chunk_df['total_amount'].isna().all() else None
+        })
+
+        # Record star schema quality metrics
+        if star_rows > 0:
+            record_quality_metrics(engine, {
+                'source_file': filename,
+                'operation_type': 'star_schema_insert',
+                'target_table': 'fact_taxi_trips',
+                'chunk_number': chunk_number,
+                'rows_attempted': len(chunk_df),
+                'rows_inserted': star_rows,
+                'rows_duplicates': 0,
+                'rows_invalid': 0,
+                'processing_duration_ms': processing_time_ms
+            })
+
+        return results
+
+    except Exception as chunk_error:
+        error_str = str(chunk_error).lower()
+
+        # Check if it's a known duplicate error type
+        if any(keyword in error_str for keyword in ['unique constraint', 'duplicate key', 'row_hash']):
+            results['duplicates'] = len(chunk_df)
+
+            # Record duplicate quality metrics
+            processing_time_ms = int((time.time() - start_time) * 1000)
+            record_quality_metrics(engine, {
+                'source_file': filename,
+                'operation_type': 'chunk_insert',
+                'target_table': 'yellow_taxi_trips',
+                'chunk_number': chunk_number,
+                'rows_attempted': len(chunk_df),
+                'rows_inserted': 0,
+                'rows_duplicates': len(chunk_df),
+                'rows_invalid': 0,
+                'processing_duration_ms': processing_time_ms,
+                'primary_error_types': ['duplicate_key'],
+                'error_message_sample': str(chunk_error)[:200]
+            })
+
+            return results
+
+        # For other errors, process row by row to identify invalid rows
+        logger.warning(f"⚠️ Chunk {chunk_number} bulk insert failed, processing row by row: {str(chunk_error)[:100]}")
+
+        for row_idx, (_, row) in enumerate(chunk_df.iterrows()):
             try:
-                # Try to insert chunk, handle duplicates gracefully
-                chunk_df.to_sql(
+                # Try to insert single row
+                single_row_df = chunk_df.iloc[row_idx:row_idx+1]
+                single_row_df.to_sql(
                     'yellow_taxi_trips',
                     engine,
                     schema='nyc_taxi',
@@ -640,35 +878,348 @@ def load_single_parquet_file(engine, file_path, chunk_size=10000):
                     index=False,
                     method='multi'
                 )
-                loaded_rows += len(chunk_df)
+                results['loaded'] += 1
 
-                if (i + 1) % 5 == 0 or i == total_chunks - 1:
-                    logger.info(f"📥 {filename}: Loaded {chunk_end:,} rows ({i+1}/{total_chunks} chunks)")
+                # Load to star schema
+                star_rows = load_chunk_to_star_schema(engine, single_row_df)
+                results['star_loaded'] += star_rows
 
-            except Exception as chunk_error:
-                # Handle duplicate constraint violations
-                error_str = str(chunk_error).lower()
-                is_duplicate_error = any(keyword in error_str for keyword in [
-                    'unique constraint', 'duplicate key', 'row_hash'
-                ])
+            except Exception as row_error:
+                # Classify the error and store invalid row
+                error_str = str(row_error).lower()
 
-                if is_duplicate_error:
-                    duplicate_rows += len(chunk_df)
-                    if (i + 1) % 5 == 0 or i == total_chunks - 1:
-                        logger.warning(f"⚠️ {filename}: Chunk {i+1}/{total_chunks} - {len(chunk_df)} duplicates skipped (hash-based)")
+                if any(keyword in error_str for keyword in ['unique constraint', 'duplicate key', 'row_hash']):
+                    results['duplicates'] += 1
+                    error_type = 'duplicate_key'
+                elif 'primary key' in error_str:
+                    results['invalid'] += 1
+                    error_type = 'primary_key_violation'
+                elif 'check constraint' in error_str:
+                    results['invalid'] += 1
+                    error_type = 'constraint_violation'
+                elif 'data type' in error_str or 'invalid input' in error_str:
+                    results['invalid'] += 1
+                    error_type = 'data_type_error'
                 else:
-                    logger.error(f"❌ {filename}: Error in chunk {i+1}: {str(chunk_error)}")
-                    raise chunk_error
+                    results['invalid'] += 1
+                    error_type = 'unknown_error'
 
-        if duplicate_rows > 0:
-            logger.info(f"✅ {filename}: Loaded {loaded_rows:,} new rows, skipped {duplicate_rows:,} duplicates")
-        else:
-            logger.info(f"✅ {filename}: Completed loading {loaded_rows:,} rows")
+                # Store invalid row if it's not a duplicate
+                if error_type != 'duplicate_key':
+                    store_invalid_row(engine, row, filename, chunk_number, row_idx + 1, str(row_error), error_type)
 
-        return loaded_rows
+        # Record quality metrics for row-by-row processing
+        processing_time_ms = int((time.time() - start_time) * 1000)
+        error_types = []
+        if results['duplicates'] > 0:
+            error_types.append('duplicate_key')
+        if results['invalid'] > 0:
+            error_types.append('validation_error')
+
+        record_quality_metrics(engine, {
+            'source_file': filename,
+            'operation_type': 'chunk_insert_with_errors',
+            'target_table': 'yellow_taxi_trips',
+            'chunk_number': chunk_number,
+            'rows_attempted': len(chunk_df),
+            'rows_inserted': results['loaded'],
+            'rows_duplicates': results['duplicates'],
+            'rows_invalid': results['invalid'],
+            'processing_duration_ms': processing_time_ms,
+            'primary_error_types': error_types,
+            'error_message_sample': str(chunk_error)[:200] if 'chunk_error' in locals() else None,
+            'constraint_violations': results['invalid'],
+            'min_date_value': chunk_df['tpep_pickup_datetime'].min().date() if not chunk_df['tpep_pickup_datetime'].isna().all() else None,
+            'max_date_value': chunk_df['tpep_pickup_datetime'].max().date() if not chunk_df['tpep_pickup_datetime'].isna().all() else None
+        })
+
+        return results
+
+def record_quality_metrics(engine, metrics):
+    """Record data quality metrics for a chunk operation"""
+    try:
+        with engine.begin() as conn:
+            # Convert lists to JSON for primary_error_types
+            primary_error_types = metrics.get('primary_error_types', [])
+            if isinstance(primary_error_types, list):
+                primary_error_types = json.dumps(primary_error_types)
+
+            conn.execute(text("""
+                INSERT INTO nyc_taxi.data_quality_monitor (
+                    source_file, operation_type, target_table, chunk_number,
+                    rows_attempted, rows_inserted, rows_duplicates, rows_invalid,
+                    processing_duration_ms, primary_error_types, error_message_sample,
+                    constraint_violations, min_date_value, max_date_value, avg_numeric_value,
+                    data_hash, batch_id
+                ) VALUES (
+                    :source_file, :operation_type, :target_table, :chunk_number,
+                    :rows_attempted, :rows_inserted, :rows_duplicates, :rows_invalid,
+                    :processing_duration_ms, :primary_error_types, :error_message_sample,
+                    :constraint_violations, :min_date_value, :max_date_value, :avg_numeric_value,
+                    :data_hash, :batch_id
+                )
+            """), {
+                'source_file': metrics.get('source_file'),
+                'operation_type': metrics.get('operation_type'),
+                'target_table': metrics.get('target_table'),
+                'chunk_number': metrics.get('chunk_number'),
+                'rows_attempted': metrics.get('rows_attempted', 0),
+                'rows_inserted': metrics.get('rows_inserted', 0),
+                'rows_duplicates': metrics.get('rows_duplicates', 0),
+                'rows_invalid': metrics.get('rows_invalid', 0),
+                'processing_duration_ms': metrics.get('processing_duration_ms'),
+                'primary_error_types': primary_error_types,
+                'error_message_sample': metrics.get('error_message_sample'),
+                'constraint_violations': metrics.get('constraint_violations', 0),
+                'min_date_value': metrics.get('min_date_value'),
+                'max_date_value': metrics.get('max_date_value'),
+                'avg_numeric_value': metrics.get('avg_numeric_value'),
+                'data_hash': metrics.get('data_hash'),
+                'batch_id': metrics.get('batch_id', f"batch_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+            })
 
     except Exception as e:
-        logger.error(f"❌ Error loading {filename}: {str(e)}")
+        logger.warning(f"⚠️ Failed to record quality metrics: {str(e)}")
+
+def store_invalid_row(engine, row, source_file, chunk_number, row_number_in_chunk, error_message, error_type):
+    """Store an invalid row in the yellow_taxi_trips_invalid table"""
+    try:
+        with engine.begin() as conn:
+            # Convert row to dictionary and handle NaN values
+            row_dict = {}
+            for col, value in row.items():
+                if pd.isna(value):
+                    row_dict[col] = None
+                else:
+                    row_dict[col] = value
+
+            # Insert invalid row
+            conn.execute(text("""
+                INSERT INTO nyc_taxi.yellow_taxi_trips_invalid (
+                    error_message, error_type, source_file, chunk_number, row_number_in_chunk,
+                    vendorid, tpep_pickup_datetime, tpep_dropoff_datetime, passenger_count,
+                    trip_distance, ratecodeid, store_and_fwd_flag, pulocationid, dolocationid,
+                    payment_type, fare_amount, extra, mta_tax, tip_amount, tolls_amount,
+                    improvement_surcharge, total_amount, congestion_surcharge, airport_fee,
+                    cbd_congestion_fee, row_hash, raw_data_json
+                ) VALUES (
+                    :error_message, :error_type, :source_file, :chunk_number, :row_number_in_chunk,
+                    :vendorid, :tpep_pickup_datetime, :tpep_dropoff_datetime, :passenger_count,
+                    :trip_distance, :ratecodeid, :store_and_fwd_flag, :pulocationid, :dolocationid,
+                    :payment_type, :fare_amount, :extra, :mta_tax, :tip_amount, :tolls_amount,
+                    :improvement_surcharge, :total_amount, :congestion_surcharge, :airport_fee,
+                    :cbd_congestion_fee, :row_hash, :raw_data_json
+                )
+            """), {
+                'error_message': error_message[:500],  # Truncate long error messages
+                'error_type': error_type,
+                'source_file': source_file,
+                'chunk_number': chunk_number,
+                'row_number_in_chunk': row_number_in_chunk,
+                'vendorid': row_dict.get('vendorid'),
+                'tpep_pickup_datetime': row_dict.get('tpep_pickup_datetime'),
+                'tpep_dropoff_datetime': row_dict.get('tpep_dropoff_datetime'),
+                'passenger_count': row_dict.get('passenger_count'),
+                'trip_distance': row_dict.get('trip_distance'),
+                'ratecodeid': row_dict.get('ratecodeid'),
+                'store_and_fwd_flag': row_dict.get('store_and_fwd_flag'),
+                'pulocationid': row_dict.get('pulocationid'),
+                'dolocationid': row_dict.get('dolocationid'),
+                'payment_type': row_dict.get('payment_type'),
+                'fare_amount': row_dict.get('fare_amount'),
+                'extra': row_dict.get('extra'),
+                'mta_tax': row_dict.get('mta_tax'),
+                'tip_amount': row_dict.get('tip_amount'),
+                'tolls_amount': row_dict.get('tolls_amount'),
+                'improvement_surcharge': row_dict.get('improvement_surcharge'),
+                'total_amount': row_dict.get('total_amount'),
+                'congestion_surcharge': row_dict.get('congestion_surcharge'),
+                'airport_fee': row_dict.get('airport_fee'),
+                'cbd_congestion_fee': row_dict.get('cbd_congestion_fee'),
+                'row_hash': row_dict.get('row_hash'),
+                'raw_data_json': json.dumps(row_dict, default=str)  # Store complete row as JSON
+            })
+
+    except Exception as e:
+        logger.warning(f"⚠️ Failed to store invalid row: {str(e)}")  # Don't fail the whole process
+
+def load_chunk_to_star_schema(engine, chunk_df):
+    """Load a chunk of data into the star schema fact table"""
+    try:
+        # Prepare data for star schema with dimension lookups and calculations
+        star_data = []
+
+        for _, row in chunk_df.iterrows():
+            # Extract date and time for dimension lookups
+            pickup_datetime = row['tpep_pickup_datetime']
+            dropoff_datetime = row['tpep_dropoff_datetime']
+
+            pickup_date = pickup_datetime.date()
+            pickup_hour = pickup_datetime.hour
+            dropoff_date = dropoff_datetime.date()
+            dropoff_hour = dropoff_datetime.hour
+
+            # Calculate derived measures
+            trip_duration_minutes = ((dropoff_datetime - pickup_datetime).total_seconds() / 60) if pd.notna(pickup_datetime) and pd.notna(dropoff_datetime) else 0
+            base_fare = (row['fare_amount'] or 0) + (row['extra'] or 0)
+            total_surcharges = (row['mta_tax'] or 0) + (row['improvement_surcharge'] or 0) + (row['congestion_surcharge'] or 0) + (row['airport_fee'] or 0) + (row.get('cbd_congestion_fee', 0) or 0)
+            tip_percentage = ((row['tip_amount'] or 0) / (row['fare_amount'] or 1)) * 100 if (row['fare_amount'] or 0) > 0 else 0
+            avg_speed_mph = ((row['trip_distance'] or 0) / (trip_duration_minutes / 60)) if trip_duration_minutes > 0 else 0
+            revenue_per_mile = ((row['total_amount'] or 0) / (row['trip_distance'] or 1)) if (row['trip_distance'] or 0) > 0 else 0
+
+            # Calculate flags
+            is_airport_trip = row['ratecodeid'] in [2, 3] if pd.notna(row['ratecodeid']) else False
+            is_cash_trip = row['payment_type'] == 2 if pd.notna(row['payment_type']) else False
+            is_long_distance = (row['trip_distance'] or 0) > 10
+            is_short_trip = (row['trip_distance'] or 0) < 1
+
+            # Create dimension keys (will be resolved via SQL joins)
+            pickup_date_key = int(pickup_date.strftime('%Y%m%d'))
+            dropoff_date_key = int(dropoff_date.strftime('%Y%m%d'))
+
+            star_row = {
+                'pickup_date_key': pickup_date_key,
+                'pickup_time_key': pickup_hour,
+                'dropoff_date_key': dropoff_date_key,
+                'dropoff_time_key': dropoff_hour,
+                'trip_distance': row['trip_distance'],
+                'trip_duration_minutes': int(trip_duration_minutes),
+                'passenger_count': int(row['passenger_count'] or 0),
+                'fare_amount': row['fare_amount'],
+                'extra': row['extra'],
+                'mta_tax': row['mta_tax'],
+                'tip_amount': row['tip_amount'],
+                'tolls_amount': row['tolls_amount'],
+                'improvement_surcharge': row['improvement_surcharge'],
+                'total_amount': row['total_amount'],
+                'congestion_surcharge': row['congestion_surcharge'],
+                'airport_fee': row['airport_fee'],
+                'cbd_congestion_fee': row.get('cbd_congestion_fee', 0),
+                'base_fare': base_fare,
+                'total_surcharges': total_surcharges,
+                'tip_percentage': tip_percentage,
+                'avg_speed_mph': avg_speed_mph,
+                'revenue_per_mile': revenue_per_mile,
+                'is_airport_trip': is_airport_trip,
+                'is_cross_borough_trip': False,  # Will be calculated via SQL join
+                'is_cash_trip': is_cash_trip,
+                'is_long_distance': is_long_distance,
+                'is_short_trip': is_short_trip,
+                'original_row_hash': row['row_hash'],
+                'pickup_date': pickup_date
+            }
+            star_data.append(star_row)
+
+        # Convert to DataFrame and insert using SQL with dimension key lookups
+        star_df = pd.DataFrame(star_data)
+
+        if len(star_df) > 0:
+            # Process star schema rows individually to handle errors gracefully
+            successful_rows = 0
+
+            for row_idx, star_row in star_df.iterrows():
+                try:
+                    # Get the original row to access location IDs
+                    orig_row = chunk_df.iloc[row_idx]
+
+                    # Insert each row in its own transaction for individual error handling
+                    with engine.begin() as conn:
+                        conn.execute(text("""
+                            INSERT INTO nyc_taxi.fact_taxi_trips (
+                                pickup_date_key, pickup_time_key, dropoff_date_key, dropoff_time_key,
+                                pickup_location_key, dropoff_location_key, vendor_key, payment_type_key, rate_code_key,
+                                trip_distance, trip_duration_minutes, passenger_count,
+                                fare_amount, extra, mta_tax, tip_amount, tolls_amount,
+                                improvement_surcharge, total_amount, congestion_surcharge,
+                                airport_fee, cbd_congestion_fee,
+                                base_fare, total_surcharges, tip_percentage, avg_speed_mph, revenue_per_mile,
+                                is_airport_trip, is_cross_borough_trip, is_cash_trip, is_long_distance, is_short_trip,
+                                original_row_hash, pickup_date
+                            )
+                            SELECT
+                                :pickup_date_key, :pickup_time_key, :dropoff_date_key, :dropoff_time_key,
+                                pickup_loc.location_key, dropoff_loc.location_key,
+                                vendor.vendor_key, payment.payment_type_key, rate.rate_code_key,
+                                :trip_distance, :trip_duration_minutes, :passenger_count,
+                                :fare_amount, :extra, :mta_tax, :tip_amount, :tolls_amount,
+                                :improvement_surcharge, :total_amount, :congestion_surcharge,
+                                :airport_fee, :cbd_congestion_fee,
+                                :base_fare, :total_surcharges, :tip_percentage, :avg_speed_mph, :revenue_per_mile,
+                                :is_airport_trip,
+                                (pickup_loc.borough != dropoff_loc.borough) as is_cross_borough_trip,
+                                :is_cash_trip, :is_long_distance, :is_short_trip,
+                                :original_row_hash, :pickup_date
+                            FROM nyc_taxi.dim_locations pickup_loc
+                            JOIN nyc_taxi.dim_locations dropoff_loc ON dropoff_loc.locationid = :dropoff_locationid
+                            LEFT JOIN nyc_taxi.dim_vendor vendor ON vendor.vendorid = :vendorid
+                            LEFT JOIN nyc_taxi.dim_payment_type payment ON payment.payment_type = :payment_type
+                            LEFT JOIN nyc_taxi.dim_rate_code rate ON rate.ratecodeid = :ratecodeid
+                            WHERE pickup_loc.locationid = :pickup_locationid
+                        """), {
+                            'pickup_date_key': star_row['pickup_date_key'],
+                            'pickup_time_key': star_row['pickup_time_key'],
+                            'dropoff_date_key': star_row['dropoff_date_key'],
+                            'dropoff_time_key': star_row['dropoff_time_key'],
+                            'pickup_locationid': int(orig_row['pulocationid'] or 0),
+                            'dropoff_locationid': int(orig_row['dolocationid'] or 0),
+                            'vendorid': int(orig_row['vendorid'] or 0),
+                            'payment_type': int(orig_row['payment_type'] or 0),
+                            'ratecodeid': int(orig_row['ratecodeid'] or 0),
+                            'trip_distance': star_row['trip_distance'],
+                            'trip_duration_minutes': star_row['trip_duration_minutes'],
+                            'passenger_count': star_row['passenger_count'],
+                            'fare_amount': star_row['fare_amount'],
+                            'extra': star_row['extra'],
+                            'mta_tax': star_row['mta_tax'],
+                            'tip_amount': star_row['tip_amount'],
+                            'tolls_amount': star_row['tolls_amount'],
+                            'improvement_surcharge': star_row['improvement_surcharge'],
+                            'total_amount': star_row['total_amount'],
+                            'congestion_surcharge': star_row['congestion_surcharge'],
+                            'airport_fee': star_row['airport_fee'],
+                            'cbd_congestion_fee': star_row['cbd_congestion_fee'],
+                            'base_fare': star_row['base_fare'],
+                            'total_surcharges': star_row['total_surcharges'],
+                            'tip_percentage': star_row['tip_percentage'],
+                            'avg_speed_mph': star_row['avg_speed_mph'],
+                            'revenue_per_mile': star_row['revenue_per_mile'],
+                            'is_airport_trip': star_row['is_airport_trip'],
+                            'is_cash_trip': star_row['is_cash_trip'],
+                            'is_long_distance': star_row['is_long_distance'],
+                            'is_short_trip': star_row['is_short_trip'],
+                            'original_row_hash': star_row['original_row_hash'],
+                            'pickup_date': star_row['pickup_date']
+                        })
+                    successful_rows += 1
+
+                except Exception as star_error:
+                    # Classify star schema errors and store invalid rows
+                    error_str = str(star_error).lower()
+
+                    if 'no partition' in error_str and 'found for row' in error_str:
+                        error_type = 'partition_constraint_violation'
+                    elif 'check violation' in error_str or 'check constraint' in error_str:
+                        error_type = 'constraint_violation'
+                    elif 'unique constraint' in error_str or 'duplicate key' in error_str:
+                        error_type = 'duplicate_key'
+                    elif 'foreign key' in error_str:
+                        error_type = 'foreign_key_violation'
+                    else:
+                        error_type = 'unknown_star_schema_error'
+
+                    # Store invalid row in the invalid table (star schema failures are data quality issues)
+                    try:
+                        store_invalid_row(engine, orig_row, 'star_schema_fact_taxi_trips', 0, row_idx + 1, str(star_error), error_type)
+                        logger.debug(f"🚨 Star schema row {row_idx + 1} failed ({error_type}): {str(star_error)[:100]}")
+                    except Exception as store_error:
+                        logger.warning(f"⚠️ Failed to store invalid star schema row: {str(store_error)}")
+
+            return successful_rows
+
+        return 0
+
+    except Exception as e:
+        logger.warning(f"⚠️ Error loading chunk to star schema: {str(e)}")
         return 0
 
 def load_trip_data(engine, load_all=True):
@@ -734,6 +1285,12 @@ def load_trip_data(engine, load_all=True):
                 continue
 
         logger.info(f"🎉 Backfill completed: {total_rows:,} total rows loaded from processed months")
+
+        # Create indexes on partitions after data loading
+        if total_rows > 0:
+            logger.info("🔧 Creating performance indexes on partitions...")
+            create_performance_indexes(engine)
+
         return total_rows > 0
 
     else:
@@ -748,11 +1305,37 @@ def load_trip_data(engine, load_all=True):
 
             chunk_size = int(os.getenv('DATA_CHUNK_SIZE', 10000))
             rows_loaded = load_single_parquet_file(engine, parquet_path, chunk_size)
+
+            # Create indexes on partitions after data loading
+            if rows_loaded > 0:
+                logger.info("🔧 Creating performance indexes on partitions...")
+                create_performance_indexes(engine)
+
             return rows_loaded > 0
 
         except Exception as e:
             logger.error(f"❌ Error in single-file loading: {str(e)}")
             return False
+
+def create_performance_indexes(engine):
+    """Create performance indexes on fact table partitions"""
+    try:
+        logger.info("🔧 Creating performance indexes on fact table partitions...")
+
+        with engine.connect() as conn:
+            # Call the SQL function to create partition indexes
+            result = conn.execute(text("SELECT nyc_taxi.create_partition_indexes()"))
+            index_results = result.fetchone()[0]
+
+            if index_results:
+                logger.info("✅ Performance indexes created successfully!")
+                for result_line in index_results:
+                    logger.info(f"   {result_line}")
+            else:
+                logger.info("ℹ️ No new indexes to create")
+
+    except Exception as e:
+        logger.warning(f"⚠️ Error creating performance indexes: {str(e)}")
 
 
 def verify_data_load(engine):
@@ -774,13 +1357,107 @@ def verify_data_load(engine):
             except:
                 logger.info("🗺️ Taxi zone shapes: Not available")
 
-            # Check trips
+            # Check trips in normalized table
             result = conn.execute(text("SELECT COUNT(*) FROM nyc_taxi.yellow_taxi_trips"))
             trip_count = result.fetchone()[0]
-            logger.info(f"🚕 Trip records: {trip_count:,}")
+            logger.info(f"🚕 Trip records (normalized): {trip_count:,}")
+
+            # Check trips in star schema
+            try:
+                result = conn.execute(text("SELECT COUNT(*) FROM nyc_taxi.fact_taxi_trips"))
+                star_trip_count = result.fetchone()[0]
+                logger.info(f"⭐ Trip records (star schema): {star_trip_count:,}")
+            except:
+                logger.info("⭐ Trip records (star schema): Not available")
+                star_trip_count = 0
+
+            # Check invalid rows
+            try:
+                result = conn.execute(text("SELECT COUNT(*) FROM nyc_taxi.yellow_taxi_trips_invalid"))
+                invalid_count = result.fetchone()[0]
+                logger.info(f"❌ Invalid trip records: {invalid_count:,}")
+
+                if invalid_count > 0:
+                    # Show breakdown by error type
+                    result = conn.execute(text("""
+                        SELECT error_type, COUNT(*) as count
+                        FROM nyc_taxi.yellow_taxi_trips_invalid
+                        GROUP BY error_type
+                        ORDER BY count DESC
+                    """))
+                    logger.info("   Invalid rows breakdown:")
+                    for row in result.fetchall():
+                        logger.info(f"   - {row[0]}: {row[1]:,}")
+            except:
+                logger.info("❌ Invalid trip records: Not available")
+
+            # Check data quality monitoring
+            try:
+                result = conn.execute(text("SELECT COUNT(*) FROM nyc_taxi.data_quality_monitor"))
+                quality_records_count = result.fetchone()[0]
+                logger.info(f"📊 Quality monitoring records: {quality_records_count:,}")
+
+                if quality_records_count > 0:
+                    # Show quality summary by table
+                    result = conn.execute(text("""
+                        SELECT
+                            target_table,
+                            operation_type,
+                            COUNT(*) as operations,
+                            SUM(rows_inserted) as total_inserted,
+                            AVG(success_rate) as avg_success_rate,
+                            AVG(error_rate) as avg_error_rate,
+                            COUNT(*) FILTER (WHERE quality_level = 'EXCELLENT') as excellent_ops,
+                            COUNT(*) FILTER (WHERE has_critical_errors = true) as critical_errors
+                        FROM nyc_taxi.data_quality_monitor
+                        WHERE target_table IN ('yellow_taxi_trips', 'fact_taxi_trips')
+                        GROUP BY target_table, operation_type
+                        ORDER BY target_table, operation_type
+                    """))
+
+                    logger.info("   Quality metrics by table:")
+                    for row in result.fetchall():
+                        logger.info(f"   - {row[0]} ({row[1]}): {row[2]} ops, {row[3]:,} rows, {row[4]:.1f}% success, {row[5]:.1f}% errors, {row[6]} excellent, {row[7]} critical")
+
+                    # Show overall quality level distribution
+                    result = conn.execute(text("""
+                        SELECT quality_level, COUNT(*) as count
+                        FROM nyc_taxi.data_quality_monitor
+                        GROUP BY quality_level
+                        ORDER BY
+                            CASE quality_level
+                                WHEN 'EXCELLENT' THEN 1
+                                WHEN 'GOOD' THEN 2
+                                WHEN 'ACCEPTABLE' THEN 3
+                                WHEN 'POOR' THEN 4
+                                WHEN 'CRITICAL' THEN 5
+                            END
+                    """))
+
+                    logger.info("   Quality level distribution:")
+                    for row in result.fetchall():
+                        logger.info(f"   - {row[0]}: {row[1]} operations")
+            except:
+                logger.info("📊 Quality monitoring: Not available")
+
+            # Check dimension tables
+            try:
+                result = conn.execute(text("SELECT COUNT(*) FROM nyc_taxi.dim_locations"))
+                dim_locations_count = result.fetchone()[0]
+                logger.info(f"📍 Location dimensions: {dim_locations_count:,}")
+
+                result = conn.execute(text("SELECT COUNT(*) FROM nyc_taxi.dim_date"))
+                dim_date_count = result.fetchone()[0]
+                logger.info(f"📅 Date dimensions: {dim_date_count:,}")
+
+                result = conn.execute(text("SELECT COUNT(*) FROM nyc_taxi.dim_time"))
+                dim_time_count = result.fetchone()[0]
+                logger.info(f"🕐 Time dimensions: {dim_time_count:,}")
+            except:
+                logger.info("📊 Dimension tables: Error checking counts")
 
             if trip_count > 0:
-                # Show sample data with zone names
+                # Show sample data with zone names from normalized table
                 result = conn.execute(text("""
                     SELECT
                         DATE(yt.tpep_pickup_datetime) as trip_date,
@@ -793,9 +1470,28 @@ def verify_data_load(engine):
                     LIMIT 5
                 """))
 
-                logger.info("📊 Top trip patterns:")
+                logger.info("📊 Top trip patterns (normalized table):")
                 for row in result.fetchall():
                     logger.info(f"   {row[0]} - {row[2]}: {row[1]:,} trips")
+
+            if star_trip_count > 0:
+                # Show sample data from star schema
+                result = conn.execute(text("""
+                    SELECT
+                        ft.pickup_date,
+                        COUNT(*) as trips,
+                        dl.borough as pickup_borough,
+                        AVG(ft.total_amount) as avg_fare
+                    FROM nyc_taxi.fact_taxi_trips ft
+                    JOIN nyc_taxi.dim_locations dl ON ft.pickup_location_key = dl.location_key
+                    GROUP BY ft.pickup_date, dl.borough
+                    ORDER BY trips DESC
+                    LIMIT 5
+                """))
+
+                logger.info("🌟 Top trip patterns (star schema):")
+                for row in result.fetchall():
+                    logger.info(f"   {row[0]} - {row[2]}: {row[1]:,} trips, avg fare: ${row[3]:.2f}")
 
         logger.info("✅ Data verification completed successfully!")
         return True

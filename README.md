@@ -35,13 +35,16 @@ A production-ready Docker-based SQL playground featuring PostgreSQL 17 + PostGIS
 - **PostgreSQL 17 + PostGIS 3.5** with geospatial support and custom Python environment
 - **PGAdmin 4** (latest) for web-based database management and query execution
 - **Automated Backfill System** - Download and load multiple months of authentic NYC taxi data
-- **Flexible Data Loading** - Load specific months, last 6/12 months, or all available data (2020-2025)
+- **Flexible Data Loading** - Load specific months, last 6/12 months, or all available data (2009-2025)
 - **Complete Geospatial Data** - 263 official NYC taxi zones with polygon boundaries (auto-downloaded)
 - **Unified Data Management** - Single location for all data with automatic downloads from official sources
 - **Dictionary Table Cleaning** - Fresh reference data loaded with each backfill for consistency
 - **Production-Scale Performance** - Optimized schema with spatial indexes for big data analytics
 - **Memory-Efficient Loading** - Chunked processing handles large datasets safely
 - **Persistent Logging** - Organized logs by configuration with full traceability
+- **Hash-Based Duplicate Prevention** - Ultimate protection against duplicate data with SHA-256 row hashing
+- **Star Schema Support** - Dimensional modeling with fact and dimension tables for advanced analytics
+- **Historical Data Support** - Complete NYC TLC data coverage from 2009 to present
 
 ## Quick Start
 
@@ -61,7 +64,7 @@ A production-ready Docker-based SQL playground featuring PostgreSQL 17 + PostGIS
    # Load specific months
    BACKFILL_MONTHS=2024-01,2024-02,2024-03
 
-   # Load all available data (2020-2025, WARNING: Very large!)
+   # Load all available data (2009-2025, WARNING: Very large!)
    BACKFILL_MONTHS=all
    ```
 
@@ -94,7 +97,7 @@ A production-ready Docker-based SQL playground featuring PostgreSQL 17 + PostGIS
 The system features a **flexible backfill system** that automatically downloads and loads data from official NYC TLC sources:
 
 **Data Sources:**
-- **Trip Data**: NYC Yellow Taxi records (2020-2025, 3-5 M records per month)
+- **Trip Data**: NYC Yellow Taxi records (2009-2025, 3-5 M records per month)
 - **Zone Data**: 263 official NYC TLC taxi zones with lookup table and PostGIS geometries
 - **Reference Data**: Vendors, payment types, rate codes with proper relationships
 
@@ -110,10 +113,13 @@ The `docker/init-data.py` script orchestrates the entire process:
    - Processes geometries with CRS conversion to NYC State Plane (EPSG:2263)
    - Reloads all lookup tables (rate codes, payment types, vendors)
 5. **Trip Data Backfill**:
-   - Downloads parquet files for configured months automatically
+   - Downloads parquet files for configured months automatically (2009-2025 coverage)
    - Converts column names to lowercase for schema compatibility
+   - Handles missing columns (e.g., cbd_congestion_fee in older data)
    - Handles numeric precision issues and NULL values
-   - Loads in 10K row chunks for memory efficiency with duplicate prevention
+   - Loads in 10K row chunks for memory efficiency with hash-based duplicate prevention
+   - Individual row error handling for partition constraint violations
+   - Star schema fact table population with dimension relationships
 6. **Data Verification**: Performs integrity checks with sample analytical queries
 
 ### Architecture Benefits
@@ -177,7 +183,8 @@ sql-playgrounds/
 - **Progress Tracking**: Real-time logging with execution time tracking
 - **Optimized Indexes**: Spatial GIST, temporal, location, and composite indexes
 - **Production Scale**: Handles millions of records efficiently based on backfill configuration
-- **Duplicate Prevention**: Hash-based system prevents any duplicate rows across backfills
+- **Ultimate Duplicate Prevention**: SHA-256 hash-based system prevents any duplicate rows across backfills
+- **Enhanced Error Handling**: Individual row processing for partition violations and data quality issues
 
 ## Pause and Resume Capability
 
@@ -293,12 +300,17 @@ uv add package-name
 
 ### NYC Taxi Data Structure
 **Main Table**: `nyc_taxi.yellow_taxi_trips` (variable records based on backfill configuration, 21 columns)
+- **Primary Key**: row_hash (SHA-256 hash of all row values for ultimate duplicate prevention)
 - **Trip Identifiers**: vendorid, pickup/dropoff timestamps
 - **Location Data**: pulocationid, dolocationid (references taxi zones)
 - **Financial Data**: fare_amount, tip_amount, total_amount, taxes, fees
 - **Trip Metrics**: passenger_count, trip_distance, payment_type
-- **Duplicate Prevention**: row_hash (SHA-256 hash of all row values for ultimate duplicate prevention)
-- **Recent Additions**: cbd_congestion_fee (Central Business District fee), airport_fee
+- **Missing Column Handling**: cbd_congestion_fee (handled gracefully for older data), airport_fee
+
+**Star Schema Tables**:
+- `fact_taxi_trips`: Dimensional fact table with calculated measures and foreign keys
+- `dim_locations`, `dim_vendor`, `dim_payment_type`, `dim_rate_code`: Dimension tables for analytics
+- `dim_date`: Date dimension with partition support (2009-2025)
 
 **Geospatial Tables**:
 - `taxi_zone_lookup`: 263 official NYC taxi zones with borough and service zone info
@@ -540,9 +552,10 @@ LIMIT 4000;
 ### NYC Yellow Taxi Trip Records
 **Source**: [NYC TLC Trip Record Data](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
 - **Format**: Official parquet files (updated monthly by NYC TLC)
-- **Available Data**: 2020-2025 (monthly files, ~60MB/3-5 M records per month)
+- **Available Data**: 2009-2025 (monthly files, ~60MB/3-5 M records per month)
 - **Auto-Download**: System automatically downloads configured months from official sources
-- **Coverage**: Complete months of taxi trip data from NYC Taxi & Limousine Commission
+- **Coverage**: Complete historical coverage of taxi trip data from NYC Taxi & Limousine Commission
+- **Data Quality**: Handles missing columns across different data periods with graceful fallbacks
 
 ### NYC Taxi Zone Reference Data
 **Source**: [NYC TLC Taxi Zone Maps and Lookup Tables](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
@@ -559,4 +572,4 @@ This is **production-scale real-world data** from New York City's official trans
 - ✅ **Rich analytical dimensions** - financial, temporal, spatial, and operational data
 - ✅ **Always current** - downloads latest data directly from official NYC TLC sources
 
-Perfect for learning advanced SQL, big data analytics, and geospatial analysis with realistic datasets that mirror production database challenges. The flexible backfill system allows you to work with datasets ranging from a single month to 5+ years of historical data.
+Perfect for learning advanced SQL, big data analytics, and geospatial analysis with realistic datasets that mirror production database challenges. The flexible backfill system allows you to work with datasets ranging from a single month to 16+ years of historical data (2009-2025).
