@@ -135,32 +135,143 @@ flowchart TD
     E --> T[(data_quality_monitor)]
     E --> U[(data_processing_log)]
 
-    %% Table Details
-    F -.-> F1[row_hash VARCHAR(64) PK<br/>vendorid INTEGER<br/>tpep_pickup_datetime TIMESTAMP<br/>tpep_dropoff_datetime TIMESTAMP<br/>passenger_count DECIMAL<br/>trip_distance DECIMAL<br/>pulocationid INTEGER FK<br/>dolocationid INTEGER FK<br/>payment_type BIGINT FK<br/>fare_amount DECIMAL<br/>total_amount DECIMAL<br/>+ 12 more columns]
+    %% Table Details (Schema Information)
+    F -.-> F1["yellow_taxi_trips
+    ---
+    row_hash VARCHAR(64) PK
+    vendorid INTEGER
+    tpep_pickup_datetime TIMESTAMP
+    tpep_dropoff_datetime TIMESTAMP
+    passenger_count DECIMAL
+    trip_distance DECIMAL
+    pulocationid INTEGER FK
+    dolocationid INTEGER FK
+    payment_type BIGINT FK
+    fare_amount DECIMAL
+    total_amount DECIMAL
+    + 12 more columns"]
 
-    G -.-> G1[invalid_id BIGSERIAL PK<br/>error_message TEXT<br/>error_type VARCHAR<br/>source_file VARCHAR<br/>+ all yellow_taxi_trips columns<br/>raw_data_json JSONB]
+    G -.-> G1["yellow_taxi_trips_invalid
+    ---
+    invalid_id BIGSERIAL PK
+    error_message TEXT
+    error_type VARCHAR
+    source_file VARCHAR
+    + all yellow_taxi_trips columns
+    raw_data_json JSONB"]
 
-    H -.-> H1[locationid INTEGER PK<br/>borough VARCHAR<br/>zone VARCHAR<br/>service_zone VARCHAR]
+    H -.-> H1["taxi_zone_lookup
+    ---
+    locationid INTEGER PK
+    borough VARCHAR
+    zone VARCHAR
+    service_zone VARCHAR"]
 
-    I -.-> I1[objectid INTEGER PK<br/>locationid INTEGER FK<br/>zone VARCHAR<br/>borough VARCHAR<br/>geometry GEOMETRY]
+    I -.-> I1["taxi_zone_shapes
+    ---
+    objectid INTEGER PK
+    locationid INTEGER FK
+    zone VARCHAR
+    borough VARCHAR
+    geometry GEOMETRY"]
 
-    M -.-> M1[location_key SERIAL PK<br/>locationid INTEGER UNIQUE<br/>zone VARCHAR<br/>borough VARCHAR<br/>zone_type VARCHAR<br/>is_airport BOOLEAN<br/>is_manhattan BOOLEAN<br/>business_district BOOLEAN]
+    M -.-> M1["dim_locations
+    ---
+    location_key SERIAL PK
+    locationid INTEGER UNIQUE
+    zone VARCHAR
+    borough VARCHAR
+    zone_type VARCHAR
+    is_airport BOOLEAN
+    is_manhattan BOOLEAN
+    business_district BOOLEAN"]
 
-    N -.-> N1[vendor_key SERIAL PK<br/>vendorid INTEGER UNIQUE<br/>vendor_name VARCHAR<br/>vendor_type VARCHAR<br/>is_active BOOLEAN]
+    N -.-> N1["dim_vendor
+    ---
+    vendor_key SERIAL PK
+    vendorid INTEGER UNIQUE
+    vendor_name VARCHAR
+    vendor_type VARCHAR
+    is_active BOOLEAN"]
 
-    O -.-> O1[payment_type_key SERIAL PK<br/>payment_type INTEGER UNIQUE<br/>payment_type_desc VARCHAR<br/>is_electronic BOOLEAN<br/>allows_tips BOOLEAN]
+    O -.-> O1["dim_payment_type
+    ---
+    payment_type_key SERIAL PK
+    payment_type INTEGER UNIQUE
+    payment_type_desc VARCHAR
+    is_electronic BOOLEAN
+    allows_tips BOOLEAN"]
 
-    P -.-> P1[rate_code_key SERIAL PK<br/>ratecodeid INTEGER UNIQUE<br/>rate_code_desc VARCHAR<br/>is_metered BOOLEAN<br/>is_airport_rate BOOLEAN]
+    P -.-> P1["dim_rate_code
+    ---
+    rate_code_key SERIAL PK
+    ratecodeid INTEGER UNIQUE
+    rate_code_desc VARCHAR
+    is_metered BOOLEAN
+    is_airport_rate BOOLEAN"]
 
-    Q -.-> Q1[date_key INTEGER PK<br/>date_actual DATE<br/>year INTEGER<br/>month INTEGER<br/>day INTEGER<br/>quarter INTEGER<br/>is_weekend BOOLEAN<br/>is_holiday BOOLEAN]
+    Q -.-> Q1["dim_date
+    ---
+    date_key INTEGER PK
+    date_actual DATE
+    year INTEGER
+    month INTEGER
+    day INTEGER
+    quarter INTEGER
+    is_weekend BOOLEAN
+    is_holiday BOOLEAN"]
 
-    R -.-> R1[time_key INTEGER PK<br/>hour_24 INTEGER<br/>hour_12 INTEGER<br/>is_rush_hour BOOLEAN<br/>is_business_hours BOOLEAN<br/>time_period VARCHAR]
+    R -.-> R1["dim_time
+    ---
+    time_key INTEGER PK
+    hour_24 INTEGER
+    hour_12 INTEGER
+    is_rush_hour BOOLEAN
+    is_business_hours BOOLEAN
+    time_period VARCHAR"]
 
-    S -.-> S1[trip_key BIGSERIAL PK<br/>pickup_date_key INTEGER FK<br/>pickup_time_key INTEGER FK<br/>dropoff_date_key INTEGER FK<br/>dropoff_time_key INTEGER FK<br/>pickup_location_key INTEGER FK<br/>dropoff_location_key INTEGER FK<br/>vendor_key INTEGER FK<br/>payment_type_key INTEGER FK<br/>rate_code_key INTEGER FK<br/>trip_distance DECIMAL<br/>trip_duration_minutes INTEGER<br/>fare_amount DECIMAL<br/>tip_amount DECIMAL<br/>total_amount DECIMAL<br/>+ calculated measures]
+    S -.-> S1["fact_taxi_trips
+    ---
+    trip_key BIGSERIAL PK
+    pickup_date_key INTEGER FK
+    pickup_time_key INTEGER FK
+    dropoff_date_key INTEGER FK
+    dropoff_time_key INTEGER FK
+    pickup_location_key INTEGER FK
+    dropoff_location_key INTEGER FK
+    vendor_key INTEGER FK
+    payment_type_key INTEGER FK
+    rate_code_key INTEGER FK
+    trip_distance DECIMAL
+    trip_duration_minutes INTEGER
+    fare_amount DECIMAL
+    tip_amount DECIMAL
+    total_amount DECIMAL
+    + calculated measures"]
 
-    T -.-> T1[monitor_id BIGSERIAL PK<br/>monitored_at TIMESTAMP<br/>source_file VARCHAR<br/>target_table VARCHAR<br/>rows_attempted BIGINT<br/>rows_inserted BIGINT<br/>rows_duplicates BIGINT<br/>rows_invalid BIGINT<br/>quality_level VARCHAR<br/>processing_duration_ms BIGINT]
+    T -.-> T1["data_quality_monitor
+    ---
+    monitor_id BIGSERIAL PK
+    monitored_at TIMESTAMP
+    source_file VARCHAR
+    target_table VARCHAR
+    rows_attempted BIGINT
+    rows_inserted BIGINT
+    rows_duplicates BIGINT
+    rows_invalid BIGINT
+    quality_level VARCHAR
+    processing_duration_ms BIGINT"]
 
-    U -.-> U1[log_id BIGSERIAL PK<br/>data_year INTEGER<br/>data_month INTEGER<br/>status VARCHAR<br/>processing_started_at TIMESTAMP<br/>processing_completed_at TIMESTAMP<br/>total_records_loaded BIGINT<br/>source_file_path VARCHAR]
+    U -.-> U1["data_processing_log
+    ---
+    log_id BIGSERIAL PK
+    data_year INTEGER
+    data_month INTEGER
+    status VARCHAR
+    processing_started_at TIMESTAMP
+    processing_completed_at TIMESTAMP
+    total_records_loaded BIGINT
+    source_file_path VARCHAR"]
 
     %% Styling
     classDef source fill:#e1f5fe
