@@ -20,7 +20,7 @@ This playground is an **ideal resource for SQL technical interviews and database
 - **System Architecture & Scalability**: High availability, monitoring, production deployment
 
 ### 💡 **Why This Playground for Interviews?**
-- **Real Production Data**: 3.4M+ authentic NYC taxi records, not synthetic datasets
+- **Real Production Data**: authentic NYC taxi records, not synthetic datasets
 - **Complex Schema**: 21-column fact table with geospatial dimensions and lookup tables
 - **Production Challenges**: Data quality issues, performance optimization, scale considerations
 - **Complete ETL Pipeline**: Hash-based duplicate prevention, chunked processing, error recovery

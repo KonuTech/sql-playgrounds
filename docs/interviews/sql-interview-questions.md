@@ -7,12 +7,32 @@
 
 ## Table of Contents
 1. [Data Modeling & Schema Design](#data-modeling--schema-design)
+   - [Question 1: Schema Analysis](#question-1-schema-analysis)
+   - [Question 2: Dimensional Modeling](#question-2-dimensional-modeling)
 2. [Data Ingestion & ETL](#data-ingestion--etl)
+   - [Question 3: Duplicate Prevention Strategy](#question-3-duplicate-prevention-strategy)
+   - [Question 4: ETL Pipeline Design](#question-4-etl-pipeline-design)
 3. [Performance & Optimization](#performance--optimization)
+   - [Question 5: Index Strategy](#question-5-index-strategy)
+   - [Question 6: Query Optimization](#question-6-query-optimization)
 4. [Complex Queries & Analytics](#complex-queries--analytics)
+   - [Question 7: Window Functions](#question-7-window-functions)
+   - [Question 8: Time Series Analysis](#question-8-time-series-analysis)
 5. [Geospatial & PostGIS](#geospatial--postgis)
+   - [Question 9: Spatial Analysis](#question-9-spatial-analysis)
+   - [Question 10: Complex Geospatial Query](#question-10-complex-geospatial-query)
 6. [Data Quality & Integrity](#data-quality--integrity)
+   - [Question 11: Data Quality Assessment](#question-11-data-quality-assessment)
+   - [Question 12: Data Cleaning Strategy](#question-12-data-cleaning-strategy)
 7. [System Architecture & Scalability](#system-architecture--scalability)
+   - [Question 13: Database Partitioning Strategy](#question-13-database-partitioning-strategy)
+   - [Question 14: High Availability Architecture](#question-14-high-availability-architecture)
+   - [Question 15: Monitoring and Alerting](#question-15-monitoring-and-alerting)
+8. [Advanced Star Schema & ETL Engineering](#advanced-star-schema--etl-engineering)
+   - [Question 16: Star Schema Migration Strategy](#question-16-star-schema-migration-strategy)
+   - [Question 17: Hash-Based Duplicate Prevention at Scale](#question-17-hash-based-duplicate-prevention-at-scale)
+   - [Question 18: Advanced Dimensional Analytics](#question-18-advanced-dimensional-analytics)
+   - [Question 19: ETL Pipeline Error Recovery and Data Quality Assurance](#question-19-etl-pipeline-error-recovery-and-data-quality-assurance)
 
 ---
 
@@ -876,6 +896,577 @@ BEGIN
     WHERE schemaname = 'nyc_taxi' AND (seq_scan + idx_scan) > 0;
 END;
 $$ LANGUAGE plpgsql;
+```
+
+---
+
+## Advanced Star Schema & ETL Engineering
+
+### Question 16: Star Schema Migration Strategy
+**Question:** You have a normalized OLTP schema with 3.4M monthly records. Design a strategy to implement a star schema for analytics while maintaining the operational system. How would you handle the dual-schema approach?
+
+**Answer:**
+```sql
+-- 1. Incremental star schema population strategy
+CREATE OR REPLACE FUNCTION populate_star_schema_incremental(
+    start_date DATE DEFAULT CURRENT_DATE - 1,
+    end_date DATE DEFAULT CURRENT_DATE
+)
+RETURNS TABLE(processed_rows BIGINT, star_rows BIGINT, dimension_updates INTEGER) AS $$
+DECLARE
+    processed_count BIGINT := 0;
+    star_count BIGINT := 0;
+    dim_updates INTEGER := 0;
+BEGIN
+    -- 1. Refresh dimension tables first
+    REFRESH MATERIALIZED VIEW CONCURRENTLY dim_locations;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY dim_vendor;
+    dim_updates := dim_updates + 2;
+
+    -- 2. Process normalized data in chunks
+    WITH new_trips AS (
+        SELECT *
+        FROM yellow_taxi_trips
+        WHERE DATE(tpep_pickup_datetime) BETWEEN start_date AND end_date
+          AND row_hash NOT IN (
+              SELECT DISTINCT source_trip_hash
+              FROM fact_taxi_trips
+              WHERE pickup_date BETWEEN start_date AND end_date
+          )
+    ),
+    enriched_trips AS (
+        SELECT
+            nt.*,
+            -- Dimension key lookups
+            dl_pickup.location_key as pickup_location_key,
+            dl_dropoff.location_key as dropoff_location_key,
+            dv.vendor_key,
+            dpt.payment_type_key,
+            drc.rate_code_key,
+            -- Date/time dimension keys
+            to_char(nt.tpep_pickup_datetime, 'YYYYMMDD')::INTEGER as pickup_date_key,
+            EXTRACT(HOUR FROM nt.tpep_pickup_datetime)::INTEGER as pickup_time_key,
+            -- Calculated measures
+            EXTRACT(EPOCH FROM (nt.tpep_dropoff_datetime - nt.tpep_pickup_datetime))/60 as trip_duration_minutes,
+            CASE
+                WHEN nt.trip_distance > 0 AND
+                     EXTRACT(EPOCH FROM (nt.tpep_dropoff_datetime - nt.tpep_pickup_datetime))/3600 > 0
+                THEN nt.trip_distance / (EXTRACT(EPOCH FROM (nt.tpep_dropoff_datetime - nt.tpep_pickup_datetime))/3600)
+                ELSE 0
+            END as avg_speed_mph
+        FROM new_trips nt
+        LEFT JOIN dim_locations dl_pickup ON nt.pulocationid = dl_pickup.locationid
+        LEFT JOIN dim_locations dl_dropoff ON nt.dolocationid = dl_dropoff.locationid
+        LEFT JOIN dim_vendor dv ON nt.vendorid = dv.vendorid
+        LEFT JOIN dim_payment_type dpt ON nt.payment_type = dpt.payment_type
+        LEFT JOIN dim_rate_code drc ON nt.ratecodeid = drc.ratecodeid
+    )
+    INSERT INTO fact_taxi_trips (
+        pickup_date_key, pickup_time_key, pickup_location_key, dropoff_location_key,
+        vendor_key, payment_type_key, rate_code_key,
+        trip_distance, trip_duration_minutes, passenger_count,
+        fare_amount, tip_amount, total_amount, avg_speed_mph,
+        source_trip_hash, created_at
+    )
+    SELECT
+        pickup_date_key, pickup_time_key, pickup_location_key, dropoff_location_key,
+        vendor_key, payment_type_key, rate_code_key,
+        trip_distance, trip_duration_minutes, passenger_count::INTEGER,
+        fare_amount, tip_amount, total_amount, avg_speed_mph,
+        row_hash, CURRENT_TIMESTAMP
+    FROM enriched_trips
+    WHERE pickup_location_key IS NOT NULL AND dropoff_location_key IS NOT NULL;
+
+    GET DIAGNOSTICS star_count = ROW_COUNT;
+
+    SELECT COUNT(*) INTO processed_count
+    FROM yellow_taxi_trips
+    WHERE DATE(tpep_pickup_datetime) BETWEEN start_date AND end_date;
+
+    RETURN QUERY SELECT processed_count, star_count, dim_updates;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 2. Data consistency monitoring
+CREATE VIEW star_schema_consistency_check AS
+WITH normalized_summary AS (
+    SELECT
+        COUNT(*) as norm_total_trips,
+        SUM(total_amount) as norm_total_revenue,
+        MIN(tpep_pickup_datetime) as norm_min_date,
+        MAX(tpep_pickup_datetime) as norm_max_date
+    FROM yellow_taxi_trips
+    WHERE tpep_pickup_datetime >= CURRENT_DATE - INTERVAL '30 days'
+),
+star_summary AS (
+    SELECT
+        COUNT(*) as star_total_trips,
+        SUM(total_amount) as star_total_revenue,
+        MIN(dd.full_date) as star_min_date,
+        MAX(dd.full_date) as star_max_date
+    FROM fact_taxi_trips ft
+    JOIN dim_date dd ON ft.pickup_date_key = dd.date_key
+    WHERE dd.full_date >= CURRENT_DATE - INTERVAL '30 days'
+)
+SELECT
+    ns.norm_total_trips,
+    ss.star_total_trips,
+    ns.norm_total_trips - ss.star_total_trips as trip_count_diff,
+    ROUND(100.0 * ss.star_total_trips / ns.norm_total_trips, 2) as coverage_percentage,
+    ABS(ns.norm_total_revenue - ss.star_total_revenue) as revenue_diff,
+    CASE
+        WHEN ABS(ns.norm_total_trips - ss.star_total_trips) < ns.norm_total_trips * 0.01
+        THEN 'GOOD'
+        ELSE 'ATTENTION_NEEDED'
+    END as consistency_status
+FROM normalized_summary ns, star_summary ss;
+```
+
+### Question 17: Hash-Based Duplicate Prevention at Scale
+**Question:** Explain the trade-offs of using SHA-256 row hashing for duplicate prevention in a high-volume ETL pipeline. How would you optimize hash generation for 3.4M records per month?
+
+**Answer:**
+```python
+# Optimized hash generation strategy implemented in the current system
+
+class OptimizedHashGenerator:
+    def __init__(self, chunk_size=10000):
+        self.chunk_size = chunk_size
+
+    def generate_row_hash_vectorized(self, df_chunk):
+        """
+        Vectorized hash generation for better performance
+        Process 10K rows at a time to balance memory vs speed
+        """
+        def hash_row_optimized(row):
+            # Create deterministic string representation
+            row_dict = {}
+            for column, value in row.items():
+                if pd.isna(value) or value is None:
+                    row_dict[column] = ""
+                elif isinstance(value, float):
+                    row_dict[column] = f"{value:.10f}"  # Consistent precision
+                elif isinstance(value, pd.Timestamp):
+                    row_dict[column] = value.strftime('%Y-%m-%d %H:%M:%S')
+                else:
+                    row_dict[column] = str(value)
+
+            # Create sorted JSON for deterministic hashing
+            row_json = json.dumps(row_dict, sort_keys=True, ensure_ascii=True)
+            return hashlib.sha256(row_json.encode('utf-8')).hexdigest()
+
+        # Apply hash generation row by row (vectorization limited by JSON serialization)
+        return df_chunk.apply(hash_row_optimized, axis=1)
+
+    def process_with_collision_detection(self, df):
+        """
+        Process chunks with collision detection and performance monitoring
+        """
+        results = {
+            'total_rows': len(df),
+            'unique_hashes': 0,
+            'collisions': 0,
+            'processing_time_ms': 0
+        }
+
+        start_time = time.time()
+
+        # Process in chunks for memory efficiency
+        hash_series_list = []
+        seen_hashes = set()
+
+        for chunk_start in range(0, len(df), self.chunk_size):
+            chunk_end = min(chunk_start + self.chunk_size, len(df))
+            chunk_df = df.iloc[chunk_start:chunk_end].copy()
+
+            # Generate hashes for chunk
+            chunk_hashes = self.generate_row_hash_vectorized(chunk_df)
+
+            # Collision detection within chunk
+            chunk_unique = len(chunk_hashes.unique())
+            chunk_total = len(chunk_hashes)
+
+            if chunk_unique < chunk_total:
+                results['collisions'] += (chunk_total - chunk_unique)
+                logger.warning(f"Hash collisions detected in chunk: {chunk_total - chunk_unique}")
+
+            # Global collision detection
+            new_hashes = set(chunk_hashes) - seen_hashes
+            if len(new_hashes) < chunk_unique:
+                results['collisions'] += (chunk_unique - len(new_hashes))
+
+            seen_hashes.update(chunk_hashes)
+            hash_series_list.append(chunk_hashes)
+
+        # Combine all hash series
+        final_hashes = pd.concat(hash_series_list, ignore_index=True)
+        results['unique_hashes'] = len(set(final_hashes))
+        results['processing_time_ms'] = int((time.time() - start_time) * 1000)
+
+        return final_hashes, results
+
+# Database-level duplicate prevention strategy
+CREATE TABLE data_quality_monitor (
+    monitor_id BIGSERIAL PRIMARY KEY,
+    monitored_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    operation_type VARCHAR(50),
+    target_table VARCHAR(100),
+    rows_attempted BIGINT,
+    rows_inserted BIGINT,
+    rows_duplicates BIGINT,
+    hash_collisions INTEGER DEFAULT 0,
+    processing_duration_ms BIGINT,
+    quality_score DECIMAL(5,2)
+);
+
+-- Monitoring query for hash effectiveness
+SELECT
+    DATE(monitored_at) as monitoring_date,
+    COUNT(*) as total_operations,
+    SUM(rows_attempted) as total_rows_processed,
+    SUM(rows_duplicates) as total_duplicates_prevented,
+    SUM(hash_collisions) as total_hash_collisions,
+    ROUND(100.0 * SUM(rows_duplicates) / SUM(rows_attempted), 2) as duplicate_rate_percent,
+    AVG(processing_duration_ms) as avg_processing_time_ms
+FROM data_quality_monitor
+WHERE operation_type = 'chunk_insert'
+  AND monitored_at >= CURRENT_DATE - INTERVAL '7 days'
+GROUP BY DATE(monitored_at)
+ORDER BY monitoring_date DESC;
+```
+
+### Question 18: Advanced Dimensional Analytics
+**Question:** Using the star schema, write a query to identify the most profitable pickup-dropoff location pairs by time of day, including their rank within each borough combination and seasonal trends.
+
+**Answer:**
+```sql
+WITH location_pairs AS (
+    SELECT
+        dl_pickup.borough as pickup_borough,
+        dl_dropoff.borough as dropoff_borough,
+        dl_pickup.zone as pickup_zone,
+        dl_dropoff.zone as dropoff_zone,
+        dt.hour_24 as pickup_hour,
+        dd.quarter as pickup_quarter,
+        ft.pickup_location_key,
+        ft.dropoff_location_key,
+        COUNT(*) as trip_count,
+        SUM(ft.total_amount) as total_revenue,
+        AVG(ft.total_amount) as avg_trip_value,
+        AVG(ft.trip_distance) as avg_trip_distance,
+        SUM(ft.tip_amount) as total_tips
+    FROM fact_taxi_trips ft
+    JOIN dim_locations dl_pickup ON ft.pickup_location_key = dl_pickup.location_key
+    JOIN dim_locations dl_dropoff ON ft.dropoff_location_key = dl_dropoff.location_key
+    JOIN dim_time dt ON ft.pickup_time_key = dt.time_key
+    JOIN dim_date dd ON ft.pickup_date_key = dd.date_key
+    WHERE dd.full_date >= CURRENT_DATE - INTERVAL '365 days'
+    GROUP BY
+        dl_pickup.borough, dl_dropoff.borough, dl_pickup.zone, dl_dropoff.zone,
+        dt.hour_24, dd.quarter, ft.pickup_location_key, ft.dropoff_location_key
+    HAVING COUNT(*) >= 10  -- Filter low-volume pairs
+),
+seasonal_comparison AS (
+    SELECT
+        *,
+        -- Time-based rankings
+        ROW_NUMBER() OVER (
+            PARTITION BY pickup_borough, dropoff_borough, pickup_hour
+            ORDER BY total_revenue DESC
+        ) as revenue_rank_by_hour,
+
+        ROW_NUMBER() OVER (
+            PARTITION BY pickup_borough, dropoff_borough, pickup_quarter
+            ORDER BY total_revenue DESC
+        ) as revenue_rank_by_quarter,
+
+        -- Calculate seasonal variance
+        AVG(total_revenue) OVER (
+            PARTITION BY pickup_zone, dropoff_zone, pickup_hour
+        ) as avg_revenue_this_hour_all_quarters,
+
+        STDDEV(total_revenue) OVER (
+            PARTITION BY pickup_zone, dropoff_zone, pickup_hour
+        ) as revenue_stddev_seasonal,
+
+        -- Profitability metrics
+        total_revenue / NULLIF(trip_count, 0) as revenue_per_trip,
+        total_tips / NULLIF(total_revenue, 0) * 100 as tip_percentage
+    FROM location_pairs
+),
+enriched_analysis AS (
+    SELECT
+        *,
+        CASE
+            WHEN pickup_hour BETWEEN 7 AND 9 THEN 'Morning Rush'
+            WHEN pickup_hour BETWEEN 17 AND 19 THEN 'Evening Rush'
+            WHEN pickup_hour BETWEEN 22 AND 5 THEN 'Night Hours'
+            ELSE 'Regular Hours'
+        END as time_category,
+
+        CASE pickup_quarter
+            WHEN 1 THEN 'Q1 (Winter)'
+            WHEN 2 THEN 'Q2 (Spring)'
+            WHEN 3 THEN 'Q3 (Summer)'
+            WHEN 4 THEN 'Q4 (Fall)'
+        END as season,
+
+        -- Seasonal volatility flag
+        CASE
+            WHEN revenue_stddev_seasonal / NULLIF(avg_revenue_this_hour_all_quarters, 0) > 0.3
+            THEN 'HIGH_SEASONAL_VARIANCE'
+            ELSE 'STABLE'
+        END as seasonal_stability,
+
+        -- Cross-borough premium
+        CASE
+            WHEN pickup_borough != dropoff_borough THEN 'Cross-Borough'
+            ELSE 'Intra-Borough'
+        END as trip_type
+    FROM seasonal_comparison
+)
+SELECT
+    pickup_borough,
+    dropoff_borough,
+    pickup_zone,
+    dropoff_zone,
+    time_category,
+    season,
+    trip_count,
+    ROUND(total_revenue, 2) as total_revenue,
+    ROUND(revenue_per_trip, 2) as revenue_per_trip,
+    ROUND(tip_percentage, 1) as tip_percentage,
+    revenue_rank_by_hour,
+    revenue_rank_by_quarter,
+    trip_type,
+    seasonal_stability,
+    -- Performance indicators
+    CASE
+        WHEN revenue_rank_by_hour <= 3 AND revenue_rank_by_quarter <= 5 THEN 'TOP_PERFORMER'
+        WHEN revenue_rank_by_hour <= 10 AND revenue_rank_by_quarter <= 15 THEN 'STRONG_PERFORMER'
+        ELSE 'AVERAGE_PERFORMER'
+    END as performance_category
+FROM enriched_analysis
+WHERE revenue_rank_by_hour <= 20  -- Top 20 pairs per borough/hour combination
+ORDER BY
+    pickup_borough, dropoff_borough, time_category, total_revenue DESC;
+
+-- Supporting materialized view for faster queries
+CREATE MATERIALIZED VIEW mv_location_pair_metrics AS
+SELECT
+    ft.pickup_location_key,
+    ft.dropoff_location_key,
+    dl_pickup.borough as pickup_borough,
+    dl_dropoff.borough as dropoff_borough,
+    COUNT(*) as total_trips,
+    SUM(ft.total_amount) as total_revenue,
+    AVG(ft.trip_distance) as avg_distance,
+    AVG(ft.trip_duration_minutes) as avg_duration,
+    MIN(dd.full_date) as first_trip_date,
+    MAX(dd.full_date) as last_trip_date
+FROM fact_taxi_trips ft
+JOIN dim_locations dl_pickup ON ft.pickup_location_key = dl_pickup.location_key
+JOIN dim_locations dl_dropoff ON ft.dropoff_location_key = dl_dropoff.location_key
+JOIN dim_date dd ON ft.pickup_date_key = dd.date_key
+GROUP BY
+    ft.pickup_location_key, ft.dropoff_location_key,
+    dl_pickup.borough, dl_dropoff.borough;
+
+CREATE UNIQUE INDEX idx_mv_location_pairs
+ON mv_location_pair_metrics (pickup_location_key, dropoff_location_key);
+```
+
+### Question 19: ETL Pipeline Error Recovery and Data Quality Assurance
+**Question:** Design an ETL error recovery system that can handle partial failures, data quality issues, and ensure consistent state between normalized and star schemas during high-volume processing.
+
+**Answer:**
+```sql
+-- 1. ETL State Management System
+CREATE TYPE etl_status AS ENUM ('pending', 'in_progress', 'completed', 'failed', 'recovering');
+
+CREATE TABLE etl_batch_control (
+    batch_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    batch_type VARCHAR(50) NOT NULL, -- 'monthly_load', 'incremental', 'recovery'
+    source_identifier VARCHAR(200) NOT NULL, -- file path, date range, etc.
+    target_tables TEXT[], -- array of affected tables
+    batch_status etl_status DEFAULT 'pending',
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    error_details JSONB,
+    recovery_attempts INTEGER DEFAULT 0,
+    rows_processed BIGINT DEFAULT 0,
+    rows_succeeded BIGINT DEFAULT 0,
+    rows_failed BIGINT DEFAULT 0,
+    checksum_normalized VARCHAR(64), -- hash of normalized data
+    checksum_star VARCHAR(64), -- hash of star schema data
+    parent_batch_id UUID REFERENCES etl_batch_control(batch_id)
+);
+
+-- 2. Transactional ETL with Rollback Capability
+CREATE OR REPLACE FUNCTION process_batch_with_recovery(
+    p_source_identifier VARCHAR(200),
+    p_batch_type VARCHAR(50) DEFAULT 'monthly_load'
+)
+RETURNS TABLE(
+    batch_id UUID,
+    final_status etl_status,
+    rows_processed BIGINT,
+    error_summary TEXT
+) AS $$
+DECLARE
+    v_batch_id UUID;
+    v_savepoint_name TEXT;
+    v_error_msg TEXT;
+    v_recovery_attempt INTEGER := 0;
+    v_max_recovery_attempts INTEGER := 3;
+BEGIN
+    -- Create batch record
+    INSERT INTO etl_batch_control (batch_type, source_identifier, batch_status, started_at)
+    VALUES (p_batch_type, p_source_identifier, 'in_progress', CURRENT_TIMESTAMP)
+    RETURNING etl_batch_control.batch_id INTO v_batch_id;
+
+    <<recovery_loop>>
+    LOOP
+        BEGIN
+            v_savepoint_name := 'batch_savepoint_' || v_recovery_attempt;
+            EXECUTE 'SAVEPOINT ' || v_savepoint_name;
+
+            -- Main ETL processing logic
+            PERFORM process_normalized_data(v_batch_id, p_source_identifier);
+            PERFORM process_star_schema_data(v_batch_id);
+            PERFORM validate_data_consistency(v_batch_id);
+
+            -- Success - update batch status
+            UPDATE etl_batch_control
+            SET batch_status = 'completed',
+                completed_at = CURRENT_TIMESTAMP,
+                checksum_normalized = calculate_batch_checksum('normalized', v_batch_id),
+                checksum_star = calculate_batch_checksum('star', v_batch_id)
+            WHERE etl_batch_control.batch_id = v_batch_id;
+
+            RETURN QUERY
+            SELECT v_batch_id, 'completed'::etl_status,
+                   (SELECT rows_processed FROM etl_batch_control WHERE batch_id = v_batch_id),
+                   'Success'::TEXT;
+            RETURN;
+
+        EXCEPTION
+            WHEN OTHERS THEN
+                v_error_msg := SQLERRM;
+                v_recovery_attempt := v_recovery_attempt + 1;
+
+                -- Log the error
+                UPDATE etl_batch_control
+                SET error_details = COALESCE(error_details, '[]'::jsonb) ||
+                    jsonb_build_object(
+                        'attempt', v_recovery_attempt,
+                        'error', v_error_msg,
+                        'timestamp', CURRENT_TIMESTAMP
+                    ),
+                    recovery_attempts = v_recovery_attempt
+                WHERE batch_id = v_batch_id;
+
+                -- Rollback to savepoint
+                EXECUTE 'ROLLBACK TO SAVEPOINT ' || v_savepoint_name;
+
+                -- Check if we should retry
+                IF v_recovery_attempt >= v_max_recovery_attempts THEN
+                    -- Mark as failed
+                    UPDATE etl_batch_control
+                    SET batch_status = 'failed', completed_at = CURRENT_TIMESTAMP
+                    WHERE batch_id = v_batch_id;
+
+                    RETURN QUERY
+                    SELECT v_batch_id, 'failed'::etl_status, 0::BIGINT, v_error_msg;
+                    RETURN;
+                END IF;
+
+                -- Wait before retry (exponential backoff)
+                PERFORM pg_sleep(POWER(2, v_recovery_attempt));
+        END;
+    END LOOP recovery_loop;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 3. Data Quality Validation Framework
+CREATE OR REPLACE FUNCTION validate_data_consistency(p_batch_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+    v_norm_count BIGINT;
+    v_star_count BIGINT;
+    v_norm_revenue NUMERIC;
+    v_star_revenue NUMERIC;
+    v_variance_threshold NUMERIC := 0.01; -- 1% tolerance
+    v_batch_date_range daterange;
+BEGIN
+    -- Get batch date range
+    SELECT daterange(
+        MIN(DATE(tpep_pickup_datetime)),
+        MAX(DATE(tpep_pickup_datetime)), '[]'
+    ) INTO v_batch_date_range
+    FROM yellow_taxi_trips yt
+    JOIN etl_batch_control ebc ON ebc.batch_id = p_batch_id
+    WHERE yt.created_at >= ebc.started_at;
+
+    -- Validate record counts
+    SELECT COUNT(*), SUM(total_amount) INTO v_norm_count, v_norm_revenue
+    FROM yellow_taxi_trips
+    WHERE DATE(tpep_pickup_datetime) <@ v_batch_date_range;
+
+    SELECT COUNT(*), SUM(total_amount) INTO v_star_count, v_star_revenue
+    FROM fact_taxi_trips ft
+    JOIN dim_date dd ON ft.pickup_date_key = dd.date_key
+    WHERE dd.full_date <@ v_batch_date_range;
+
+    -- Check variance
+    IF ABS(v_norm_count - v_star_count) > v_norm_count * v_variance_threshold THEN
+        RAISE EXCEPTION 'Record count mismatch: Normalized=%, Star=%, Variance=%',
+            v_norm_count, v_star_count,
+            ABS(v_norm_count - v_star_count)::NUMERIC / v_norm_count;
+    END IF;
+
+    IF ABS(v_norm_revenue - v_star_revenue) > v_norm_revenue * v_variance_threshold THEN
+        RAISE EXCEPTION 'Revenue mismatch: Normalized=%, Star=%, Variance=%',
+            v_norm_revenue, v_star_revenue,
+            ABS(v_norm_revenue - v_star_revenue) / v_norm_revenue;
+    END IF;
+
+    -- Log validation success
+    INSERT INTO data_quality_monitor (
+        operation_type, target_table, rows_attempted, rows_inserted,
+        additional_info
+    ) VALUES (
+        'consistency_check', 'normalized_vs_star', v_norm_count, v_star_count,
+        jsonb_build_object(
+            'batch_id', p_batch_id,
+            'norm_revenue', v_norm_revenue,
+            'star_revenue', v_star_revenue,
+            'validation_status', 'PASSED'
+        )
+    );
+
+    RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 4. Automated Recovery Monitoring
+CREATE OR REPLACE VIEW etl_health_dashboard AS
+SELECT
+    DATE(started_at) as processing_date,
+    batch_type,
+    COUNT(*) as total_batches,
+    COUNT(*) FILTER (WHERE batch_status = 'completed') as successful_batches,
+    COUNT(*) FILTER (WHERE batch_status = 'failed') as failed_batches,
+    COUNT(*) FILTER (WHERE batch_status = 'in_progress') as in_progress_batches,
+    AVG(recovery_attempts) as avg_recovery_attempts,
+    SUM(rows_processed) as total_rows_processed,
+    ROUND(100.0 * COUNT(*) FILTER (WHERE batch_status = 'completed') / COUNT(*), 2) as success_rate,
+    MAX(completed_at - started_at) as max_processing_duration,
+    AVG(completed_at - started_at) FILTER (WHERE batch_status = 'completed') as avg_processing_duration
+FROM etl_batch_control
+WHERE started_at >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY DATE(started_at), batch_type
+ORDER BY processing_date DESC, batch_type;
 ```
 
 ---

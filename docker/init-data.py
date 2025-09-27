@@ -985,13 +985,19 @@ def store_invalid_row(engine, row, source_file, chunk_number, row_number_in_chun
     """Store an invalid row in the yellow_taxi_trips_invalid table"""
     try:
         with engine.begin() as conn:
-            # Convert row to dictionary and handle NaN values
+            # Convert row to dictionary and handle NaN values and numpy types
             row_dict = {}
             for col, value in row.items():
                 if pd.isna(value):
                     row_dict[col] = None
                 else:
-                    row_dict[col] = value
+                    # Convert numpy types to Python native types for psycopg2 compatibility
+                    if hasattr(value, 'item'):  # numpy scalar
+                        row_dict[col] = value.item()
+                    elif isinstance(value, (pd.Timestamp, pd.NaT)):
+                        row_dict[col] = value.to_pydatetime() if pd.notna(value) else None
+                    else:
+                        row_dict[col] = value
 
             # Insert invalid row
             conn.execute(text("""
