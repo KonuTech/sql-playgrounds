@@ -91,6 +91,109 @@ A production-ready Docker-based SQL playground featuring PostgreSQL 17 + PostGIS
    - **Password**: admin123
    - **Schema**: nyc_taxi
 
+## Data Pipeline Architecture
+
+```mermaid
+flowchart TD
+    %% Data Sources
+    A[NYC TLC Data Sources] --> B[yellow_tripdata_*.parquet]
+    A --> C[taxi_zone_lookup.csv]
+    A --> D[taxi_zones.zip]
+
+    %% ETL Process
+    B --> E[Python ETL Process]
+    C --> E
+    D --> E
+
+    %% Normalized Schema
+    E --> F[(yellow_taxi_trips)]
+    E --> G[(yellow_taxi_trips_invalid)]
+    E --> H[(taxi_zone_lookup)]
+    E --> I[(taxi_zone_shapes)]
+    E --> J[(vendor_lookup)]
+    E --> K[(payment_type_lookup)]
+    E --> L[(rate_code_lookup)]
+
+    %% Star Schema Dimensions
+    H --> M[(dim_locations)]
+    J --> N[(dim_vendor)]
+    K --> O[(dim_payment_type)]
+    L --> P[(dim_rate_code)]
+    E --> Q[(dim_date)]
+    E --> R[(dim_time)]
+
+    %% Star Schema Fact Table
+    F --> S[(fact_taxi_trips)]
+    M --> S
+    N --> S
+    O --> S
+    P --> S
+    Q --> S
+    R --> S
+
+    %% Data Quality Monitoring
+    E --> T[(data_quality_monitor)]
+    E --> U[(data_processing_log)]
+
+    %% Table Details
+    F -.-> F1[row_hash VARCHAR(64) PK<br/>vendorid INTEGER<br/>tpep_pickup_datetime TIMESTAMP<br/>tpep_dropoff_datetime TIMESTAMP<br/>passenger_count DECIMAL<br/>trip_distance DECIMAL<br/>pulocationid INTEGER FK<br/>dolocationid INTEGER FK<br/>payment_type BIGINT FK<br/>fare_amount DECIMAL<br/>total_amount DECIMAL<br/>+ 12 more columns]
+
+    G -.-> G1[invalid_id BIGSERIAL PK<br/>error_message TEXT<br/>error_type VARCHAR<br/>source_file VARCHAR<br/>+ all yellow_taxi_trips columns<br/>raw_data_json JSONB]
+
+    H -.-> H1[locationid INTEGER PK<br/>borough VARCHAR<br/>zone VARCHAR<br/>service_zone VARCHAR]
+
+    I -.-> I1[objectid INTEGER PK<br/>locationid INTEGER FK<br/>zone VARCHAR<br/>borough VARCHAR<br/>geometry GEOMETRY]
+
+    M -.-> M1[location_key SERIAL PK<br/>locationid INTEGER UNIQUE<br/>zone VARCHAR<br/>borough VARCHAR<br/>zone_type VARCHAR<br/>is_airport BOOLEAN<br/>is_manhattan BOOLEAN<br/>business_district BOOLEAN]
+
+    N -.-> N1[vendor_key SERIAL PK<br/>vendorid INTEGER UNIQUE<br/>vendor_name VARCHAR<br/>vendor_type VARCHAR<br/>is_active BOOLEAN]
+
+    O -.-> O1[payment_type_key SERIAL PK<br/>payment_type INTEGER UNIQUE<br/>payment_type_desc VARCHAR<br/>is_electronic BOOLEAN<br/>allows_tips BOOLEAN]
+
+    P -.-> P1[rate_code_key SERIAL PK<br/>ratecodeid INTEGER UNIQUE<br/>rate_code_desc VARCHAR<br/>is_metered BOOLEAN<br/>is_airport_rate BOOLEAN]
+
+    Q -.-> Q1[date_key INTEGER PK<br/>date_actual DATE<br/>year INTEGER<br/>month INTEGER<br/>day INTEGER<br/>quarter INTEGER<br/>is_weekend BOOLEAN<br/>is_holiday BOOLEAN]
+
+    R -.-> R1[time_key INTEGER PK<br/>hour_24 INTEGER<br/>hour_12 INTEGER<br/>is_rush_hour BOOLEAN<br/>is_business_hours BOOLEAN<br/>time_period VARCHAR]
+
+    S -.-> S1[trip_key BIGSERIAL PK<br/>pickup_date_key INTEGER FK<br/>pickup_time_key INTEGER FK<br/>dropoff_date_key INTEGER FK<br/>dropoff_time_key INTEGER FK<br/>pickup_location_key INTEGER FK<br/>dropoff_location_key INTEGER FK<br/>vendor_key INTEGER FK<br/>payment_type_key INTEGER FK<br/>rate_code_key INTEGER FK<br/>trip_distance DECIMAL<br/>trip_duration_minutes INTEGER<br/>fare_amount DECIMAL<br/>tip_amount DECIMAL<br/>total_amount DECIMAL<br/>+ calculated measures]
+
+    T -.-> T1[monitor_id BIGSERIAL PK<br/>monitored_at TIMESTAMP<br/>source_file VARCHAR<br/>target_table VARCHAR<br/>rows_attempted BIGINT<br/>rows_inserted BIGINT<br/>rows_duplicates BIGINT<br/>rows_invalid BIGINT<br/>quality_level VARCHAR<br/>processing_duration_ms BIGINT]
+
+    U -.-> U1[log_id BIGSERIAL PK<br/>data_year INTEGER<br/>data_month INTEGER<br/>status VARCHAR<br/>processing_started_at TIMESTAMP<br/>processing_completed_at TIMESTAMP<br/>total_records_loaded BIGINT<br/>source_file_path VARCHAR]
+
+    %% Styling
+    classDef source fill:#e1f5fe
+    classDef normalized fill:#f3e5f5
+    classDef star fill:#e8f5e8
+    classDef quality fill:#fff3e0
+    classDef details fill:#f5f5f5,stroke:#999,stroke-dasharray: 5 5
+
+    class A,B,C,D source
+    class F,G,H,I,J,K,L normalized
+    class M,N,O,P,Q,R,S star
+    class T,U quality
+    class F1,G1,H1,I1,M1,N1,O1,P1,Q1,R1,S1,T1,U1 details
+```
+
+### Data Flow Legend
+- **🔵 Blue (Source)**: NYC TLC official data sources
+- **🟣 Purple (Normalized)**: OLTP-style normalized tables for data integrity
+- **🟢 Green (Star Schema)**: OLAP-style dimensional model for analytics
+- **🟠 Orange (Quality)**: Data quality monitoring and processing logs
+- **Solid Lines**: Data transformation flow
+- **Dotted Lines**: Table schema details with PK/FK indicators
+
+### Key Relationships
+- **yellow_taxi_trips**: Main fact table with hash-based primary key for duplicate prevention
+- **Foreign Key Relationships**:
+  - `pulocationid/dolocationid` → `taxi_zone_lookup.locationid`
+  - `vendorid` → `vendor_lookup.vendorid`
+  - `payment_type` → `payment_type_lookup.payment_type`
+  - `ratecodeid` → `rate_code_lookup.ratecodeid`
+- **Star Schema**: Dimensional model with `fact_taxi_trips` as central fact table
+- **Data Quality**: Comprehensive monitoring with invalid row tracking and metrics
+
 ## Architecture & Data Loading
 
 ### Automated Backfill System
