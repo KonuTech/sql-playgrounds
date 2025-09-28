@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS yellow_taxi_trips (
     passenger_count DECIMAL(4,1),        -- Number of passengers in the vehicle (can be fractional)
 
     -- Trip distance
-    trip_distance DECIMAL(8,2),          -- Trip distance in miles
+    trip_distance DECIMAL(12,2),          -- Trip distance in miles
 
     -- Location and rate information
     ratecodeid DECIMAL(4,1),             -- Rate code in effect at the end of the trip
@@ -37,16 +37,16 @@ CREATE TABLE IF NOT EXISTS yellow_taxi_trips (
 
     -- Payment information
     payment_type BIGINT,                 -- Payment method (1= Credit card, 2= Cash, 3= No charge, 4= Dispute, 5= Unknown, 6= Voided trip)
-    fare_amount DECIMAL(8,2),           -- Time-and-distance fare calculated by the meter
-    extra DECIMAL(8,2),                 -- Miscellaneous extras and surcharges ($0.50 and $1 rush hour and overnight charges)
-    mta_tax DECIMAL(8,2),               -- $0.50 MTA tax that is automatically triggered based on the metered rate in use
-    tip_amount DECIMAL(8,2),            -- Tip amount (automatically populated for credit card tips, cash tips not included)
-    tolls_amount DECIMAL(8,2),          -- Total amount of all tolls paid in trip
-    improvement_surcharge DECIMAL(8,2),  -- $0.30 improvement surcharge assessed trips at the flag drop
-    total_amount DECIMAL(8,2),          -- Total amount charged to passengers (does not include cash tips)
-    congestion_surcharge DECIMAL(8,2),  -- Total amount collected in trip for NYS congestion surcharge
-    airport_fee DECIMAL(8,2),           -- $1.25 for pick up only at LaGuardia and John F. Kennedy Airports
-    cbd_congestion_fee DECIMAL(8,2),     -- CBD (Central Business District) congestion fee
+    fare_amount DECIMAL(10,2),           -- Time-and-distance fare calculated by the meter
+    extra DECIMAL(10,2),                 -- Miscellaneous extras and surcharges ($0.50 and $1 rush hour and overnight charges)
+    mta_tax DECIMAL(10,2),               -- $0.50 MTA tax that is automatically triggered based on the metered rate in use
+    tip_amount DECIMAL(10,2),            -- Tip amount (automatically populated for credit card tips, cash tips not included)
+    tolls_amount DECIMAL(10,2),          -- Total amount of all tolls paid in trip
+    improvement_surcharge DECIMAL(10,2),  -- $0.30 improvement surcharge assessed trips at the flag drop
+    total_amount DECIMAL(12,2),          -- Total amount charged to passengers (does not include cash tips)
+    congestion_surcharge DECIMAL(10,2),  -- Total amount collected in trip for NYS congestion surcharge
+    airport_fee DECIMAL(10,2),           -- $1.25 for pick up only at LaGuardia and John F. Kennedy Airports
+    cbd_congestion_fee DECIMAL(10,2),     -- CBD (Central Business District) congestion fee
 
     -- Hash-based duplicate prevention (ultimate protection) - now primary key for performance
     row_hash VARCHAR(64) PRIMARY KEY,    -- SHA-256 hash of all row values prevents any duplicate row
@@ -72,22 +72,22 @@ CREATE TABLE IF NOT EXISTS yellow_taxi_trips_invalid (
     tpep_pickup_datetime TIMESTAMP,
     tpep_dropoff_datetime TIMESTAMP,
     passenger_count DECIMAL(4,1),
-    trip_distance DECIMAL(8,2),
+    trip_distance DECIMAL(12,2),
     ratecodeid DECIMAL(4,1),
     store_and_fwd_flag VARCHAR(1),
     pulocationid INTEGER,
     dolocationid INTEGER,
     payment_type BIGINT,
-    fare_amount DECIMAL(8,2),
-    extra DECIMAL(8,2),
-    mta_tax DECIMAL(8,2),
-    tip_amount DECIMAL(8,2),
-    tolls_amount DECIMAL(8,2),
-    improvement_surcharge DECIMAL(8,2),
-    total_amount DECIMAL(8,2),
-    congestion_surcharge DECIMAL(8,2),
-    airport_fee DECIMAL(8,2),
-    cbd_congestion_fee DECIMAL(8,2),
+    fare_amount DECIMAL(10,2),
+    extra DECIMAL(10,2),
+    mta_tax DECIMAL(10,2),
+    tip_amount DECIMAL(10,2),
+    tolls_amount DECIMAL(10,2),
+    improvement_surcharge DECIMAL(10,2),
+    total_amount DECIMAL(12,2),
+    congestion_surcharge DECIMAL(10,2),
+    airport_fee DECIMAL(10,2),
+    cbd_congestion_fee DECIMAL(10,2),
     row_hash VARCHAR(64),
 
     -- Additional debugging information
@@ -499,26 +499,26 @@ CREATE TABLE IF NOT EXISTS fact_taxi_trips (
     payment_type_key INTEGER,
     rate_code_key INTEGER,
 
-    -- Measures (Facts)
-    trip_distance DECIMAL(8,2),
+    -- Measures (Facts) - Updated precision to handle outliers
+    trip_distance DECIMAL(12,2),
     trip_duration_minutes INTEGER,
     passenger_count INTEGER,
-    fare_amount DECIMAL(8,2),
-    extra DECIMAL(8,2),
-    mta_tax DECIMAL(8,2),
-    tip_amount DECIMAL(8,2),
-    tolls_amount DECIMAL(8,2),
-    improvement_surcharge DECIMAL(8,2),
-    total_amount DECIMAL(8,2),
-    congestion_surcharge DECIMAL(8,2),
-    airport_fee DECIMAL(8,2),
-    cbd_congestion_fee DECIMAL(8,2),
+    fare_amount DECIMAL(10,2),
+    extra DECIMAL(10,2),
+    mta_tax DECIMAL(10,2),
+    tip_amount DECIMAL(10,2),
+    tolls_amount DECIMAL(10,2),
+    improvement_surcharge DECIMAL(10,2),
+    total_amount DECIMAL(12,2),
+    congestion_surcharge DECIMAL(10,2),
+    airport_fee DECIMAL(10,2),
+    cbd_congestion_fee DECIMAL(10,2),
 
     -- Derived Measures
     base_fare DECIMAL(10,2),
     total_surcharges DECIMAL(10,2),
-    tip_percentage DECIMAL(8,2),
-    avg_speed_mph DECIMAL(8,2),
+    tip_percentage DECIMAL(10,2),
+    avg_speed_mph DECIMAL(10,2),
     revenue_per_mile DECIMAL(10,2),
 
     -- Flags for Analysis

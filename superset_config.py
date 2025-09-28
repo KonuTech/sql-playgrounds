@@ -72,13 +72,30 @@ WEBSERVER_THREADS = 4
 
 # Security settings
 WTF_CSRF_ENABLED = True
-WTF_CSRF_EXEMPT_LIST = []
+WTF_CSRF_EXEMPT_LIST = ['superset.views.api', 'superset.security.views']
 WTF_CSRF_TIME_LIMIT = None
+
+# Additional CSRF configuration for API endpoints
+CSRF_ENABLED = True
+WTF_CSRF_CHECK_DEFAULT = True
+
+# API and frontend CSRF handling
+SUPERSET_WEBSERVER_TIMEOUT = 60
+PUBLIC_ROLE_LIKE_GAMMA = True
 
 # Session configuration for stability
 SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
+
+# Use Redis for session storage to fix CSRF issues
+SESSION_TYPE = 'redis'
+SESSION_REDIS_HOST = REDIS_HOST
+SESSION_REDIS_PORT = REDIS_PORT
+SESSION_REDIS_DB = 2
+SESSION_PERMANENT = False
+SESSION_USE_SIGNER = True
+SESSION_KEY_PREFIX = 'superset_session:'
 
 # Additional configuration for SQL Lab stability
 SQLLAB_TIMEOUT = 300
