@@ -3,9 +3,10 @@ FROM apache/superset:latest
 # Switch to root to install system packages
 USER root
 
-# Install PostgreSQL development libraries, build tools, pip, and curl
+# Install PostgreSQL development libraries, client tools, build tools, pip, and curl
 RUN apt-get update && apt-get install -y \
     libpq-dev \
+    postgresql-client \
     gcc \
     python3-dev \
     python3-pip \

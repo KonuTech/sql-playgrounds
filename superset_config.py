@@ -70,32 +70,33 @@ ROW_LIMIT = 5000
 # Webserver configuration
 WEBSERVER_THREADS = 4
 
-# Security settings
-WTF_CSRF_ENABLED = True
-WTF_CSRF_EXEMPT_LIST = ['superset.views.api', 'superset.security.views']
-WTF_CSRF_TIME_LIMIT = None
+# Security settings - Disable CSRF for development environment
+WTF_CSRF_ENABLED = False
+TALISMAN_ENABLED = False
 
-# Additional CSRF configuration for API endpoints
-CSRF_ENABLED = True
-WTF_CSRF_CHECK_DEFAULT = True
+# Additional security settings for development
+CSRF_ENABLED = False
+WTF_CSRF_CHECK_DEFAULT = False
+WTF_CSRF_SSL_STRICT = False
+SEND_FILE_MAX_AGE_DEFAULT = 60 * 60 * 24 * 365
 
 # API and frontend CSRF handling
 SUPERSET_WEBSERVER_TIMEOUT = 60
 PUBLIC_ROLE_LIKE_GAMMA = True
 
-# Session configuration for stability
+# Session configuration for development
 SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = None  # More permissive for development
 
-# Use Redis for session storage to fix CSRF issues
-SESSION_TYPE = 'redis'
-SESSION_REDIS_HOST = REDIS_HOST
-SESSION_REDIS_PORT = REDIS_PORT
-SESSION_REDIS_DB = 2
+# Use filesystem session storage (more reliable than Redis)
+SESSION_TYPE = 'filesystem'
+SESSION_FILE_DIR = '/tmp/superset_sessions'
 SESSION_PERMANENT = False
 SESSION_USE_SIGNER = True
-SESSION_KEY_PREFIX = 'superset_session:'
+
+# Alternative Redis cache for other purposes (keep Redis for caching only)
+# Note: Redis session storage can cause CSRF issues in some Superset versions
 
 # Additional configuration for SQL Lab stability
 SQLLAB_TIMEOUT = 300
@@ -269,8 +270,10 @@ def configure_logging():
     logger.info(f"📁 Log Directory: {LOG_DIR}")
     logger.info(f"🗄️ Database: {SQLALCHEMY_DATABASE_URI.split('@')[1] if '@' in SQLALCHEMY_DATABASE_URI else 'configured'}")
     logger.info(f"🔑 Redis Cache: {REDIS_HOST}:{REDIS_PORT}")
-    logger.info(f"🔒 CSRF Protection: {WTF_CSRF_ENABLED}")
+    logger.info(f"🔒 CSRF Protection: {'❌ DISABLED (Development Mode)' if not WTF_CSRF_ENABLED else '✅ ENABLED'}")
+    logger.info(f"🛡️ Talisman Security: {'❌ DISABLED (Development Mode)' if not TALISMAN_ENABLED else '✅ ENABLED'}")
     logger.info(f"📊 Row Limit: {ROW_LIMIT}")
+    logger.info(f"📁 Session Storage: {SESSION_TYPE} ({'Filesystem' if SESSION_TYPE == 'filesystem' else 'Other'})")
     logger.info("📋 Log Files:")
     logger.info(f"  • Application: superset.log")
     logger.info(f"  • Errors: superset_errors.log")

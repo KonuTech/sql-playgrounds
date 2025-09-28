@@ -47,12 +47,16 @@ services:
     environment:
       SUPERSET_CONFIG_PATH: /app/superset_config.py
       PYTHONPATH: /app
+      # PostgreSQL connection variables for initialization script
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin123}
+      SUPERSET_LOAD_EXAMPLES: ${SUPERSET_LOAD_EXAMPLES:-false}
     ports:
       - "${SUPERSET_PORT:-8088}:8088"
     volumes:
       - superset_data:/app/superset_home
       - ./superset_config.py:/app/superset_config.py
       - ./logs/superset:/app/logs
+      - ./docker/init-superset.sh:/app/init-superset.sh
     networks:
       - sql-playground-network
     depends_on:
@@ -60,9 +64,7 @@ services:
       - redis
     command: >
       bash -c "
-      superset db upgrade &&
-      superset fab create-admin --username admin --firstname Admin --lastname User --email admin@superset.com --password admin123 &&
-      superset init &&
+      /app/init-superset.sh &&
       gunicorn --bind 0.0.0.0:8088 --workers 4 --timeout 120 'superset.app:create_app()'
       "
 
