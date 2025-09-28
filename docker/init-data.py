@@ -104,9 +104,43 @@ def wait_for_postgres(host='localhost', port=5432, database='playground',
     logger.error("❌ PostgreSQL not available after maximum attempts")
     return False
 
+def create_superset_database():
+    """Create superset database using direct psycopg2 connection with autocommit"""
+    try:
+        # Connect to postgres database (not playground) to create new database
+        conn = psycopg2.connect(
+            host='localhost',
+            port=5432,
+            database='postgres',  # Connect to postgres database first
+            user='admin',
+            password='admin123'
+        )
+        conn.autocommit = True  # Required for CREATE DATABASE
+
+        with conn.cursor() as cursor:
+            # Check if database exists
+            cursor.execute("SELECT 1 FROM pg_database WHERE datname = 'superset'")
+            if cursor.fetchone() is None:
+                logger.info("🔧 Creating superset database...")
+                cursor.execute("CREATE DATABASE superset")
+                cursor.execute("GRANT ALL PRIVILEGES ON DATABASE superset TO admin")
+                logger.info("✅ Superset database created successfully")
+            else:
+                logger.info("ℹ️ Superset database already exists")
+
+        conn.close()
+        return True
+
+    except Exception as e:
+        logger.error(f"❌ Error creating superset database: {e}")
+        return False
+
 def execute_sql_scripts(engine):
     """Execute SQL initialization scripts in order"""
     logger.info("🗃️ Executing SQL initialization scripts...")
+
+    # First, handle superset database creation separately
+    create_superset_database()
 
     # Define the script directory and order
     script_dir = '/sql-scripts/init-scripts'
@@ -117,6 +151,9 @@ def execute_sql_scripts(engine):
 
     # Get all SQL files and sort them (ensuring proper execution order)
     sql_files = sorted(glob.glob(os.path.join(script_dir, "*.sql")))
+
+    # Filter out superset database script since we handle it separately
+    sql_files = [f for f in sql_files if 'superset-database' not in f]
 
     if not sql_files:
         logger.warning("⚠️ No SQL scripts found to execute")

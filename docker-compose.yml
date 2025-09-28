@@ -38,10 +38,53 @@ services:
     depends_on:
       - postgres
 
+  superset:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.superset
+    container_name: sql-playground-superset
+    restart: unless-stopped
+    environment:
+      SUPERSET_CONFIG_PATH: /app/superset_config.py
+      PYTHONPATH: /app
+    ports:
+      - "${SUPERSET_PORT:-8088}:8088"
+    volumes:
+      - superset_data:/app/superset_home
+      - ./superset_config.py:/app/superset_config.py
+      - ./logs/superset:/app/logs
+    networks:
+      - sql-playground-network
+    depends_on:
+      - postgres
+      - redis
+    command: >
+      bash -c "
+      superset db upgrade &&
+      superset fab create-admin --username admin --firstname Admin --lastname User --email admin@superset.com --password admin123 &&
+      superset init &&
+      gunicorn --bind 0.0.0.0:8088 --workers 4 --timeout 120 'superset.app:create_app()'
+      "
+
+  redis:
+    image: redis:7-alpine
+    container_name: sql-playground-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - sql-playground-network
+
 volumes:
   postgres_data:
     driver: local
   pgadmin_data:
+    driver: local
+  superset_data:
+    driver: local
+  redis_data:
     driver: local
 
 networks:

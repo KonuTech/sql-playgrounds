@@ -1,0 +1,24 @@
+FROM apache/superset:latest
+
+# Switch to root to install system packages
+USER root
+
+# Install PostgreSQL development libraries, build tools, pip, and curl
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    python3-dev \
+    python3-pip \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install PostgreSQL drivers and requests using system pip to virtual environment
+# Install both pg8000 (primary) and psycopg2-binary (for Superset internal compatibility)
+RUN /usr/bin/python3 -m pip install --target /app/.venv/lib/python3.10/site-packages pg8000 psycopg2-binary requests --break-system-packages
+
+# Copy database connection script
+COPY docker/create-db-connection.py /app/create-db-connection.py
+RUN chmod +x /app/create-db-connection.py
+
+# Set the final user
+USER superset
