@@ -15,7 +15,7 @@ SET search_path = nyc_taxi, public;
 
 -- Yellow Taxi Trip Records table
 -- This table structure exactly matches the NYC TLC Yellow Taxi data format (20 columns)
-CREATE TABLE yellow_taxi_trips (
+CREATE TABLE IF NOT EXISTS yellow_taxi_trips (
     -- Trip identifiers
     vendorid INTEGER,                    -- Provider that provided the record (1= Creative Mobile Technologies, 2= VeriFone Inc.)
 
@@ -57,7 +57,7 @@ CREATE TABLE yellow_taxi_trips (
 
 -- Invalid Trip Records table - stores rows that failed to insert into yellow_taxi_trips
 -- Used for data quality monitoring and debugging during batch ingestion
-CREATE TABLE yellow_taxi_trips_invalid (
+CREATE TABLE IF NOT EXISTS yellow_taxi_trips_invalid (
     -- Metadata about the failed insertion
     invalid_id BIGSERIAL PRIMARY KEY,
     failed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -95,14 +95,14 @@ CREATE TABLE yellow_taxi_trips_invalid (
 );
 
 -- Indexes for efficient querying of invalid data
-CREATE INDEX idx_yellow_taxi_trips_invalid_failed_at ON yellow_taxi_trips_invalid (failed_at);
-CREATE INDEX idx_yellow_taxi_trips_invalid_error_type ON yellow_taxi_trips_invalid (error_type);
-CREATE INDEX idx_yellow_taxi_trips_invalid_source_file ON yellow_taxi_trips_invalid (source_file);
-CREATE INDEX idx_yellow_taxi_trips_invalid_row_hash ON yellow_taxi_trips_invalid (row_hash);
+CREATE INDEX IF NOT EXISTS idx_yellow_taxi_trips_invalid_failed_at ON yellow_taxi_trips_invalid (failed_at);
+CREATE INDEX IF NOT EXISTS idx_yellow_taxi_trips_invalid_error_type ON yellow_taxi_trips_invalid (error_type);
+CREATE INDEX IF NOT EXISTS idx_yellow_taxi_trips_invalid_source_file ON yellow_taxi_trips_invalid (source_file);
+CREATE INDEX IF NOT EXISTS idx_yellow_taxi_trips_invalid_row_hash ON yellow_taxi_trips_invalid (row_hash);
 
 -- Data Quality Monitoring table - tracks quality metrics for all table insertions
 -- Provides comprehensive monitoring of data quality across all tables and operations
-CREATE TABLE data_quality_monitor (
+CREATE TABLE IF NOT EXISTS data_quality_monitor (
     -- Primary identification
     quality_id BIGSERIAL PRIMARY KEY,
     monitored_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -198,7 +198,7 @@ CREATE TABLE data_quality_monitor (
 );
 
 -- Quality Assessment Summary table - aggregated quality metrics by table/timeframe
-CREATE TABLE data_quality_summary (
+CREATE TABLE IF NOT EXISTS data_quality_summary (
     summary_id BIGSERIAL PRIMARY KEY,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -236,21 +236,21 @@ CREATE TABLE data_quality_summary (
 );
 
 -- Indexes for efficient data quality monitoring queries
-CREATE INDEX idx_data_quality_monitor_monitored_at ON data_quality_monitor (monitored_at);
-CREATE INDEX idx_data_quality_monitor_target_table ON data_quality_monitor (target_table, target_schema);
-CREATE INDEX idx_data_quality_monitor_quality_level ON data_quality_monitor (quality_level);
-CREATE INDEX idx_data_quality_monitor_source_file ON data_quality_monitor (source_file);
-CREATE INDEX idx_data_quality_monitor_batch_id ON data_quality_monitor (batch_id);
-CREATE INDEX idx_data_quality_monitor_critical_errors ON data_quality_monitor (has_critical_errors) WHERE has_critical_errors = true;
-CREATE INDEX idx_data_quality_monitor_session_id ON data_quality_monitor (processing_session_id);
+CREATE INDEX IF NOT EXISTS idx_data_quality_monitor_monitored_at ON data_quality_monitor (monitored_at);
+CREATE INDEX IF NOT EXISTS idx_data_quality_monitor_target_table ON data_quality_monitor (target_table, target_schema);
+CREATE INDEX IF NOT EXISTS idx_data_quality_monitor_quality_level ON data_quality_monitor (quality_level);
+CREATE INDEX IF NOT EXISTS idx_data_quality_monitor_source_file ON data_quality_monitor (source_file);
+CREATE INDEX IF NOT EXISTS idx_data_quality_monitor_batch_id ON data_quality_monitor (batch_id);
+CREATE INDEX IF NOT EXISTS idx_data_quality_monitor_critical_errors ON data_quality_monitor (has_critical_errors) WHERE has_critical_errors = true;
+CREATE INDEX IF NOT EXISTS idx_data_quality_monitor_session_id ON data_quality_monitor (processing_session_id);
 
 -- Summary table indexes
-CREATE INDEX idx_data_quality_summary_table_period ON data_quality_summary (target_table, summary_period, period_start);
-CREATE INDEX idx_data_quality_summary_quality_score ON data_quality_summary (quality_score);
-CREATE INDEX idx_data_quality_summary_period_range ON data_quality_summary (period_start, period_end);
+CREATE INDEX IF NOT EXISTS idx_data_quality_summary_table_period ON data_quality_summary (target_table, summary_period, period_start);
+CREATE INDEX IF NOT EXISTS idx_data_quality_summary_quality_score ON data_quality_summary (quality_score);
+CREATE INDEX IF NOT EXISTS idx_data_quality_summary_period_range ON data_quality_summary (period_start, period_end);
 
 -- Data Quality Alert Thresholds Configuration table
-CREATE TABLE data_quality_thresholds (
+CREATE TABLE IF NOT EXISTS data_quality_thresholds (
     threshold_id SERIAL PRIMARY KEY,
     target_table VARCHAR(100) NOT NULL,
     target_schema VARCHAR(50) DEFAULT 'nyc_taxi',
@@ -279,10 +279,15 @@ INSERT INTO data_quality_thresholds (target_table, max_error_rate, max_duplicate
 ('yellow_taxi_trips', 2.0, 5.0, 98.0),
 ('fact_taxi_trips', 1.0, 3.0, 99.0),
 ('taxi_zone_lookup', 0.0, 0.0, 100.0),
-('taxi_zone_shapes', 0.0, 0.0, 100.0);
+('taxi_zone_shapes', 0.0, 0.0, 100.0)
+ON CONFLICT (target_table, target_schema) DO UPDATE SET
+    max_error_rate = EXCLUDED.max_error_rate,
+    max_duplicate_rate = EXCLUDED.max_duplicate_rate,
+    min_success_rate = EXCLUDED.min_success_rate,
+    updated_at = CURRENT_TIMESTAMP;
 
 -- Taxi Zone Lookup table (complete reference data from NYC TLC)
-CREATE TABLE taxi_zone_lookup (
+CREATE TABLE IF NOT EXISTS taxi_zone_lookup (
     locationid INTEGER PRIMARY KEY,
     borough VARCHAR(50) NOT NULL,
     zone VARCHAR(100) NOT NULL,
@@ -291,7 +296,7 @@ CREATE TABLE taxi_zone_lookup (
 
 -- Taxi Zone Shapes table (geospatial data from NYC TLC)
 -- Contains polygon geometries for each taxi zone
-CREATE TABLE taxi_zone_shapes (
+CREATE TABLE IF NOT EXISTS taxi_zone_shapes (
     objectid INTEGER PRIMARY KEY,
     locationid INTEGER NOT NULL,
     zone VARCHAR(100) NOT NULL,
@@ -303,29 +308,29 @@ CREATE TABLE taxi_zone_shapes (
 );
 
 -- Create spatial index for efficient geospatial queries
-CREATE INDEX idx_taxi_zone_shapes_geometry ON taxi_zone_shapes USING GIST (geometry);
+CREATE INDEX IF NOT EXISTS idx_taxi_zone_shapes_geometry ON taxi_zone_shapes USING GIST (geometry);
 
 -- Rate Code Lookup table
-CREATE TABLE rate_code_lookup (
+CREATE TABLE IF NOT EXISTS rate_code_lookup (
     ratecodeid INTEGER PRIMARY KEY,
     rate_code_desc VARCHAR(50)
 );
 
 -- Payment Type Lookup table
-CREATE TABLE payment_type_lookup (
+CREATE TABLE IF NOT EXISTS payment_type_lookup (
     payment_type INTEGER PRIMARY KEY,
     payment_type_desc VARCHAR(50)
 );
 
 -- Vendor Lookup table
-CREATE TABLE vendor_lookup (
+CREATE TABLE IF NOT EXISTS vendor_lookup (
     vendorid INTEGER PRIMARY KEY,
     vendor_name VARCHAR(100)
 );
 
 -- Data Processing Tracking table
 -- Tracks which months have been successfully processed to prevent duplicates
-CREATE TABLE data_processing_log (
+CREATE TABLE IF NOT EXISTS data_processing_log (
     id SERIAL PRIMARY KEY,
     data_year INTEGER NOT NULL,
     data_month INTEGER NOT NULL,
@@ -347,7 +352,9 @@ INSERT INTO rate_code_lookup (ratecodeid, rate_code_desc) VALUES
 (3, 'Newark'),
 (4, 'Nassau or Westchester'),
 (5, 'Negotiated fare'),
-(6, 'Group ride');
+(6, 'Group ride')
+ON CONFLICT (ratecodeid) DO UPDATE SET
+    rate_code_desc = EXCLUDED.rate_code_desc;
 
 INSERT INTO payment_type_lookup (payment_type, payment_type_desc) VALUES
 (1, 'Credit card'),
@@ -355,28 +362,32 @@ INSERT INTO payment_type_lookup (payment_type, payment_type_desc) VALUES
 (3, 'No charge'),
 (4, 'Dispute'),
 (5, 'Unknown'),
-(6, 'Voided trip');
+(6, 'Voided trip')
+ON CONFLICT (payment_type) DO UPDATE SET
+    payment_type_desc = EXCLUDED.payment_type_desc;
 
 INSERT INTO vendor_lookup (vendorid, vendor_name) VALUES
 (1, 'Creative Mobile Technologies'),
-(2, 'VeriFone Inc.');
+(2, 'VeriFone Inc.')
+ON CONFLICT (vendorid) DO UPDATE SET
+    vendor_name = EXCLUDED.vendor_name;
 
 -- Taxi zone data will be loaded from CSV and shapefile via Python script
 
 -- Indexes for performance optimization on real NYC taxi data
-CREATE INDEX idx_yellow_taxi_pickup_datetime ON yellow_taxi_trips (tpep_pickup_datetime);
-CREATE INDEX idx_yellow_taxi_dropoff_datetime ON yellow_taxi_trips (tpep_dropoff_datetime);
-CREATE INDEX idx_yellow_taxi_pickup_location ON yellow_taxi_trips (pulocationid);
-CREATE INDEX idx_yellow_taxi_dropoff_location ON yellow_taxi_trips (dolocationid);
-CREATE INDEX idx_yellow_taxi_payment_type ON yellow_taxi_trips (payment_type);
-CREATE INDEX idx_yellow_taxi_vendor ON yellow_taxi_trips (vendorid);
-CREATE INDEX idx_yellow_taxi_trip_distance ON yellow_taxi_trips (trip_distance);
-CREATE INDEX idx_yellow_taxi_total_amount ON yellow_taxi_trips (total_amount);
+CREATE INDEX IF NOT EXISTS idx_yellow_taxi_pickup_datetime ON yellow_taxi_trips (tpep_pickup_datetime);
+CREATE INDEX IF NOT EXISTS idx_yellow_taxi_dropoff_datetime ON yellow_taxi_trips (tpep_dropoff_datetime);
+CREATE INDEX IF NOT EXISTS idx_yellow_taxi_pickup_location ON yellow_taxi_trips (pulocationid);
+CREATE INDEX IF NOT EXISTS idx_yellow_taxi_dropoff_location ON yellow_taxi_trips (dolocationid);
+CREATE INDEX IF NOT EXISTS idx_yellow_taxi_payment_type ON yellow_taxi_trips (payment_type);
+CREATE INDEX IF NOT EXISTS idx_yellow_taxi_vendor ON yellow_taxi_trips (vendorid);
+CREATE INDEX IF NOT EXISTS idx_yellow_taxi_trip_distance ON yellow_taxi_trips (trip_distance);
+CREATE INDEX IF NOT EXISTS idx_yellow_taxi_total_amount ON yellow_taxi_trips (total_amount);
 
 -- Composite indexes for common analytical queries
-CREATE INDEX idx_yellow_taxi_datetime_vendor ON yellow_taxi_trips (tpep_pickup_datetime, vendorid);
-CREATE INDEX idx_yellow_taxi_location_datetime ON yellow_taxi_trips (pulocationid, tpep_pickup_datetime);
-CREATE INDEX idx_yellow_taxi_date_payment ON yellow_taxi_trips (DATE(tpep_pickup_datetime), payment_type);
+CREATE INDEX IF NOT EXISTS idx_yellow_taxi_datetime_vendor ON yellow_taxi_trips (tpep_pickup_datetime, vendorid);
+CREATE INDEX IF NOT EXISTS idx_yellow_taxi_location_datetime ON yellow_taxi_trips (pulocationid, tpep_pickup_datetime);
+CREATE INDEX IF NOT EXISTS idx_yellow_taxi_date_payment ON yellow_taxi_trips (DATE(tpep_pickup_datetime), payment_type);
 
 -- Partitioning by month for better performance (if using PostgreSQL 10+)
 -- This would be implemented when loading actual data by month
@@ -386,7 +397,7 @@ CREATE INDEX idx_yellow_taxi_date_payment ON yellow_taxi_trips (DATE(tpep_pickup
 -- ================================================================================
 
 -- Date Dimension - Complete date hierarchy for time-based analysis
-CREATE TABLE dim_date (
+CREATE TABLE IF NOT EXISTS dim_date (
     date_key INTEGER PRIMARY KEY,
     full_date DATE NOT NULL,
     year INTEGER NOT NULL,
@@ -406,7 +417,7 @@ CREATE TABLE dim_date (
 );
 
 -- Time Dimension - Hour-level analysis with business rules
-CREATE TABLE dim_time (
+CREATE TABLE IF NOT EXISTS dim_time (
     time_key INTEGER PRIMARY KEY,
     hour_24 INTEGER NOT NULL,
     hour_12 INTEGER NOT NULL,
@@ -419,7 +430,7 @@ CREATE TABLE dim_time (
 );
 
 -- Enhanced Location Dimension - Enriched with business classifications
-CREATE TABLE dim_locations (
+CREATE TABLE IF NOT EXISTS dim_locations (
     location_key SERIAL PRIMARY KEY,
     locationid INTEGER NOT NULL,
     zone VARCHAR(100) NOT NULL,
@@ -435,7 +446,7 @@ CREATE TABLE dim_locations (
 );
 
 -- Vendor Dimension - Enhanced with performance metrics placeholders
-CREATE TABLE dim_vendor (
+CREATE TABLE IF NOT EXISTS dim_vendor (
     vendor_key SERIAL PRIMARY KEY,
     vendorid INTEGER NOT NULL,
     vendor_name VARCHAR(100) NOT NULL,
@@ -447,7 +458,7 @@ CREATE TABLE dim_vendor (
 );
 
 -- Payment Type Dimension - Enhanced with processing characteristics
-CREATE TABLE dim_payment_type (
+CREATE TABLE IF NOT EXISTS dim_payment_type (
     payment_type_key SERIAL PRIMARY KEY,
     payment_type INTEGER NOT NULL,
     payment_type_desc VARCHAR(50) NOT NULL,
@@ -458,7 +469,7 @@ CREATE TABLE dim_payment_type (
 );
 
 -- Rate Code Dimension - Enhanced with zone applicability
-CREATE TABLE dim_rate_code (
+CREATE TABLE IF NOT EXISTS dim_rate_code (
     rate_code_key SERIAL PRIMARY KEY,
     ratecodeid INTEGER NOT NULL,
     rate_code_desc VARCHAR(50) NOT NULL,
@@ -474,7 +485,7 @@ CREATE TABLE dim_rate_code (
 -- ================================================================================
 
 -- Partitioned fact table by pickup date
-CREATE TABLE fact_taxi_trips (
+CREATE TABLE IF NOT EXISTS fact_taxi_trips (
     trip_key BIGSERIAL,
 
     -- Foreign Keys to Dimensions

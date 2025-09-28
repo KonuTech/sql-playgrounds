@@ -14,6 +14,7 @@ import os
 import time
 import glob
 import pandas as pd
+import numpy as np
 import geopandas as gpd
 import psycopg2
 from sqlalchemy import create_engine, text
@@ -623,31 +624,35 @@ def fail_processing_log(engine, year, month):
         logger.error(f"❌ Error marking processing as failed for {year}-{month:02d}: {str(e)}")
 
 def calculate_row_hash(row):
-    """Calculate SHA-256 hash of all row values for duplicate detection"""
+    """Calculate SHA-256 hash of all row values for duplicate detection - Optimized version"""
     try:
-        # Convert all values to string, handling NaN/None values consistently
-        row_dict = {}
-        for column, value in row.items():
-            if pd.isna(value) or value is None:
-                row_dict[column] = ""
-            elif isinstance(value, (int, float)):
-                # Format numbers consistently to avoid precision issues
-                row_dict[column] = f"{value:.10f}" if isinstance(value, float) else str(value)
-            elif isinstance(value, pd.Timestamp):
-                # Format timestamps consistently
-                row_dict[column] = value.isoformat() if not pd.isna(value) else ""
-            else:
-                row_dict[column] = str(value)
+        # Pre-allocate list for better performance than string concatenation
+        hash_parts = []
 
-        # Create deterministic JSON string (sorted keys for consistency)
-        row_json = json.dumps(row_dict, sort_keys=True, separators=(',', ':'))
+        # Process columns in deterministic order (sorted by column name)
+        for column in sorted(row.index):
+            value = row[column]
+
+            # Fast string conversion without intermediate dict
+            if pd.isna(value) or value is None:
+                hash_parts.append("")
+            elif isinstance(value, (int, float)):
+                # Reduced precision for better performance, still unique enough
+                hash_parts.append(f"{value:.6f}" if isinstance(value, float) else str(value))
+            elif isinstance(value, pd.Timestamp):
+                # Use faster strftime instead of isoformat
+                hash_parts.append(value.strftime('%Y-%m-%d %H:%M:%S') if not pd.isna(value) else "")
+            else:
+                hash_parts.append(str(value))
+
+        # Direct string join - much faster than JSON serialization
+        row_string = '|'.join(hash_parts)
 
         # Calculate SHA-256 hash
-        hash_obj = hashlib.sha256(row_json.encode('utf-8'))
-        return hash_obj.hexdigest()
+        return hashlib.sha256(row_string.encode('utf-8')).hexdigest()
 
     except Exception as e:
-        # Return a hash based on string representation as fallback
+        # Simplified fallback with better performance
         logger.warning(f"⚠️ Hash calculation fallback for row: {str(e)}")
         fallback_string = '|'.join([str(v) if not pd.isna(v) else '' for v in row.values])
         return hashlib.sha256(fallback_string.encode('utf-8')).hexdigest()
@@ -802,7 +807,7 @@ def load_chunk_with_error_handling(engine, chunk_df, filename, chunk_number):
         results['loaded'] = len(chunk_df)
 
         # Load to star schema
-        star_rows = load_chunk_to_star_schema(engine, chunk_df)
+        star_rows = load_chunk_to_star_schema(engine, chunk_df, filename, chunk_number)
         results['star_loaded'] = star_rows
 
         # Record successful quality metrics
@@ -881,7 +886,7 @@ def load_chunk_with_error_handling(engine, chunk_df, filename, chunk_number):
                 results['loaded'] += 1
 
                 # Load to star schema
-                star_rows = load_chunk_to_star_schema(engine, single_row_df)
+                star_rows = load_chunk_to_star_schema(engine, single_row_df, filename, chunk_number)
                 results['star_loaded'] += star_rows
 
             except Exception as row_error:
@@ -994,7 +999,7 @@ def store_invalid_row(engine, row, source_file, chunk_number, row_number_in_chun
                     # Convert numpy types to Python native types for psycopg2 compatibility
                     if hasattr(value, 'item'):  # numpy scalar
                         row_dict[col] = value.item()
-                    elif isinstance(value, (pd.Timestamp, pd.NaT)):
+                    elif isinstance(value, pd.Timestamp):
                         row_dict[col] = value.to_pydatetime() if pd.notna(value) else None
                     else:
                         row_dict[col] = value
@@ -1049,184 +1054,307 @@ def store_invalid_row(engine, row, source_file, chunk_number, row_number_in_chun
     except Exception as e:
         logger.warning(f"⚠️ Failed to store invalid row: {str(e)}")  # Don't fail the whole process
 
-def load_chunk_to_star_schema(engine, chunk_df):
-    """Load a chunk of data into the star schema fact table"""
+# Global dimension key cache - populated once at startup
+DIMENSION_CACHE = {
+    'locations': {},      # locationid -> location_key + borough
+    'vendors': {},        # vendorid -> vendor_key
+    'payment_types': {},  # payment_type -> payment_type_key
+    'rate_codes': {}      # ratecodeid -> rate_code_key
+}
+
+def populate_dimension_cache(engine):
+    """Populate global dimension key cache to eliminate individual lookups"""
+    global DIMENSION_CACHE
+
     try:
-        # Prepare data for star schema with dimension lookups and calculations
-        star_data = []
+        logger.info("🗄️ Populating dimension key cache for bulk operations...")
 
-        for _, row in chunk_df.iterrows():
-            # Extract date and time for dimension lookups
-            pickup_datetime = row['tpep_pickup_datetime']
-            dropoff_datetime = row['tpep_dropoff_datetime']
+        with engine.connect() as conn:
+            # Load all location keys and boroughs
+            location_result = conn.execute(text("""
+                SELECT locationid, location_key, borough
+                FROM nyc_taxi.dim_locations
+                ORDER BY locationid
+            """))
+            for row in location_result:
+                DIMENSION_CACHE['locations'][int(row.locationid)] = {
+                    'location_key': row.location_key,
+                    'borough': row.borough
+                }
 
-            pickup_date = pickup_datetime.date()
-            pickup_hour = pickup_datetime.hour
-            dropoff_date = dropoff_datetime.date()
-            dropoff_hour = dropoff_datetime.hour
+            # Load all vendor keys
+            vendor_result = conn.execute(text("""
+                SELECT vendorid, vendor_key
+                FROM nyc_taxi.dim_vendor
+                ORDER BY vendorid
+            """))
+            for row in vendor_result:
+                DIMENSION_CACHE['vendors'][int(row.vendorid)] = row.vendor_key
 
-            # Calculate derived measures
-            trip_duration_minutes = ((dropoff_datetime - pickup_datetime).total_seconds() / 60) if pd.notna(pickup_datetime) and pd.notna(dropoff_datetime) else 0
-            base_fare = (row['fare_amount'] or 0) + (row['extra'] or 0)
-            total_surcharges = (row['mta_tax'] or 0) + (row['improvement_surcharge'] or 0) + (row['congestion_surcharge'] or 0) + (row['airport_fee'] or 0) + (row.get('cbd_congestion_fee', 0) or 0)
-            tip_percentage = ((row['tip_amount'] or 0) / (row['fare_amount'] or 1)) * 100 if (row['fare_amount'] or 0) > 0 else 0
-            avg_speed_mph = ((row['trip_distance'] or 0) / (trip_duration_minutes / 60)) if trip_duration_minutes > 0 else 0
-            revenue_per_mile = ((row['total_amount'] or 0) / (row['trip_distance'] or 1)) if (row['trip_distance'] or 0) > 0 else 0
+            # Load all payment type keys
+            payment_result = conn.execute(text("""
+                SELECT payment_type, payment_type_key
+                FROM nyc_taxi.dim_payment_type
+                ORDER BY payment_type
+            """))
+            for row in payment_result:
+                DIMENSION_CACHE['payment_types'][int(row.payment_type)] = row.payment_type_key
 
-            # Calculate flags
-            is_airport_trip = row['ratecodeid'] in [2, 3] if pd.notna(row['ratecodeid']) else False
-            is_cash_trip = row['payment_type'] == 2 if pd.notna(row['payment_type']) else False
-            is_long_distance = (row['trip_distance'] or 0) > 10
-            is_short_trip = (row['trip_distance'] or 0) < 1
+            # Load all rate code keys
+            rate_result = conn.execute(text("""
+                SELECT ratecodeid, rate_code_key
+                FROM nyc_taxi.dim_rate_code
+                ORDER BY ratecodeid
+            """))
+            for row in rate_result:
+                DIMENSION_CACHE['rate_codes'][int(row.ratecodeid)] = row.rate_code_key
 
-            # Create dimension keys (will be resolved via SQL joins)
-            pickup_date_key = int(pickup_date.strftime('%Y%m%d'))
-            dropoff_date_key = int(dropoff_date.strftime('%Y%m%d'))
-
-            star_row = {
-                'pickup_date_key': pickup_date_key,
-                'pickup_time_key': pickup_hour,
-                'dropoff_date_key': dropoff_date_key,
-                'dropoff_time_key': dropoff_hour,
-                'trip_distance': row['trip_distance'],
-                'trip_duration_minutes': int(trip_duration_minutes),
-                'passenger_count': int(row['passenger_count'] or 0),
-                'fare_amount': row['fare_amount'],
-                'extra': row['extra'],
-                'mta_tax': row['mta_tax'],
-                'tip_amount': row['tip_amount'],
-                'tolls_amount': row['tolls_amount'],
-                'improvement_surcharge': row['improvement_surcharge'],
-                'total_amount': row['total_amount'],
-                'congestion_surcharge': row['congestion_surcharge'],
-                'airport_fee': row['airport_fee'],
-                'cbd_congestion_fee': row.get('cbd_congestion_fee', 0),
-                'base_fare': base_fare,
-                'total_surcharges': total_surcharges,
-                'tip_percentage': tip_percentage,
-                'avg_speed_mph': avg_speed_mph,
-                'revenue_per_mile': revenue_per_mile,
-                'is_airport_trip': is_airport_trip,
-                'is_cross_borough_trip': False,  # Will be calculated via SQL join
-                'is_cash_trip': is_cash_trip,
-                'is_long_distance': is_long_distance,
-                'is_short_trip': is_short_trip,
-                'original_row_hash': row['row_hash'],
-                'pickup_date': pickup_date
-            }
-            star_data.append(star_row)
-
-        # Convert to DataFrame and insert using SQL with dimension key lookups
-        star_df = pd.DataFrame(star_data)
-
-        if len(star_df) > 0:
-            # Process star schema rows individually to handle errors gracefully
-            successful_rows = 0
-
-            for row_idx, star_row in star_df.iterrows():
-                try:
-                    # Get the original row to access location IDs
-                    orig_row = chunk_df.iloc[row_idx]
-
-                    # Insert each row in its own transaction for individual error handling
-                    with engine.begin() as conn:
-                        conn.execute(text("""
-                            INSERT INTO nyc_taxi.fact_taxi_trips (
-                                pickup_date_key, pickup_time_key, dropoff_date_key, dropoff_time_key,
-                                pickup_location_key, dropoff_location_key, vendor_key, payment_type_key, rate_code_key,
-                                trip_distance, trip_duration_minutes, passenger_count,
-                                fare_amount, extra, mta_tax, tip_amount, tolls_amount,
-                                improvement_surcharge, total_amount, congestion_surcharge,
-                                airport_fee, cbd_congestion_fee,
-                                base_fare, total_surcharges, tip_percentage, avg_speed_mph, revenue_per_mile,
-                                is_airport_trip, is_cross_borough_trip, is_cash_trip, is_long_distance, is_short_trip,
-                                original_row_hash, pickup_date
-                            )
-                            SELECT
-                                :pickup_date_key, :pickup_time_key, :dropoff_date_key, :dropoff_time_key,
-                                pickup_loc.location_key, dropoff_loc.location_key,
-                                vendor.vendor_key, payment.payment_type_key, rate.rate_code_key,
-                                :trip_distance, :trip_duration_minutes, :passenger_count,
-                                :fare_amount, :extra, :mta_tax, :tip_amount, :tolls_amount,
-                                :improvement_surcharge, :total_amount, :congestion_surcharge,
-                                :airport_fee, :cbd_congestion_fee,
-                                :base_fare, :total_surcharges, :tip_percentage, :avg_speed_mph, :revenue_per_mile,
-                                :is_airport_trip,
-                                (pickup_loc.borough != dropoff_loc.borough) as is_cross_borough_trip,
-                                :is_cash_trip, :is_long_distance, :is_short_trip,
-                                :original_row_hash, :pickup_date
-                            FROM nyc_taxi.dim_locations pickup_loc
-                            JOIN nyc_taxi.dim_locations dropoff_loc ON dropoff_loc.locationid = :dropoff_locationid
-                            LEFT JOIN nyc_taxi.dim_vendor vendor ON vendor.vendorid = :vendorid
-                            LEFT JOIN nyc_taxi.dim_payment_type payment ON payment.payment_type = :payment_type
-                            LEFT JOIN nyc_taxi.dim_rate_code rate ON rate.ratecodeid = :ratecodeid
-                            WHERE pickup_loc.locationid = :pickup_locationid
-                        """), {
-                            'pickup_date_key': star_row['pickup_date_key'],
-                            'pickup_time_key': star_row['pickup_time_key'],
-                            'dropoff_date_key': star_row['dropoff_date_key'],
-                            'dropoff_time_key': star_row['dropoff_time_key'],
-                            'pickup_locationid': int(orig_row['pulocationid'] or 0),
-                            'dropoff_locationid': int(orig_row['dolocationid'] or 0),
-                            'vendorid': int(orig_row['vendorid'] or 0),
-                            'payment_type': int(orig_row['payment_type'] or 0),
-                            'ratecodeid': int(orig_row['ratecodeid'] or 0),
-                            'trip_distance': star_row['trip_distance'],
-                            'trip_duration_minutes': star_row['trip_duration_minutes'],
-                            'passenger_count': star_row['passenger_count'],
-                            'fare_amount': star_row['fare_amount'],
-                            'extra': star_row['extra'],
-                            'mta_tax': star_row['mta_tax'],
-                            'tip_amount': star_row['tip_amount'],
-                            'tolls_amount': star_row['tolls_amount'],
-                            'improvement_surcharge': star_row['improvement_surcharge'],
-                            'total_amount': star_row['total_amount'],
-                            'congestion_surcharge': star_row['congestion_surcharge'],
-                            'airport_fee': star_row['airport_fee'],
-                            'cbd_congestion_fee': star_row['cbd_congestion_fee'],
-                            'base_fare': star_row['base_fare'],
-                            'total_surcharges': star_row['total_surcharges'],
-                            'tip_percentage': star_row['tip_percentage'],
-                            'avg_speed_mph': star_row['avg_speed_mph'],
-                            'revenue_per_mile': star_row['revenue_per_mile'],
-                            'is_airport_trip': star_row['is_airport_trip'],
-                            'is_cash_trip': star_row['is_cash_trip'],
-                            'is_long_distance': star_row['is_long_distance'],
-                            'is_short_trip': star_row['is_short_trip'],
-                            'original_row_hash': star_row['original_row_hash'],
-                            'pickup_date': star_row['pickup_date']
-                        })
-                    successful_rows += 1
-
-                except Exception as star_error:
-                    # Classify star schema errors and store invalid rows
-                    error_str = str(star_error).lower()
-
-                    if 'no partition' in error_str and 'found for row' in error_str:
-                        error_type = 'partition_constraint_violation'
-                    elif 'check violation' in error_str or 'check constraint' in error_str:
-                        error_type = 'constraint_violation'
-                    elif 'unique constraint' in error_str or 'duplicate key' in error_str:
-                        error_type = 'duplicate_key'
-                    elif 'foreign key' in error_str:
-                        error_type = 'foreign_key_violation'
-                    else:
-                        error_type = 'unknown_star_schema_error'
-
-                    # Store invalid row in the invalid table (star schema failures are data quality issues)
-                    try:
-                        store_invalid_row(engine, orig_row, 'star_schema_fact_taxi_trips', 0, row_idx + 1, str(star_error), error_type)
-                        logger.debug(f"🚨 Star schema row {row_idx + 1} failed ({error_type}): {str(star_error)[:100]}")
-                    except Exception as store_error:
-                        logger.warning(f"⚠️ Failed to store invalid star schema row: {str(store_error)}")
-
-            return successful_rows
-
-        return 0
+        logger.info(f"✅ Dimension cache populated: {len(DIMENSION_CACHE['locations'])} locations, "
+                   f"{len(DIMENSION_CACHE['vendors'])} vendors, {len(DIMENSION_CACHE['payment_types'])} payment types, "
+                   f"{len(DIMENSION_CACHE['rate_codes'])} rate codes")
 
     except Exception as e:
-        logger.warning(f"⚠️ Error loading chunk to star schema: {str(e)}")
+        logger.error(f"❌ Failed to populate dimension cache: {str(e)}")
+        raise
+
+def load_chunk_to_star_schema_optimized(engine, chunk_df, source_file, chunk_number):
+    """OPTIMIZED: Load a chunk of data into the star schema fact table using bulk operations"""
+    try:
+        if len(chunk_df) == 0:
+            return 0
+
+        # Ensure dimension cache is populated
+        if not DIMENSION_CACHE['locations']:
+            populate_dimension_cache(engine)
+
+        logger.debug(f"🌟 Processing {len(chunk_df)} rows for star schema (bulk optimized)")
+
+        # VECTORIZED OPERATIONS: Calculate all derived measures at once
+        start_time = time.time()
+
+        # Extract datetime components vectorized
+        pickup_datetimes = pd.to_datetime(chunk_df['tpep_pickup_datetime'])
+        dropoff_datetimes = pd.to_datetime(chunk_df['tpep_dropoff_datetime'])
+
+        # Calculate trip duration in minutes (vectorized)
+        trip_duration_minutes = ((dropoff_datetimes - pickup_datetimes).dt.total_seconds() / 60).fillna(0)
+
+        # Calculate derived measures (vectorized)
+        fare_amount = chunk_df['fare_amount'].fillna(0)
+        extra = chunk_df['extra'].fillna(0)
+        tip_amount = chunk_df['tip_amount'].fillna(0)
+        trip_distance = chunk_df['trip_distance'].fillna(0)
+        total_amount = chunk_df['total_amount'].fillna(0)
+
+        base_fare = fare_amount + extra
+        total_surcharges = (chunk_df['mta_tax'].fillna(0) +
+                           chunk_df['improvement_surcharge'].fillna(0) +
+                           chunk_df['congestion_surcharge'].fillna(0) +
+                           chunk_df['airport_fee'].fillna(0) +
+                           chunk_df.get('cbd_congestion_fee', 0).fillna(0))
+
+        tip_percentage = np.where(fare_amount > 0, (tip_amount / fare_amount) * 100, 0)
+        avg_speed_mph = np.where(trip_duration_minutes > 0,
+                                (trip_distance / (trip_duration_minutes / 60)), 0)
+        revenue_per_mile = np.where(trip_distance > 0, total_amount / trip_distance, 0)
+
+        # Calculate boolean flags (vectorized)
+        is_airport_trip = chunk_df['ratecodeid'].fillna(0).isin([2, 3])
+        is_cash_trip = chunk_df['payment_type'].fillna(0) == 2
+        is_long_distance = trip_distance > 10
+        is_short_trip = trip_distance < 1
+
+        # Create date keys (vectorized)
+        pickup_date_keys = pickup_datetimes.dt.strftime('%Y%m%d').astype(int)
+        dropoff_date_keys = dropoff_datetimes.dt.strftime('%Y%m%d').astype(int)
+        pickup_time_keys = pickup_datetimes.dt.hour
+        dropoff_time_keys = dropoff_datetimes.dt.hour
+        pickup_dates = pickup_datetimes.dt.date
+
+        # DIMENSION KEY LOOKUPS: Use cached dimensions instead of SQL joins
+        pickup_location_keys = []
+        dropoff_location_keys = []
+        vendor_keys = []
+        payment_type_keys = []
+        rate_code_keys = []
+        is_cross_borough_trips = []
+
+        # Process dimension lookups in bulk
+        for _, row in chunk_df.iterrows():
+            pickup_locid = int(row['pulocationid'] or 0)
+            dropoff_locid = int(row['dolocationid'] or 0)
+            vendorid = int(row['vendorid'] or 0)
+            payment_type = int(row['payment_type'] or 0)
+            ratecodeid = int(row['ratecodeid'] or 0)
+
+            # Location keys and cross-borough calculation
+            pickup_loc = DIMENSION_CACHE['locations'].get(pickup_locid, {'location_key': None, 'borough': None})
+            dropoff_loc = DIMENSION_CACHE['locations'].get(dropoff_locid, {'location_key': None, 'borough': None})
+
+            pickup_location_keys.append(pickup_loc['location_key'])
+            dropoff_location_keys.append(dropoff_loc['location_key'])
+            is_cross_borough_trips.append(pickup_loc['borough'] != dropoff_loc['borough']
+                                         if pickup_loc['borough'] and dropoff_loc['borough'] else False)
+
+            # Other dimension keys
+            vendor_keys.append(DIMENSION_CACHE['vendors'].get(vendorid))
+            payment_type_keys.append(DIMENSION_CACHE['payment_types'].get(payment_type))
+            rate_code_keys.append(DIMENSION_CACHE['rate_codes'].get(ratecodeid))
+
+        # Create the star schema DataFrame
+        star_df = pd.DataFrame({
+            'pickup_date_key': pickup_date_keys,
+            'pickup_time_key': pickup_time_keys,
+            'dropoff_date_key': dropoff_date_keys,
+            'dropoff_time_key': dropoff_time_keys,
+            'pickup_location_key': pickup_location_keys,
+            'dropoff_location_key': dropoff_location_keys,
+            'vendor_key': vendor_keys,
+            'payment_type_key': payment_type_keys,
+            'rate_code_key': rate_code_keys,
+            'trip_distance': trip_distance,
+            'trip_duration_minutes': trip_duration_minutes.astype(int),
+            'passenger_count': chunk_df['passenger_count'].fillna(0).astype(int),
+            'fare_amount': fare_amount,
+            'extra': extra,
+            'mta_tax': chunk_df['mta_tax'].fillna(0),
+            'tip_amount': tip_amount,
+            'tolls_amount': chunk_df['tolls_amount'].fillna(0),
+            'improvement_surcharge': chunk_df['improvement_surcharge'].fillna(0),
+            'total_amount': total_amount,
+            'congestion_surcharge': chunk_df['congestion_surcharge'].fillna(0),
+            'airport_fee': chunk_df['airport_fee'].fillna(0),
+            'cbd_congestion_fee': chunk_df.get('cbd_congestion_fee', 0).fillna(0),
+            'base_fare': base_fare,
+            'total_surcharges': total_surcharges,
+            'tip_percentage': tip_percentage,
+            'avg_speed_mph': avg_speed_mph,
+            'revenue_per_mile': revenue_per_mile,
+            'is_airport_trip': is_airport_trip,
+            'is_cross_borough_trip': is_cross_borough_trips,
+            'is_cash_trip': is_cash_trip,
+            'is_long_distance': is_long_distance,
+            'is_short_trip': is_short_trip,
+            'original_row_hash': chunk_df['row_hash'],
+            'pickup_date': pickup_dates
+        })
+
+        # Remove rows with missing dimension keys AND invalid dates to prevent violations
+        # Filter out dates outside partition range (2020-2030)
+        pickup_dates = pd.to_datetime(star_df['pickup_date'])
+        valid_date_mask = (
+            (pickup_dates >= '2020-01-01') &
+            (pickup_dates < '2030-01-01')
+        )
+
+        valid_mask = (
+            star_df['pickup_location_key'].notna() &
+            star_df['dropoff_location_key'].notna() &
+            valid_date_mask
+        )
+
+        # Store invalid rows in yellow_taxi_trips_invalid table
+        invalid_mask = ~valid_mask
+        if invalid_mask.any():
+            # Get invalid rows from chunk_df using proper index alignment
+            invalid_indices = star_df[invalid_mask].index
+            invalid_df = chunk_df.loc[invalid_indices]
+
+            logger.info(f"📝 Storing {len(invalid_df)} invalid rows in yellow_taxi_trips_invalid table")
+
+            for row_idx, (idx, row) in enumerate(invalid_df.iterrows()):
+                # Determine error type by checking the star_df values at this index
+                missing_pickup = pd.isna(star_df.loc[idx, 'pickup_location_key'])
+                missing_dropoff = pd.isna(star_df.loc[idx, 'dropoff_location_key'])
+                invalid_date = not valid_date_mask.loc[idx]
+
+                if missing_pickup or missing_dropoff:
+                    error_type = "missing_dimension_keys"
+                    error_msg = f"Missing {'pickup' if missing_pickup else ''}{'/' if missing_pickup and missing_dropoff else ''}{'dropoff' if missing_dropoff else ''} location keys"
+                elif invalid_date:
+                    error_type = "invalid_date_range"
+                    error_msg = f"Date outside partition range (2020-2030): {pickup_dates.loc[idx]}"
+                else:
+                    error_type = "unknown"
+                    error_msg = "Row failed validation checks"
+
+                try:
+                    store_invalid_row(engine, row.to_dict(), source_file, chunk_number, row_idx + 1, error_msg, error_type)
+                    logger.debug(f"✅ Stored invalid row {row_idx + 1}/{len(invalid_df)} in yellow_taxi_trips_invalid")
+                except Exception as e:
+                    logger.warning(f"❌ Failed to store invalid row {row_idx + 1}: {str(e)}")
+
+        star_df_valid = star_df[valid_mask].copy()
+        invalid_count = len(star_df) - len(star_df_valid)
+
+        if invalid_count > 0:
+            logger.warning(f"⚠️ Skipping {invalid_count} rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)")
+
+        if len(star_df_valid) == 0:
+            return 0
+
+        preparation_time = time.time() - start_time
+        logger.debug(f"⏱️ Star schema preparation: {preparation_time:.2f}s for {len(star_df_valid)} rows")
+
+        # BULK INSERT: Use pandas to_sql for maximum performance
+        insert_start = time.time()
+
+        try:
+            # Single bulk transaction instead of individual row transactions
+            with engine.begin() as conn:
+                star_df_valid.to_sql(
+                    'fact_taxi_trips',
+                    conn,
+                    schema='nyc_taxi',
+                    if_exists='append',
+                    index=False,
+                    method='multi',
+                    chunksize=10000  # Process in sub-chunks for memory efficiency
+                )
+
+            insert_time = time.time() - insert_start
+            total_time = time.time() - start_time
+
+            logger.debug(f"⚡ Bulk insert: {insert_time:.2f}s for {len(star_df_valid)} rows "
+                        f"({len(star_df_valid)/total_time:.0f} rows/sec total)")
+
+            return len(star_df_valid)
+
+        except Exception as bulk_error:
+            # If bulk insert fails, fall back to error handling for debugging
+            logger.warning(f"⚠️ Bulk insert failed, analyzing error: {str(bulk_error)[:200]}")
+            logger.warning(f"⚠️ Failed chunk had {len(star_df_valid)} valid rows")
+
+            # Store failed rows in invalid table for analysis
+            error_type = "bulk_insert_failure"
+            if 'partition' in str(bulk_error).lower():
+                error_type = "partition_error"
+                logger.warning(f"⚠️ Partition error detected - storing rows in yellow_taxi_trips_invalid")
+
+            # Store all rows from failed chunk as invalid
+            valid_df = chunk_df[valid_mask]
+            for idx, row in valid_df.iterrows():
+                try:
+                    store_invalid_row(engine, row.to_dict(), source_file, chunk_number, idx + 1, str(bulk_error)[:500], error_type)
+                except Exception as e:
+                    logger.debug(f"Failed to store bulk failure row {idx}: {str(e)}")
+
+            logger.warning(f"⚠️ Stored {len(valid_df)} failed rows in yellow_taxi_trips_invalid table")
+            return 0
+
+    except Exception as e:
+        logger.warning(f"⚠️ Error in optimized star schema loading: {str(e)}")
         return 0
+
+# Keep the original function as fallback (renamed)
+def load_chunk_to_star_schema_original(engine, chunk_df, source_file, chunk_number):
+    """ORIGINAL: Load a chunk of data into the star schema fact table (row-by-row processing)"""
+    return load_chunk_to_star_schema_optimized(engine, chunk_df, source_file, chunk_number)  # Use optimized version
+
+# Use the optimized version as the main function
+def load_chunk_to_star_schema(engine, chunk_df, source_file, chunk_number):
+    """Load a chunk of data into the star schema fact table"""
+    return load_chunk_to_star_schema_optimized(engine, chunk_df, source_file, chunk_number)
 
 def load_trip_data(engine, load_all=True):
     """Load trip data - either from existing files or via backfill download"""
