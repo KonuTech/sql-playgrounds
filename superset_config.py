@@ -11,7 +11,8 @@ JWT_SECRET_KEY = 'jwt-secret-for-async-queries-at-least-32-bytes-long-with-rando
 PREVENT_UNSAFE_DEFAULT_SECRET_KEY = False
 
 # Database configuration for Superset metadata - using SQLite for simplicity and persistence
-SQLALCHEMY_DATABASE_URI = "sqlite:////app/superset_home/superset.db?check_same_thread=false"
+# SQLite-specific options are included in the URI to avoid affecting PostgreSQL connections
+SQLALCHEMY_DATABASE_URI = "sqlite:////app/superset_home/superset.db?check_same_thread=false&timeout=30"
 
 # Enhanced Redis configuration for caching and query results
 REDIS_HOST = "redis"
@@ -40,7 +41,8 @@ DATA_CACHE_CONFIG = {
 }
 
 # Query result backend for async query results
-RESULTS_BACKEND = f'redis://{REDIS_HOST}:{REDIS_PORT}/3'
+# Disabled for development - enables synchronous query execution in SQL Lab
+RESULTS_BACKEND = None
 
 # Filter state cache configuration
 FILTER_STATE_CACHE_CONFIG = {
@@ -83,17 +85,13 @@ FEATURE_FLAGS = {
 # Disable example data to avoid transaction conflicts
 SUPERSET_LOAD_EXAMPLES = False
 
-# Configure pg8000 for better compatibility with Superset
-import pg8000
-# Use default paramstyle (format) for SQLAlchemy compatibility
+# Configure PostgreSQL drivers for better compatibility with Superset
+# Both pg8000 and psycopg2-binary are available for use by SQLAlchemy
 
-# SQLAlchemy configuration - metadata database only (SQLite)
+# Minimal SQLAlchemy configuration to avoid conflicts with data source connections
+# Only apply essential settings that work for both SQLite (metadata) and PostgreSQL (data sources)
 SQLALCHEMY_ENGINE_OPTIONS = {
     'echo': False,                          # Disable SQL query logging for performance
-    'connect_args': {
-        'check_same_thread': False,         # Required for SQLite in multi-threaded environment
-        'timeout': 30                       # Database lock timeout
-    }
 }
 
 # Suppress SQLAlchemy warnings about SQLite and Decimal objects
@@ -101,38 +99,10 @@ import warnings
 from sqlalchemy.exc import SAWarning
 warnings.filterwarnings('ignore', category=SAWarning, message='.*Dialect sqlite.*does.*not.*support Decimal.*')
 
-# Enhanced database connection configuration for data sources
-# This ensures PostgreSQL connections work properly for data queries
-DATABASE_CONNECTIVITY_OPTIONS = {
-    'postgresql+pg8000': {
-        'pool_recycle': 3600,
-        'pool_pre_ping': True,
-        'pool_size': 10,
-        'max_overflow': 20,
-        'echo': False,
-        'connect_args': {
-            'application_name': 'superset_datasource'
-        }
-    }
-}
+# Removed DATABASE_CONNECTIVITY_OPTIONS that were interfering with PostgreSQL connections
 
-# Create psycopg2 mock to satisfy Superset's internal import requirements
-import sys
-from unittest.mock import MagicMock
-
-# Mock psycopg2 modules that Superset tries to import
-psycopg2_mock = MagicMock()
-psycopg2_mock.__version__ = '2.9.10'
-psycopg2_mock.extensions = MagicMock()
-psycopg2_mock.extras = MagicMock()
-psycopg2_mock.sql = MagicMock()
-
-# Add mocks to sys.modules before any Superset imports
-sys.modules['psycopg2'] = psycopg2_mock
-sys.modules['psycopg2._psycopg'] = MagicMock()
-sys.modules['psycopg2.extensions'] = psycopg2_mock.extensions
-sys.modules['psycopg2.extras'] = psycopg2_mock.extras
-sys.modules['psycopg2.sql'] = psycopg2_mock.sql
+# Removed psycopg2 mock - it was interfering with actual PostgreSQL connections
+# Superset can handle both pg8000 and psycopg2 drivers naturally without mocking
 
 # Performance monitoring and query optimization
 ENABLE_TIME_ROTATE = True

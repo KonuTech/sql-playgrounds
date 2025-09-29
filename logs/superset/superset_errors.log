@@ -1,0 +1,82 @@
+[2025-09-29 07:41:06] [ERROR] superset.views.error_handling: No module named 'pg8000'
+Traceback (most recent call last):
+  File "/app/.venv/lib/python3.10/site-packages/flask/app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/app/.venv/lib/python3.10/site-packages/flask/app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+  File "/app/.venv/lib/python3.10/site-packages/flask_appbuilder/security/decorators.py", line 109, in wraps
+    return f(self, *args, **kwargs)
+  File "/app/.venv/lib/python3.10/site-packages/flask_appbuilder/api/__init__.py", line 183, in wraps
+    return f(self, *args, **kwargs)
+  File "/app/superset/views/base_api.py", line 120, in wraps
+    duration, response = time_function(f, self, *args, **kwargs)
+  File "/app/superset/utils/core.py", line 1369, in time_function
+    response = func(*args, **kwargs)
+  File "/app/superset/utils/log.py", line 304, in wrapper
+    value = f(*args, **kwargs)
+  File "/app/superset/databases/api.py", line 727, in schemas
+    schemas = database.get_all_schema_names(
+  File "/app/superset/utils/cache.py", line 129, in wrapped_f
+    return f(*args, **kwargs)
+  File "/app/superset/models/core.py", line 901, in get_all_schema_names
+    raise self.db_engine_spec.get_dbapi_mapped_exception(ex) from ex
+  File "/app/superset/models/core.py", line 892, in get_all_schema_names
+    with self.get_inspector(
+  File "/usr/local/lib/python3.10/contextlib.py", line 135, in __enter__
+    return next(self.gen)
+  File "/app/superset/models/core.py", line 867, in get_inspector
+    with self.get_sqla_engine(
+  File "/usr/local/lib/python3.10/contextlib.py", line 135, in __enter__
+    return next(self.gen)
+  File "/app/superset/models/core.py", line 459, in get_sqla_engine
+    yield self._get_sqla_engine(
+  File "/app/superset/models/core.py", line 557, in _get_sqla_engine
+    raise self.db_engine_spec.get_dbapi_mapped_exception(ex) from ex
+  File "/app/superset/models/core.py", line 555, in _get_sqla_engine
+    return create_engine(sqlalchemy_url, **params)
+  File "<string>", line 2, in create_engine
+  File "/app/.venv/lib/python3.10/site-packages/sqlalchemy/util/deprecations.py", line 375, in warned
+    return fn(*args, **kwargs)
+  File "/app/.venv/lib/python3.10/site-packages/sqlalchemy/engine/create.py", line 544, in create_engine
+    dbapi = dialect_cls.dbapi(**dbapi_args)
+  File "/app/.venv/lib/python3.10/site-packages/sqlalchemy/dialects/postgresql/pg8000.py", line 421, in dbapi
+    return __import__("pg8000")
+ModuleNotFoundError: No module named 'pg8000'
+[2025-09-29 07:42:19] [ERROR] flask_appbuilder.api: No module named 'pg8000'
+Traceback (most recent call last):
+  File "/app/.venv/lib/python3.10/site-packages/flask_appbuilder/api/__init__.py", line 111, in wraps
+    return f(self, *args, **kwargs)
+  File "/app/superset/views/base_api.py", line 120, in wraps
+    duration, response = time_function(f, self, *args, **kwargs)
+  File "/app/superset/utils/core.py", line 1369, in time_function
+    response = func(*args, **kwargs)
+  File "/app/superset/utils/log.py", line 304, in wrapper
+    value = f(*args, **kwargs)
+  File "/app/superset/explore/api.py", line 115, in get
+    result = GetExploreCommand(params).run()
+  File "/app/superset/commands/explore/get.py", line 148, in run
+    datasource_data = datasource.data
+  File "/app/superset/connectors/sqla/models.py", line 1420, in data
+    data_ = super().data
+  File "/app/superset/connectors/sqla/models.py", line 407, in data
+    "select_star": self.select_star,
+  File "/app/superset/connectors/sqla/models.py", line 1399, in select_star
+    return self.database.select_star(
+  File "/app/superset/models/core.py", line 770, in select_star
+    with self.get_sqla_engine(catalog=table.catalog, schema=table.schema) as engine:
+  File "/usr/local/lib/python3.10/contextlib.py", line 135, in __enter__
+    return next(self.gen)
+  File "/app/superset/models/core.py", line 459, in get_sqla_engine
+    yield self._get_sqla_engine(
+  File "/app/superset/models/core.py", line 557, in _get_sqla_engine
+    raise self.db_engine_spec.get_dbapi_mapped_exception(ex) from ex
+  File "/app/superset/models/core.py", line 555, in _get_sqla_engine
+    return create_engine(sqlalchemy_url, **params)
+  File "<string>", line 2, in create_engine
+  File "/app/.venv/lib/python3.10/site-packages/sqlalchemy/util/deprecations.py", line 375, in warned
+    return fn(*args, **kwargs)
+  File "/app/.venv/lib/python3.10/site-packages/sqlalchemy/engine/create.py", line 544, in create_engine
+    dbapi = dialect_cls.dbapi(**dbapi_args)
+  File "/app/.venv/lib/python3.10/site-packages/sqlalchemy/dialects/postgresql/pg8000.py", line 421, in dbapi
+    return __import__("pg8000")
+ModuleNotFoundError: No module named 'pg8000'

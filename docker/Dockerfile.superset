@@ -16,12 +16,9 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install PostgreSQL drivers using system pip to virtual environment
-# Install both pg8000 (primary) and psycopg2-binary (for Superset internal compatibility)
-RUN /usr/bin/python3 -m pip install --target /app/.venv/lib/python3.10/site-packages pg8000 psycopg2-binary requests --break-system-packages
-
-# Install Pillow using the container's own pip to ensure proper C extensions
-RUN /usr/bin/python3 -m pip install Pillow --break-system-packages
+# Install PostgreSQL drivers in Superset's virtual environment
+# This ensures proper integration with Superset's Python environment
+RUN pip install --target=/app/.venv/lib/python3.10/site-packages pg8000 psycopg2-binary requests Pillow
 
 # Copy database connection script
 COPY docker/create-db-connection.py /app/create-db-connection.py
