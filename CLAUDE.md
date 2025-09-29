@@ -100,7 +100,7 @@ pytest tests/ --cov=. --cov-report=html
    - **Backfill capability**: Automatic download and loading of multiple months
 3. **Automated Data Processing** (during container startup):
    - **Dictionary table cleaning**: All reference tables cleaned before each backfill
-   - SQL schema creation: `sql-scripts/init-scripts/` executed in order
+   - SQL schema creation: `postgres/sql-scripts/init-scripts/` executed in order
    - **Unified data download**: CSV and shapefile ZIP downloaded to single location
    - CSV processing: taxi zone lookup table (263 zones)
    - Shapefile processing: ZIP extraction + PostGIS geometry conversion (EPSG:2263)
@@ -148,7 +148,7 @@ pytest tests/ --cov=. --cov-report=html
   - `postgres_data`: PostgreSQL data persistence
   - `pgadmin_data`: PGAdmin settings persistence
   - `superset_data`: Superset configuration and dashboards
-  - `./sql-scripts:/sql-scripts`: SQL scripts only
+  - `./postgres/sql-scripts:/sql-scripts`: SQL scripts only
   - `./postgres/data:/postgres/data`: NYC taxi data storage
   - `./postgres/logs:/postgres/logs`: PostgreSQL persistent logging with organized folder structure
   - `./superset/logs:/app/logs`: Superset application logs
@@ -158,7 +158,7 @@ pytest tests/ --cov=. --cov-report=html
 ### Initialization Process (`docker/init-data.py`)
 **Critical Functions**:
 - `wait_for_postgres()`: Ensures DB is ready before data loading
-- `execute_sql_scripts()`: Runs all SQL files in `sql-scripts/init-scripts/` in order
+- `execute_sql_scripts()`: Runs all SQL files in `postgres/sql-scripts/init-scripts/` in order
 - `download_taxi_zone_data()`: Downloads CSV and shapefile ZIP to unified location
 - `load_taxi_zones()`: Dictionary table cleaning + CSV/shapefile processing + lookup table reloading
 - `load_trip_data()`: Backfill processing with automatic downloads and chunked loading
@@ -212,7 +212,7 @@ SUPERSET_LOAD_EXAMPLES=false
 1. `00-postgis-setup.sql`: PostGIS extensions and spatial reference systems
 2. `01-nyc-taxi-schema.sql`: Complete schema with lowercase column names
 3. Python data loading via `docker/init-data.py`
-4. Analytical queries available in `sql-scripts/reports-scripts/`
+4. Analytical queries available in `postgres/sql-scripts/reports-scripts/`
 
 ## Critical Implementation Details
 
@@ -269,7 +269,7 @@ SUPERSET_LOAD_EXAMPLES=false
 **Trip Data**: `/postgres/data/yellow/`
 - **Trip data**: `yellow_tripdata_YYYY-MM.parquet` files (automatically downloaded via backfill)
 
-**Schema files**: `sql-scripts/init-scripts/01-nyc-taxi-schema.sql` (must use lowercase column names)
+**Schema files**: `postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql` (must use lowercase column names)
 
 **No Manual Data Management Required**: System automatically downloads all required data files from official NYC TLC sources into organized subdirectories
 
@@ -327,7 +327,7 @@ docker exec sql-playground-postgres psql -U admin -d playground -c "SELECT COUNT
 ## Advanced Features
 
 ### Star Schema Implementation
-The project includes a complete dimensional modeling implementation in `sql-scripts/model-scripts/`:
+The project includes a complete dimensional modeling implementation in `postgres/sql-scripts/model-scripts/`:
 
 **Available Scripts**:
 - `01-phase1-star-schema.sql`: Complete dimensional model with 6 dimension tables and fact table
@@ -557,12 +557,12 @@ sql-playgrounds/
 │   ├── data/                 # NYC taxi data storage
 │   │   ├── zones/            # Taxi zone data (CSV + shapefiles)
 │   │   └── yellow/           # Trip data (parquet files)
-│   └── logs/                 # PostgreSQL persistent logging
-│       └── [BACKFILL_MONTHS]/    # Organized by backfill configuration
-├── sql-scripts/               # SQL scripts only (no data or logs subdirectories)
-│   ├── init-scripts/         # Database schema initialization
-│   ├── model-scripts/        # Star schema and dimensional modeling
-│   └── reports-scripts/      # Analytical queries
+│   ├── logs/                 # PostgreSQL persistent logging
+│   │   └── [BACKFILL_MONTHS]/    # Organized by backfill configuration
+│   └── sql-scripts/          # SQL scripts
+│       ├── init-scripts/     # Database schema initialization
+│       ├── model-scripts/    # Star schema and dimensional modeling
+│       └── reports-scripts/  # Analytical queries
 ├── superset/                  # Apache Superset configuration and logs
 │   ├── config/               # Superset configuration files
 │   │   └── superset_config.py # Superset configuration (SQLite + logging)

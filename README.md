@@ -388,13 +388,13 @@ sql-playgrounds/
 │   │   └── yellow/                 # NYC Yellow taxi trip data (auto-downloaded)
 │   │       └── yellow_tripdata_*.parquet # Trip data files based on backfill config
 │   └── logs/                       # PostgreSQL persistent logging
-├── sql-scripts/                    # SQL scripts only
-│   ├── init-scripts/               # Database schema creation (executed automatically)
-│   │   ├── 00-postgis-setup.sql    # PostGIS extensions and spatial references
-│   │   └── 01-nyc-taxi-schema.sql  # Complete NYC taxi schema (lowercase columns)
-│   └── reports-scripts/            # Pre-built analytical queries (available in PGAdmin)
-│       ├── nyc-taxi-analytics.sql  # Trip volume, financial, and temporal analysis
-│       └── geospatial-taxi-analytics.sql # PostGIS spatial queries and zone analysis
+│   └── sql-scripts/                # SQL scripts
+│       ├── init-scripts/           # Database schema creation (executed automatically)
+│       │   ├── 00-postgis-setup.sql # PostGIS extensions and spatial references
+│       │   └── 01-nyc-taxi-schema.sql # Complete NYC taxi schema (lowercase columns)
+│       └── reports-scripts/        # Pre-built analytical queries (available in PGAdmin)
+│           ├── nyc-taxi-analytics.sql # Trip volume, financial, and temporal analysis
+│           └── geospatial-taxi-analytics.sql # PostGIS spatial queries and zone analysis
 ├── docker/                         # Custom PostgreSQL container
 │   ├── Dockerfile.postgres         # Custom image: PostgreSQL + PostGIS + Python environment
 │   └── init-data.py                # Comprehensive initialization script with backfill system
@@ -413,7 +413,7 @@ sql-playgrounds/
 ### Volume Strategy
 - **Database Persistence**: `postgres_data` volume (survives container restarts)
 - **PGAdmin Configuration**: `pgadmin_data` volume (settings, connections)
-- **SQL Scripts**: `./sql-scripts:/sql-scripts` (database schema and reports)
+- **SQL Scripts**: `./postgres/sql-scripts:/sql-scripts` (database schema and reports)
 - **NYC Taxi Data**: `./postgres/data:/postgres/data` (auto-downloaded data files)
 - **PostgreSQL Persistent Logging**: `./postgres/logs:/postgres/logs` (organized by backfill configuration)
 - **Script Access**: SQL scripts available both for initialization and PGAdmin queries

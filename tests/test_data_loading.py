@@ -205,8 +205,8 @@ class TestFileStructure:
 
     def test_data_directory_structure(self):
         """Test that data directories are properly organized"""
-        sql_scripts_path = Path("sql-scripts")
-        assert sql_scripts_path.exists(), "sql-scripts directory should exist"
+        sql_scripts_path = Path("postgres/sql-scripts")
+        assert sql_scripts_path.exists(), "postgres/sql-scripts directory should exist"
 
         data_path = Path("postgres/data")
         assert data_path.exists(), "data directory should exist"
@@ -218,12 +218,12 @@ class TestFileStructure:
 
     def test_init_scripts_exist(self):
         """Test that initialization SQL scripts exist"""
-        init_scripts_path = Path("sql-scripts/init-scripts")
+        init_scripts_path = Path("postgres/sql-scripts/init-scripts")
         assert init_scripts_path.exists(), "init-scripts directory should exist"
 
         # Check for key initialization files
-        postgis_script = Path("sql-scripts/init-scripts/00-postgis-setup.sql")
-        schema_script = Path("sql-scripts/init-scripts/01-nyc-taxi-schema.sql")
+        postgis_script = Path("postgres/sql-scripts/init-scripts/00-postgis-setup.sql")
+        schema_script = Path("postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql")
 
         assert postgis_script.exists(), "PostGIS setup script should exist"
         assert schema_script.exists(), "Schema setup script should exist"

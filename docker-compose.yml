@@ -16,7 +16,7 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./sql-scripts:/sql-scripts
+      - ./postgres/sql-scripts:/sql-scripts
       - ./postgres/logs:/postgres/logs
       - ./postgres/data:/postgres/data
     networks:
