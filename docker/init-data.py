@@ -30,7 +30,7 @@ import json
 
 # Setup logging
 # Create logs directory structure
-base_log_dir = '/sql-scripts/logs'
+base_log_dir = '/postgres/logs'
 os.makedirs(base_log_dir, exist_ok=True)
 
 # Get backfill configuration for folder structure

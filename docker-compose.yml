@@ -17,7 +17,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./sql-scripts:/sql-scripts
-      - ./logs:/sql-scripts/logs
+      - ./postgres/logs:/postgres/logs
     networks:
       - sql-playground-network
 

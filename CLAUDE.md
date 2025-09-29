@@ -53,10 +53,10 @@ docker exec sql-playground-postgres psql -U admin -d playground -c "SELECT COUNT
 docker logs -f sql-playground-postgres
 
 # Monitor file logs (persistent, organized by configuration)
-tail -f logs/$BACKFILL_MONTHS/log_*.log
+tail -f postgres/logs/$BACKFILL_MONTHS/log_*.log
 
 # Example: Monitor logs for last_12_months configuration
-tail -f logs/last_12_months/log_*.log
+tail -f postgres/logs/last_12_months/log_*.log
 ```
 
 ### Python Development (Local)
@@ -80,7 +80,7 @@ pytest tests/ --cov=. --cov-report=html
 
 ### Logging System
 - **Dual Logging**: Both console (Docker logs) and persistent file logging
-- **Organized Structure**: Logs stored in `./logs/$BACKFILL_MONTHS/` directories
+- **Organized Structure**: Logs stored in `./postgres/logs/$BACKFILL_MONTHS/` directories
 - **Timestamped Files**: Each execution creates `log_YYYYMMDD_HHMMSS.log`
 - **Full Traceability**: Complete record of downloads, data loading, and errors
 - **Host Access**: Logs accessible from host filesystem for analysis and monitoring
@@ -149,7 +149,7 @@ pytest tests/ --cov=. --cov-report=html
   - `pgadmin_data`: PGAdmin settings persistence
   - `superset_data`: Superset configuration and dashboards
   - `./sql-scripts:/sql-scripts`: SQL scripts and unified data location
-  - `./logs:/sql-scripts/logs`: Persistent logging with organized folder structure
+  - `./postgres/logs:/postgres/logs`: PostgreSQL persistent logging with organized folder structure
   - `./superset/logs:/app/logs`: Superset application logs
 
 ## Key Integration Points
@@ -552,9 +552,10 @@ sql-playgrounds/
 │   └── init-superset.sh      # Superset initialization
 ├── docs/                      # Documentation
 │   └── interviews/           # SQL technical interview questions
-├── logs/                      # Persistent logging
-│   └── [BACKFILL_MONTHS]/    # Organized by backfill configuration
-├── sql-scripts/               # SQL scripts and data
+├── postgres/                  # PostgreSQL-related files
+│   └── logs/                 # PostgreSQL persistent logging
+│       └── [BACKFILL_MONTHS]/    # Organized by backfill configuration
+├── sql-scripts/               # SQL scripts and data (no logs subdirectory)
 │   ├── init-scripts/         # Database schema initialization
 │   ├── model-scripts/        # Star schema and dimensional modeling
 │   ├── reports-scripts/      # Analytical queries

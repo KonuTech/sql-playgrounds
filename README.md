@@ -416,7 +416,7 @@ sql-playgrounds/
 - **Database Persistence**: `postgres_data` volume (survives container restarts)
 - **PGAdmin Configuration**: `pgadmin_data` volume (settings, connections)
 - **Unified Data Location**: `./sql-scripts:/sql-scripts` (contains auto-downloaded data files)
-- **Persistent Logging**: `./logs:/sql-scripts/logs` (organized by backfill configuration)
+- **PostgreSQL Persistent Logging**: `./postgres/logs:/postgres/logs` (organized by backfill configuration)
 - **Script Access**: SQL scripts available both for initialization and PGAdmin queries
 
 ### Memory & Performance
