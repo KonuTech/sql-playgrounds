@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Docker-based SQL playground featuring PostgreSQL 17 + PostGIS 3.5, PGAdmin, and Apache Superset with real NYC Yellow Taxi data (3.47+ million records per month). The architecture uses a custom PostgreSQL Docker image with embedded Python data loading that runs a single comprehensive initialization script during container startup. Includes comprehensive SQL technical interview questions and star schema modeling examples.
+This is a Docker-based SQL playground featuring PostgreSQL 17 + PostGIS 3.5, PGAdmin, and Apache Superset with real NYC Yellow Taxi data (3.47+ million records per month). The architecture uses a custom PostgreSQL Docker image with embedded Python data loading that runs a single comprehensive initialization script during container startup. **Simplified architecture with no Redis dependency** - uses SQLite-based caching for optimal development experience. Includes comprehensive SQL technical interview questions and star schema modeling examples.
 
 ## Common Commands
 
 ### Environment Management
 ```bash
-# Start the full environment (PostgreSQL + PGAdmin + Superset + Redis)
+# Start the full environment (PostgreSQL + PGAdmin + Superset - no Redis needed)
 docker-compose up -d --build
 
 # Monitor data loading progress (first startup takes ~30-45 minutes)
@@ -67,6 +67,12 @@ uv sync
 # Add new dependencies
 uv add package-name
 
+# Run tests (requires Docker environment running)
+pytest tests/ -v
+
+# Run tests with coverage
+pytest tests/ --cov=. --cov-report=html
+
 # Python environment is embedded in Docker - no local Python needed for normal operation
 ```
 
@@ -99,7 +105,7 @@ uv add package-name
    - CSV processing: taxi zone lookup table (263 zones)
    - Shapefile processing: ZIP extraction + PostGIS geometry conversion (EPSG:2263)
    - **Backfill processing**: Downloads missing parquet files from NYC TLC
-   - Parquet processing: chunked loading (10K rows/chunk) with data type conversion
+   - Parquet processing: chunked loading (100K rows/chunk) with data type conversion
    - **Lookup table reloading**: Rate codes, payment types, and vendor tables refreshed
    - Progress tracking: real-time logging of download/loading status with dual logging
 4. **Query Interface**: PGAdmin 4 web interface with pre-loaded analytical queries
@@ -133,16 +139,15 @@ uv add package-name
     - Keeps PostgreSQL running in foreground
 - **PGAdmin Container**: `dpage/pgadmin4:latest` for web-based database management
 - **Superset Container**: Custom Apache Superset build with PostgreSQL connectivity
-  - **Configuration**: Custom `superset_config.py` with optimized settings
+  - **Configuration**: Custom `superset/superset_config.py` with simplified, Redis-free settings
   - **Metadata Database**: SQLite for persistent dashboard/chart storage (`/app/superset_home/superset.db`)
+  - **Caching Strategy**: SQLite-based using SupersetMetastoreCache and NullCache (no Redis needed)
   - **Initialization**: Automated database connection setup via `init-superset.sh`
-  - **Dependencies**: Redis for caching and session management
-- **Redis Container**: `redis:7-alpine` for Superset caching
+  - **Dependencies**: None - fully self-contained with SQLite backend
 - **Volume Mappings**:
   - `postgres_data`: PostgreSQL data persistence
   - `pgadmin_data`: PGAdmin settings persistence
   - `superset_data`: Superset configuration and dashboards
-  - `redis_data`: Redis data persistence
   - `./sql-scripts:/sql-scripts`: SQL scripts and unified data location
   - `./logs:/sql-scripts/logs`: Persistent logging with organized folder structure
 
@@ -167,7 +172,7 @@ uv add package-name
 - Column name case sensitivity: converts all to lowercase
 - Numeric precision: schema uses DECIMAL(4,1) for ratecodeid, DECIMAL(4,1) for passenger_count
 - NULL value handling: drops invalid taxi zone records, fills numeric NULLs with 0
-- Chunked loading: 10K rows per chunk to manage memory usage
+- Chunked loading: 100K rows per chunk to manage memory usage
 - Hash-based duplicate prevention: SHA-256 hashes prevent any duplicate rows
 
 ### Environment Configuration
@@ -180,7 +185,7 @@ POSTGRES_PORT=5432
 PGADMIN_EMAIL=admin@admin.com
 PGADMIN_PASSWORD=admin123
 PGADMIN_PORT=8080
-DATA_CHUNK_SIZE=10000
+DATA_CHUNK_SIZE=100000
 INIT_LOAD_ALL_DATA=true
 
 # Backfill Configuration Options:
@@ -269,7 +274,7 @@ SUPERSET_LOAD_EXAMPLES=false
 ### Production Deployment Notes
 - **First startup**: Takes 30-45 minutes to load 3.47M records
 - **Subsequent startups**: Instant (data persisted in `postgres_data` volume)
-- **Memory usage**: 10K row chunks prevent memory overflow during loading
+- **Memory usage**: 100K row chunks prevent memory overflow during loading
 - **Error recovery**: `docker-compose down -v` forces complete reload
 
 ## Access Points
@@ -290,16 +295,16 @@ SUPERSET_LOAD_EXAMPLES=false
   - SQL Lab for advanced querying
   - Chart creation and sharing capabilities
   - **Persistent SQLite metadata database** for dashboard/chart storage
-  - **Enhanced caching** with Redis for optimal performance
+  - **Simplified caching** with SQLite-based storage (no Redis dependency)
   - **Native filters and cross-filtering** for interactive dashboards
-  - **Async query execution** for large datasets
+  - **Synchronous query execution** optimized for development
   - **Advanced data types support** and tagging system
 - **Database**: Automatically connected to playground database, nyc_taxi schema
 - **Persistence**: All dashboards, charts, and user settings are saved in SQLite database (`/app/superset_home/superset.db`)
 - **Performance**:
   - Connection pooling (20 core + 30 overflow connections)
-  - Multi-tier Redis caching (5 separate databases for different cache types)
-  - Query result caching up to 24 hours
+  - SQLite-based caching for filter state and form data
+  - No query result caching (NullCache) for simplified development
   - Row limits: 5,000 default, 100,000 maximum
 
 ### Direct Database Access
@@ -380,6 +385,42 @@ cat docs/interviews/sql-interview-questions.md
 # All questions use the actual NYC taxi dataset
 ```
 
+## Testing
+
+### Test Suite
+The project includes comprehensive tests to validate the Docker environment and data integrity:
+
+**Test Categories**:
+- **Docker Setup Tests**: Container connectivity, health checks, configuration validation
+- **Data Loading Tests**: Schema validation, data integrity, geospatial data, duplicate prevention
+- **Integration Tests**: Service connectivity and end-to-end workflows
+
+**Running Tests**:
+```bash
+# Prerequisites: Docker environment must be running
+docker-compose up -d --build
+
+# Install test dependencies
+pip install -r tests/requirements-test.txt
+
+# Run all tests
+pytest tests/ -v
+
+# Run specific test categories
+pytest tests/test_docker_setup.py -v
+pytest tests/test_data_loading.py -v
+
+# Run with coverage
+pytest tests/ --cov=. --cov-report=html
+```
+
+**Test Features**:
+- Waits for containers to be ready before running tests
+- Validates schema structure regardless of data presence
+- Checks geospatial data integrity and PostGIS functionality
+- Verifies hash-based duplicate prevention system
+- Tests all service connectivity (PostgreSQL, PGAdmin, Superset)
+
 ## Common Development Workflows
 
 ### Initial Setup and Data Loading
@@ -440,17 +481,32 @@ docker logs sql-playground-superset
 # Restart Superset if needed
 docker-compose restart superset
 
-# Check if Redis is accessible (used for caching)
-docker exec sql-playground-superset redis-cli -h redis ping
+# Check Superset configuration and caching
+docker exec sql-playground-superset python -c "from superset_config import configure_logging; configure_logging()"
 
 # Verify SQLite metadata database exists
 docker exec sql-playground-superset ls -la /app/superset_home/
 
-# Check Redis cache usage across all databases
-docker exec sql-playground-superset redis-cli -h redis info keyspace
+# Check SQLite-based cache status (filter state and form data stored in metadata DB)
+docker exec sql-playground-superset python -c "
+import sqlite3
+conn = sqlite3.connect('/app/superset_home/superset.db')
+cursor = conn.cursor()
+cursor.execute(\"SELECT name FROM sqlite_master WHERE type='table' AND name LIKE '%cache%'\")
+tables = cursor.fetchall()
+print('Cache-related tables:', tables if tables else 'Using in-memory MetastoreCache')
+conn.close()
+"
 
-# Monitor cache performance
-docker exec sql-playground-superset redis-cli -h redis --scan --pattern "superset_*" | head -10
+# Monitor SQLite cache tables
+docker exec sql-playground-superset python3 -c "
+import sqlite3
+conn = sqlite3.connect('/app/superset_home/superset.db')
+cursor = conn.cursor()
+cursor.execute('SELECT name FROM sqlite_master WHERE type=\"table\" AND name LIKE \"%cache%\"')
+tables = cursor.fetchall()
+print('SQLite cache tables:', tables if tables else 'Using MetastoreCache')
+conn.close()"
 ```
 
 **Performance Debugging**:
@@ -481,3 +537,49 @@ docker exec sql-playground-postgres psql -U admin -d playground -c "SELECT schem
 - Use the `data_processing_log` table to track which months are loaded
 - Implement proper error handling for new data processing scripts
 - Consider the hash-based duplicate prevention system when adding new data
+
+## Project Structure
+
+### Directory Organization
+```
+sql-playgrounds/
+├── configs/                    # Configuration files
+├── docker/                    # Docker build files
+│   ├── Dockerfile.postgres    # PostgreSQL + PostGIS + Python environment
+│   ├── Dockerfile.superset    # Superset with PostgreSQL drivers
+│   ├── init-data.py          # Data loading script
+│   └── init-superset.sh      # Superset initialization
+├── docs/                      # Documentation
+│   └── interviews/           # SQL technical interview questions
+├── logs/                      # Persistent logging
+│   ├── [BACKFILL_MONTHS]/    # Organized by backfill configuration
+│   └── superset/             # Superset application logs
+├── sql-scripts/               # SQL scripts and data
+│   ├── init-scripts/         # Database schema initialization
+│   ├── model-scripts/        # Star schema and dimensional modeling
+│   ├── reports-scripts/      # Analytical queries
+│   └── data/                 # Unified data location
+│       ├── zones/            # NYC taxi zone data (CSV + shapefiles)
+│       └── yellow/           # Trip data (parquet files)
+├── superset/                  # Apache Superset configuration
+│   └── superset_config.py    # Superset configuration (SQLite + logging)
+├── tests/                     # Comprehensive test suite
+│   ├── test_docker_setup.py  # Container and service tests
+│   ├── test_data_loading.py  # Data integrity and schema tests
+│   ├── conftest.py           # Test fixtures and configuration
+│   └── requirements-test.txt # Test dependencies
+├── docker-compose.yml         # 3-container setup (no Redis)
+├── pyproject.toml            # UV/Python dependency management
+├── uv.lock                   # UV lockfile for reproducible installs
+├── .env                      # Environment configuration
+└── CLAUDE.md                 # This documentation
+```
+
+### Configuration Management
+- **Centralized configs**: All configuration files in `configs/` directory
+- **Environment variables**: Control via `.env` file for easy deployment
+- **Package management**: UV-based dependency management with `pyproject.toml`
+- **Reproducible builds**: Lockfile (`uv.lock`) ensures consistent dependencies
+- **Testing infrastructure**: Comprehensive test suite with isolated dependencies
+- **Logging separation**: Application logs separate from data processing logs
+- **Volume organization**: Clear separation between persistent data and temporary files

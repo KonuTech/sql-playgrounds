@@ -5451,3 +5451,704 @@ werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on 
 [2025-09-29 11:09:31] [INFO] superset.sql_lab: Query 19: Executing 1 statement(s)
 [2025-09-29 11:09:31] [INFO] superset.sql_lab: Query 19: Set query to 'running'
 [2025-09-29 11:09:31] [INFO] superset.sql_lab: Query 19: Running statement 1 out of 1
+[2025-09-29 11:41:54] [INFO] superset.config: ================================================================================
+[2025-09-29 11:41:54] [INFO] superset.config: 🚀 SUPERSET PERSISTENT LOGGING CONFIGURED
+[2025-09-29 11:41:54] [INFO] superset.config: ================================================================================
+[2025-09-29 11:41:54] [INFO] superset.config: 📁 Log Directory: /app/logs
+[2025-09-29 11:41:54] [INFO] superset.config: 🗄️ Database: SQLite (/app/superset_home/superset.db)
+[2025-09-29 11:41:54] [INFO] superset.config: 🔑 Caching: SQLite-based (No Redis required)
+[2025-09-29 11:41:54] [INFO] superset.config: 🔒 CSRF Protection: ❌ DISABLED (Development Mode)
+[2025-09-29 11:41:54] [INFO] superset.config: 🛡️ Talisman Security: ❌ DISABLED (Development Mode)
+[2025-09-29 11:41:54] [INFO] superset.config: 📊 Row Limit: 5000 (Max: 100000)
+[2025-09-29 11:41:54] [INFO] superset.config: ⏱️ Query Timeouts: SQL Lab=300s, Async=600s
+[2025-09-29 11:41:54] [INFO] superset.config: 📁 Session Storage: filesystem (Filesystem)
+[2025-09-29 11:41:54] [INFO] superset.config: 🗂️ Cache Configuration:
+[2025-09-29 11:41:54] [INFO] superset.config:   • Application Cache: NullCache (disabled)
+[2025-09-29 11:41:54] [INFO] superset.config:   • Data Cache: NullCache (no query result caching)
+[2025-09-29 11:41:54] [INFO] superset.config:   • Filter State: SupersetMetastoreCache (SQLite)
+[2025-09-29 11:41:54] [INFO] superset.config:   • Explore Form Data: SupersetMetastoreCache (SQLite)
+[2025-09-29 11:41:54] [INFO] superset.config: 📋 Log Files:
+[2025-09-29 11:41:54] [INFO] superset.config:   • Application: superset.log
+[2025-09-29 11:41:54] [INFO] superset.config:   • Errors: superset_errors.log
+[2025-09-29 11:41:54] [INFO] superset.config: 🚩 Enhanced Feature Flags:
+[2025-09-29 11:41:54] [INFO] superset.config:   • DASHBOARD_NATIVE_FILTERS: ✅
+[2025-09-29 11:41:54] [INFO] superset.config:   • DASHBOARD_CROSS_FILTERS: ✅
+[2025-09-29 11:41:54] [INFO] superset.config:   • GLOBAL_ASYNC_QUERIES: ❌
+[2025-09-29 11:41:54] [INFO] superset.config:   • DASHBOARD_CACHE: ✅
+[2025-09-29 11:41:54] [INFO] superset.config:   • TAGGING_SYSTEM: ✅
+[2025-09-29 11:41:54] [INFO] superset.config:   • Plus 6 additional features enabled
+[2025-09-29 11:41:54] [INFO] superset.config: 🔧 Performance Optimizations:
+[2025-09-29 11:41:54] [INFO] superset.config:   • Metadata DB: SQLite (persistent, no connection pooling)
+[2025-09-29 11:41:54] [INFO] superset.config:   • SQLite Timeout: N/As
+[2025-09-29 11:41:54] [INFO] superset.config:   • Data Sources: PostgreSQL with optimized connection pooling
+[2025-09-29 11:41:54] [INFO] superset.config:   • SQLAlchemy Warnings: Suppressed for SQLite/Decimal compatibility
+[2025-09-29 11:41:54] [INFO] superset.config:   • Caching Strategy: Simplified (SQLite-based, no Redis)
+[2025-09-29 11:41:54] [INFO] superset.config:   • Time Rotate Logging: ✅
+[2025-09-29 11:41:54] [INFO] superset.config: ================================================================================
+[2025-09-29 11:41:54] [INFO] superset.config: ================================================================================
+[2025-09-29 11:41:54] [INFO] superset.config: 🚀 SUPERSET PERSISTENT LOGGING CONFIGURED
+[2025-09-29 11:41:54] [INFO] superset.config: ================================================================================
+[2025-09-29 11:41:54] [INFO] superset.config: 📁 Log Directory: /app/logs
+[2025-09-29 11:41:54] [INFO] superset.config: 🗄️ Database: SQLite (/app/superset_home/superset.db)
+[2025-09-29 11:41:54] [INFO] superset.config: 🔑 Caching: SQLite-based (No Redis required)
+[2025-09-29 11:41:54] [INFO] superset.config: 🔒 CSRF Protection: ❌ DISABLED (Development Mode)
+[2025-09-29 11:41:54] [INFO] superset.config: 🛡️ Talisman Security: ❌ DISABLED (Development Mode)
+[2025-09-29 11:41:54] [INFO] superset.config: 📊 Row Limit: 5000 (Max: 100000)
+[2025-09-29 11:41:54] [INFO] superset.config: ⏱️ Query Timeouts: SQL Lab=300s, Async=600s
+[2025-09-29 11:41:54] [INFO] superset.config: 📁 Session Storage: filesystem (Filesystem)
+[2025-09-29 11:41:54] [INFO] superset.config: 🗂️ Cache Configuration:
+[2025-09-29 11:41:54] [INFO] superset.config:   • Application Cache: NullCache (disabled)
+[2025-09-29 11:41:54] [INFO] superset.config:   • Data Cache: NullCache (no query result caching)
+[2025-09-29 11:41:54] [INFO] superset.config:   • Filter State: SupersetMetastoreCache (SQLite)
+[2025-09-29 11:41:54] [INFO] superset.config:   • Explore Form Data: SupersetMetastoreCache (SQLite)
+[2025-09-29 11:41:54] [INFO] superset.config: 📋 Log Files:
+[2025-09-29 11:41:54] [INFO] superset.config:   • Application: superset.log
+[2025-09-29 11:41:54] [INFO] superset.config:   • Errors: superset_errors.log
+[2025-09-29 11:41:54] [INFO] superset.config: 🚩 Enhanced Feature Flags:
+[2025-09-29 11:41:54] [INFO] superset.config:   • DASHBOARD_NATIVE_FILTERS: ✅
+[2025-09-29 11:41:54] [INFO] superset.config:   • DASHBOARD_CROSS_FILTERS: ✅
+[2025-09-29 11:41:54] [INFO] superset.config:   • GLOBAL_ASYNC_QUERIES: ❌
+[2025-09-29 11:41:54] [INFO] superset.config:   • DASHBOARD_CACHE: ✅
+[2025-09-29 11:41:54] [INFO] superset.config:   • TAGGING_SYSTEM: ✅
+[2025-09-29 11:41:54] [INFO] superset.config:   • Plus 6 additional features enabled
+[2025-09-29 11:41:54] [INFO] superset.config: 🔧 Performance Optimizations:
+[2025-09-29 11:41:54] [INFO] superset.config:   • Metadata DB: SQLite (persistent, no connection pooling)
+[2025-09-29 11:41:54] [INFO] superset.config:   • SQLite Timeout: N/As
+[2025-09-29 11:41:54] [INFO] superset.config:   • Data Sources: PostgreSQL with optimized connection pooling
+[2025-09-29 11:41:54] [INFO] superset.config:   • SQLAlchemy Warnings: Suppressed for SQLite/Decimal compatibility
+[2025-09-29 11:41:54] [INFO] superset.config:   • Caching Strategy: Simplified (SQLite-based, no Redis)
+[2025-09-29 11:41:54] [INFO] superset.config:   • Time Rotate Logging: ✅
+[2025-09-29 11:41:54] [INFO] superset.config: ================================================================================
+[2025-09-29 11:41:57] [INFO] superset.config: ================================================================================
+[2025-09-29 11:41:57] [INFO] superset.config: 🚀 SUPERSET PERSISTENT LOGGING CONFIGURED
+[2025-09-29 11:41:57] [INFO] superset.config: ================================================================================
+[2025-09-29 11:41:57] [INFO] superset.config: 📁 Log Directory: /app/logs
+[2025-09-29 11:41:57] [INFO] superset.config: 🗄️ Database: SQLite (/app/superset_home/superset.db)
+[2025-09-29 11:41:57] [INFO] superset.config: 🔑 Caching: SQLite-based (No Redis required)
+[2025-09-29 11:41:57] [INFO] superset.config: 🔒 CSRF Protection: ❌ DISABLED (Development Mode)
+[2025-09-29 11:41:57] [INFO] superset.config: 🛡️ Talisman Security: ❌ DISABLED (Development Mode)
+[2025-09-29 11:41:57] [INFO] superset.config: 📊 Row Limit: 5000 (Max: 100000)
+[2025-09-29 11:41:57] [INFO] superset.config: ⏱️ Query Timeouts: SQL Lab=300s, Async=600s
+[2025-09-29 11:41:57] [INFO] superset.config: 📁 Session Storage: filesystem (Filesystem)
+[2025-09-29 11:41:57] [INFO] superset.config: 🗂️ Cache Configuration:
+[2025-09-29 11:41:57] [INFO] superset.config:   • Application Cache: NullCache (disabled)
+[2025-09-29 11:41:57] [INFO] superset.config:   • Data Cache: NullCache (no query result caching)
+[2025-09-29 11:41:57] [INFO] superset.config:   • Filter State: SupersetMetastoreCache (SQLite)
+[2025-09-29 11:41:57] [INFO] superset.config:   • Explore Form Data: SupersetMetastoreCache (SQLite)
+[2025-09-29 11:41:57] [INFO] superset.config: 📋 Log Files:
+[2025-09-29 11:41:57] [INFO] superset.config:   • Application: superset.log
+[2025-09-29 11:41:57] [INFO] superset.config:   • Errors: superset_errors.log
+[2025-09-29 11:41:57] [INFO] superset.config: 🚩 Enhanced Feature Flags:
+[2025-09-29 11:41:57] [INFO] superset.config:   • DASHBOARD_NATIVE_FILTERS: ✅
+[2025-09-29 11:41:57] [INFO] superset.config:   • DASHBOARD_CROSS_FILTERS: ✅
+[2025-09-29 11:41:57] [INFO] superset.config:   • GLOBAL_ASYNC_QUERIES: ❌
+[2025-09-29 11:41:57] [INFO] superset.config:   • DASHBOARD_CACHE: ✅
+[2025-09-29 11:41:57] [INFO] superset.config:   • TAGGING_SYSTEM: ✅
+[2025-09-29 11:41:57] [INFO] superset.config:   • Plus 6 additional features enabled
+[2025-09-29 11:41:57] [INFO] superset.config: 🔧 Performance Optimizations:
+[2025-09-29 11:41:57] [INFO] superset.config:   • Metadata DB: SQLite (persistent, no connection pooling)
+[2025-09-29 11:41:57] [INFO] superset.config:   • SQLite Timeout: N/As
+[2025-09-29 11:41:57] [INFO] superset.config:   • Data Sources: PostgreSQL with optimized connection pooling
+[2025-09-29 11:41:57] [INFO] superset.config:   • SQLAlchemy Warnings: Suppressed for SQLite/Decimal compatibility
+[2025-09-29 11:41:57] [INFO] superset.config:   • Caching Strategy: Simplified (SQLite-based, no Redis)
+[2025-09-29 11:41:57] [INFO] superset.config:   • Time Rotate Logging: ✅
+[2025-09-29 11:41:57] [INFO] superset.config: ================================================================================
+[2025-09-29 11:41:57] [WARNING] superset.initialization: We haven't found any Content Security Policy (CSP) defined in the configurations. Please make sure to configure CSP using the TALISMAN_ENABLED and TALISMAN_CONFIG keys or any other external software. Failing to configure CSP have serious security implications. Check https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP for more information. You can disable this warning using the CONTENT_SECURITY_POLICY_WARNING key.
+[2025-09-29 11:41:57] [INFO] flask_appbuilder.security.sqla.manager: Security DB not found Creating all Models from Base
+[2025-09-29 11:41:57] [INFO] flask_appbuilder.security.sqla.manager: Security DB Created
+[2025-09-29 11:41:57] [INFO] flask_appbuilder.security.sqla.manager: Inserted Role: Admin
+[2025-09-29 11:41:57] [INFO] flask_appbuilder.security.sqla.manager: Inserted Role: Public
+[2025-09-29 11:41:57] [WARNING] flask_appbuilder.security.manager: No user yet created, use flask fab command to do it.
+[2025-09-29 11:42:11] [INFO] superset.migrations.shared.security_converge: Going to delete pvm: can_csv_upload Database
+[2025-09-29 11:42:11] [INFO] superset.migrations.shared.security_converge: Going to delete permission: can_csv_upload
+[2025-09-29 11:42:11] [INFO] superset.migrations.shared.security_converge: Going to delete pvm: can_excel_upload Database
+[2025-09-29 11:42:11] [INFO] superset.migrations.shared.security_converge: Going to delete permission: can_excel_upload
+[2025-09-29 11:42:11] [INFO] superset.migrations.shared.security_converge: Going to delete pvm: can_columnar_upload Database
+[2025-09-29 11:42:11] [INFO] superset.migrations.shared.security_converge: Going to delete permission: can_columnar_upload
+[2025-09-29 11:42:12] [INFO] superset.config: ================================================================================
+[2025-09-29 11:42:12] [INFO] superset.config: 🚀 SUPERSET PERSISTENT LOGGING CONFIGURED
+[2025-09-29 11:42:12] [INFO] superset.config: ================================================================================
+[2025-09-29 11:42:12] [INFO] superset.config: 📁 Log Directory: /app/logs
+[2025-09-29 11:42:12] [INFO] superset.config: 🗄️ Database: SQLite (/app/superset_home/superset.db)
+[2025-09-29 11:42:12] [INFO] superset.config: 🔑 Caching: SQLite-based (No Redis required)
+[2025-09-29 11:42:12] [INFO] superset.config: 🔒 CSRF Protection: ❌ DISABLED (Development Mode)
+[2025-09-29 11:42:12] [INFO] superset.config: 🛡️ Talisman Security: ❌ DISABLED (Development Mode)
+[2025-09-29 11:42:12] [INFO] superset.config: 📊 Row Limit: 5000 (Max: 100000)
+[2025-09-29 11:42:12] [INFO] superset.config: ⏱️ Query Timeouts: SQL Lab=300s, Async=600s
+[2025-09-29 11:42:12] [INFO] superset.config: 📁 Session Storage: filesystem (Filesystem)
+[2025-09-29 11:42:12] [INFO] superset.config: 🗂️ Cache Configuration:
+[2025-09-29 11:42:12] [INFO] superset.config:   • Application Cache: NullCache (disabled)
+[2025-09-29 11:42:12] [INFO] superset.config:   • Data Cache: NullCache (no query result caching)
+[2025-09-29 11:42:12] [INFO] superset.config:   • Filter State: SupersetMetastoreCache (SQLite)
+[2025-09-29 11:42:12] [INFO] superset.config:   • Explore Form Data: SupersetMetastoreCache (SQLite)
+[2025-09-29 11:42:12] [INFO] superset.config: 📋 Log Files:
+[2025-09-29 11:42:12] [INFO] superset.config:   • Application: superset.log
+[2025-09-29 11:42:12] [INFO] superset.config:   • Errors: superset_errors.log
+[2025-09-29 11:42:12] [INFO] superset.config: 🚩 Enhanced Feature Flags:
+[2025-09-29 11:42:12] [INFO] superset.config:   • DASHBOARD_NATIVE_FILTERS: ✅
+[2025-09-29 11:42:12] [INFO] superset.config:   • DASHBOARD_CROSS_FILTERS: ✅
+[2025-09-29 11:42:12] [INFO] superset.config:   • GLOBAL_ASYNC_QUERIES: ❌
+[2025-09-29 11:42:12] [INFO] superset.config:   • DASHBOARD_CACHE: ✅
+[2025-09-29 11:42:12] [INFO] superset.config:   • TAGGING_SYSTEM: ✅
+[2025-09-29 11:42:12] [INFO] superset.config:   • Plus 6 additional features enabled
+[2025-09-29 11:42:12] [INFO] superset.config: 🔧 Performance Optimizations:
+[2025-09-29 11:42:12] [INFO] superset.config:   • Metadata DB: SQLite (persistent, no connection pooling)
+[2025-09-29 11:42:12] [INFO] superset.config:   • SQLite Timeout: N/As
+[2025-09-29 11:42:12] [INFO] superset.config:   • Data Sources: PostgreSQL with optimized connection pooling
+[2025-09-29 11:42:12] [INFO] superset.config:   • SQLAlchemy Warnings: Suppressed for SQLite/Decimal compatibility
+[2025-09-29 11:42:12] [INFO] superset.config:   • Caching Strategy: Simplified (SQLite-based, no Redis)
+[2025-09-29 11:42:12] [INFO] superset.config:   • Time Rotate Logging: ✅
+[2025-09-29 11:42:12] [INFO] superset.config: ================================================================================
+[2025-09-29 11:42:12] [WARNING] superset.initialization: We haven't found any Content Security Policy (CSP) defined in the configurations. Please make sure to configure CSP using the TALISMAN_ENABLED and TALISMAN_CONFIG keys or any other external software. Failing to configure CSP have serious security implications. Check https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP for more information. You can disable this warning using the CONTENT_SECURITY_POLICY_WARNING key.
+[2025-09-29 11:42:12] [WARNING] flask_appbuilder.security.manager: No user yet created, use flask fab command to do it.
+[2025-09-29 11:42:13] [INFO] flask_appbuilder.security.sqla.manager: Added user admin
+[2025-09-29 11:42:16] [INFO] superset.config: ================================================================================
+[2025-09-29 11:42:16] [INFO] superset.config: 🚀 SUPERSET PERSISTENT LOGGING CONFIGURED
+[2025-09-29 11:42:16] [INFO] superset.config: ================================================================================
+[2025-09-29 11:42:16] [INFO] superset.config: 📁 Log Directory: /app/logs
+[2025-09-29 11:42:16] [INFO] superset.config: 🗄️ Database: SQLite (/app/superset_home/superset.db)
+[2025-09-29 11:42:16] [INFO] superset.config: 🔑 Caching: SQLite-based (No Redis required)
+[2025-09-29 11:42:16] [INFO] superset.config: 🔒 CSRF Protection: ❌ DISABLED (Development Mode)
+[2025-09-29 11:42:16] [INFO] superset.config: 🛡️ Talisman Security: ❌ DISABLED (Development Mode)
+[2025-09-29 11:42:16] [INFO] superset.config: 📊 Row Limit: 5000 (Max: 100000)
+[2025-09-29 11:42:16] [INFO] superset.config: ⏱️ Query Timeouts: SQL Lab=300s, Async=600s
+[2025-09-29 11:42:16] [INFO] superset.config: 📁 Session Storage: filesystem (Filesystem)
+[2025-09-29 11:42:16] [INFO] superset.config: 🗂️ Cache Configuration:
+[2025-09-29 11:42:16] [INFO] superset.config:   • Application Cache: NullCache (disabled)
+[2025-09-29 11:42:16] [INFO] superset.config:   • Data Cache: NullCache (no query result caching)
+[2025-09-29 11:42:16] [INFO] superset.config:   • Filter State: SupersetMetastoreCache (SQLite)
+[2025-09-29 11:42:16] [INFO] superset.config:   • Explore Form Data: SupersetMetastoreCache (SQLite)
+[2025-09-29 11:42:16] [INFO] superset.config: 📋 Log Files:
+[2025-09-29 11:42:16] [INFO] superset.config:   • Application: superset.log
+[2025-09-29 11:42:16] [INFO] superset.config:   • Errors: superset_errors.log
+[2025-09-29 11:42:16] [INFO] superset.config: 🚩 Enhanced Feature Flags:
+[2025-09-29 11:42:16] [INFO] superset.config:   • DASHBOARD_NATIVE_FILTERS: ✅
+[2025-09-29 11:42:16] [INFO] superset.config:   • DASHBOARD_CROSS_FILTERS: ✅
+[2025-09-29 11:42:16] [INFO] superset.config:   • GLOBAL_ASYNC_QUERIES: ❌
+[2025-09-29 11:42:16] [INFO] superset.config:   • DASHBOARD_CACHE: ✅
+[2025-09-29 11:42:16] [INFO] superset.config:   • TAGGING_SYSTEM: ✅
+[2025-09-29 11:42:16] [INFO] superset.config:   • Plus 6 additional features enabled
+[2025-09-29 11:42:16] [INFO] superset.config: 🔧 Performance Optimizations:
+[2025-09-29 11:42:16] [INFO] superset.config:   • Metadata DB: SQLite (persistent, no connection pooling)
+[2025-09-29 11:42:16] [INFO] superset.config:   • SQLite Timeout: N/As
+[2025-09-29 11:42:16] [INFO] superset.config:   • Data Sources: PostgreSQL with optimized connection pooling
+[2025-09-29 11:42:16] [INFO] superset.config:   • SQLAlchemy Warnings: Suppressed for SQLite/Decimal compatibility
+[2025-09-29 11:42:16] [INFO] superset.config:   • Caching Strategy: Simplified (SQLite-based, no Redis)
+[2025-09-29 11:42:16] [INFO] superset.config:   • Time Rotate Logging: ✅
+[2025-09-29 11:42:16] [INFO] superset.config: ================================================================================
+[2025-09-29 11:42:16] [WARNING] superset.initialization: We haven't found any Content Security Policy (CSP) defined in the configurations. Please make sure to configure CSP using the TALISMAN_ENABLED and TALISMAN_CONFIG keys or any other external software. Failing to configure CSP have serious security implications. Check https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP for more information. You can disable this warning using the CONTENT_SECURITY_POLICY_WARNING key.
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can this form get on ResetPasswordView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can this form get on ResetPasswordView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can this form post on ResetPasswordView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can this form post on ResetPasswordView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can this form get on ResetMyPasswordView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can this form get on ResetMyPasswordView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can this form post on ResetMyPasswordView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can this form post on ResetMyPasswordView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can this form get on UserInfoEditView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can this form get on UserInfoEditView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can this form post on UserInfoEditView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can this form post on UserInfoEditView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can show on UserDBModelView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can show on UserDBModelView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can add on UserDBModelView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can add on UserDBModelView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can edit on UserDBModelView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can edit on UserDBModelView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can list on UserDBModelView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can list on UserDBModelView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can delete on UserDBModelView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can delete on UserDBModelView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can userinfo on UserDBModelView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can userinfo on UserDBModelView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: resetmypassword on UserDBModelView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission resetmypassword on UserDBModelView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: resetpasswords on UserDBModelView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission resetpasswords on UserDBModelView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: userinfoedit on UserDBModelView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission userinfoedit on UserDBModelView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can show on RoleModelView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can show on RoleModelView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can add on RoleModelView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can add on RoleModelView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can edit on RoleModelView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can edit on RoleModelView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can delete on RoleModelView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can delete on RoleModelView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can list on RoleModelView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can list on RoleModelView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: copyrole on RoleModelView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission copyrole on RoleModelView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can get on OpenApi
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can get on OpenApi to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can show on SwaggerView
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can show on SwaggerView to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can get on MenuApi
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can get on MenuApi to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on Annotation to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can write on Annotation to role Admin
+[2025-09-29 11:42:17] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can list on AsyncEventsRestApi
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can list on AsyncEventsRestApi to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can read on AdvancedDataType
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on AdvancedDataType to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can read on AvailableDomains
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on AvailableDomains to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can invalidate on CacheRestApi
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can invalidate on CacheRestApi to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can warm up cache on Chart
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can warm up cache on Chart to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can export on Chart
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can export on Chart to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on Chart to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can write on Chart to role Admin
+[2025-09-29 11:42:18] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Chart.can_write Admin
+[2025-09-29 11:42:18] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Chart.can_warm_up_cache Admin
+[2025-09-29 11:42:18] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Chart.can_export Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on CssTemplate to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can write on CssTemplate to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can write on DashboardFilterStateRestApi
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can write on DashboardFilterStateRestApi to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can read on DashboardFilterStateRestApi
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on DashboardFilterStateRestApi to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can write on DashboardPermalinkRestApi
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can write on DashboardPermalinkRestApi to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can read on DashboardPermalinkRestApi
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on DashboardPermalinkRestApi to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can set embedded on Dashboard
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can set embedded on Dashboard to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can cache dashboard screenshot on Dashboard
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can cache dashboard screenshot on Dashboard to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can export on Dashboard
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can export on Dashboard to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can get embedded on Dashboard
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can get embedded on Dashboard to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can delete embedded on Dashboard
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can delete embedded on Dashboard to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on Dashboard to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can write on Dashboard to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Removed Permission View: can_view_chart_as_table on Dashboard
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Removed Permission View: can_view_query on Dashboard
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can export on Database
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can export on Database to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on Database to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can write on Database to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can upload on Database to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can warm up cache on Dataset
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can warm up cache on Dataset to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can duplicate on Dataset
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can duplicate on Dataset to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can export on Dataset
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can export on Dataset to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can get or create dataset on Dataset
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can get or create dataset on Dataset to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on Dataset to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can write on Dataset to role Admin
+[2025-09-29 11:42:18] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_read Admin
+[2025-09-29 11:42:18] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_warm_up_cache Admin
+[2025-09-29 11:42:18] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_duplicate Admin
+[2025-09-29 11:42:18] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_export Admin
+[2025-09-29 11:42:18] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_get_or_create_dataset Admin
+[2025-09-29 11:42:18] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_read Admin
+[2025-09-29 11:42:18] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_warm_up_cache Admin
+[2025-09-29 11:42:18] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_duplicate Admin
+[2025-09-29 11:42:18] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_export Admin
+[2025-09-29 11:42:18] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_get_or_create_dataset Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can get column values on Datasource
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can get column values on Datasource to role Admin
+[2025-09-29 11:42:18] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can read on EmbeddedDashboard
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on EmbeddedDashboard to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can read on Explore
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on Explore to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can write on ExploreFormDataRestApi
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can write on ExploreFormDataRestApi to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can read on ExploreFormDataRestApi
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on ExploreFormDataRestApi to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can write on ExplorePermalinkRestApi
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can write on ExplorePermalinkRestApi to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can read on ExplorePermalinkRestApi
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on ExplorePermalinkRestApi to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can import  on ImportExportRestApi
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can import  on ImportExportRestApi to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can export on ImportExportRestApi
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can export on ImportExportRestApi to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on Query to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on ReportSchedule to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can write on ReportSchedule to role Admin
+[2025-09-29 11:42:19] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists ReportSchedule.can_write Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can write on Row Level Security
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can write on Row Level Security to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can read on Row Level Security
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on Row Level Security to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can export on SavedQuery
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can export on SavedQuery to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on SavedQuery to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can write on SavedQuery to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can write on Tag
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can write on Tag to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can read on Tag
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on Tag to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can bulk create on Tag
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can bulk create on Tag to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can format sql on SQLLab
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can format sql on SQLLab to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can read on SQLLab
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on SQLLab to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can get results on SQLLab
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can get results on SQLLab to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can estimate query cost on SQLLab
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can estimate query cost on SQLLab to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can execute sql query on SQLLab
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can execute sql query on SQLLab to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can export csv on SQLLab
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can export csv on SQLLab to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can write on SqlLabPermalinkRestApi
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can write on SqlLabPermalinkRestApi to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can read on SqlLabPermalinkRestApi
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on SqlLabPermalinkRestApi to role Admin
+[2025-09-29 11:42:19] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Database.can_write Admin
+[2025-09-29 11:42:19] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Database.can_upload Admin
+[2025-09-29 11:42:19] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Database.can_export Admin
+[2025-09-29 11:42:19] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_set_embedded Admin
+[2025-09-29 11:42:19] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_cache_dashboard_screenshot Admin
+[2025-09-29 11:42:19] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_export Admin
+[2025-09-29 11:42:19] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_get_embedded Admin
+[2025-09-29 11:42:19] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_delete_embedded Admin
+[2025-09-29 11:42:19] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Chart.can_warm_up_cache Admin
+[2025-09-29 11:42:19] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Chart.can_export Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can show on DynamicPlugin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can show on DynamicPlugin to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can write on DynamicPlugin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can write on DynamicPlugin to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can add on DynamicPlugin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can add on DynamicPlugin to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can download on DynamicPlugin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can download on DynamicPlugin to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can edit on DynamicPlugin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can edit on DynamicPlugin to role Admin
+[2025-09-29 11:42:19] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can list on DynamicPlugin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can list on DynamicPlugin to role Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can delete on DynamicPlugin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can delete on DynamicPlugin to role Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can query on Api
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can query on Api to role Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can query form data on Api
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can query form data on Api to role Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can time range on Api
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can time range on Api to role Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_read Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_set_embedded Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_cache_dashboard_screenshot Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_export Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_get_embedded Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_delete_embedded Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can samples on Datasource
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can samples on Datasource to role Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can get on Datasource
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can get on Datasource to role Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can save on Datasource
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can save on Datasource to role Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can external metadata on Datasource
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can external metadata on Datasource to role Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can external metadata by name on Datasource
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can external metadata by name on Datasource to role Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Datasource.can_get_column_values Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_write Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_warm_up_cache Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_duplicate Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_export Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_get_or_create_dataset Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can list on SavedQuery
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can list on SavedQuery to role Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists SavedQuery.can_read Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists SavedQuery.can_write Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists SavedQuery.can_export Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists SQLLab.can_format_sql Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists SQLLab.can_get_results Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists SQLLab.can_estimate_query_cost Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists SQLLab.can_execute_sql_query Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists SQLLab.can_export_csv Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can slice on Superset
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can slice on Superset to role Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can warm up cache on Superset
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can warm up cache on Superset to role Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can sqllab history on Superset
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can sqllab history on Superset to role Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can dashboard permalink on Superset
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can dashboard permalink on Superset to role Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can explore on Superset
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can explore on Superset to role Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can explore json on Superset
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can explore json on Superset to role Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can dashboard on Superset
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can dashboard on Superset to role Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can fetch datasource metadata on Superset
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can fetch datasource metadata on Superset to role Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can log on Superset
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can log on Superset to role Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_write Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_warm_up_cache Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_duplicate Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_export Admin
+[2025-09-29 11:42:20] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_get_or_create_dataset Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can delete on TableSchemaView
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can delete on TableSchemaView to role Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can post on TableSchemaView
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can post on TableSchemaView to role Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can expanded on TableSchemaView
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can expanded on TableSchemaView to role Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can delete query on TabStateView
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can delete query on TabStateView to role Admin
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can get on TabStateView
+[2025-09-29 11:42:20] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can get on TabStateView to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can put on TabStateView
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can put on TabStateView to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can activate on TabStateView
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can activate on TabStateView to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can delete on TabStateView
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can delete on TabStateView to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can post on TabStateView
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can post on TabStateView to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can migrate query on TabStateView
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can migrate query on TabStateView to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can list on Tags
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can list on Tags to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can tags on TagView
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can tags on TagView to role Admin
+[2025-09-29 11:42:21] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists ReportSchedule.can_write Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can recent activity on Log
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can recent activity on Log to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on Log to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can write on Log to role Admin
+[2025-09-29 11:42:21] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Log.can_write Admin
+[2025-09-29 11:42:21] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Log.can_recent_activity Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can read on SecurityRestApi
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on SecurityRestApi to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can grant guest token on SecurityRestApi
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can grant guest token on SecurityRestApi to role Admin
+[2025-09-29 11:42:21] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists ReportSchedule.can_write Admin
+[2025-09-29 11:42:21] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Annotation.can_write Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can read on RowLevelSecurity
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission can read on RowLevelSecurity to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: menu access on Security
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission menu access on Security to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: menu access on List Users
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission menu access on List Users to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: menu access on List Roles
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission menu access on List Roles to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: menu access on Action Log
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission menu access on Action Log to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: menu access on Row Level Security
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission menu access on Row Level Security to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: menu access on Home
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission menu access on Home to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: menu access on Data
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission menu access on Data to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: menu access on Databases
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission menu access on Databases to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: menu access on Dashboards
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission menu access on Dashboards to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: menu access on Charts
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission menu access on Charts to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: menu access on Datasets
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Added Permission menu access on Datasets to role Admin
+[2025-09-29 11:42:21] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: menu access on Manage
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Added Permission menu access on Manage to role Admin
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: menu access on Plugins
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Added Permission menu access on Plugins to role Admin
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: menu access on CSS Templates
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Added Permission menu access on CSS Templates to role Admin
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: menu access on Tags
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Added Permission menu access on Tags to role Admin
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: menu access on Alerts & Report
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Added Permission menu access on Alerts & Report to role Admin
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: menu access on Annotation Layers
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Added Permission menu access on Annotation Layers to role Admin
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: menu access on SQL Lab
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Added Permission menu access on SQL Lab to role Admin
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: menu access on SQL Editor
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Added Permission menu access on SQL Editor to role Admin
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: menu access on Saved Queries
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Added Permission menu access on Saved Queries to role Admin
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: menu access on Query Search
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Added Permission menu access on Query Search to role Admin
+[2025-09-29 11:42:22] [INFO] superset.security.manager: Syncing role definition
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: all datasource access on all_datasource_access
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: all database access on all_database_access
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: all query access on all_query_access
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can csv on Superset
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can share dashboard on Superset
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can share chart on Superset
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can sqllab on Superset
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can view query on Dashboard
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can view chart as table on Dashboard
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can drill on Dashboard
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can tag on Chart
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: can tag on Dashboard
+[2025-09-29 11:42:22] [INFO] superset.security.manager: Syncing Admin perms
+[2025-09-29 11:42:22] [INFO] superset.security.manager: Syncing Alpha perms
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Inserted Role: Alpha
+[2025-09-29 11:42:22] [INFO] superset.security.manager: Syncing Gamma perms
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Inserted Role: Gamma
+[2025-09-29 11:42:22] [INFO] superset.security.manager: Syncing sql_lab perms
+[2025-09-29 11:42:22] [INFO] flask_appbuilder.security.sqla.manager: Inserted Role: sql_lab
+[2025-09-29 11:42:22] [INFO] superset.security.manager: Fetching a set of all perms to lookup which ones are missing
+[2025-09-29 11:42:22] [INFO] superset.security.manager: Creating missing datasource permissions.
+[2025-09-29 11:42:22] [INFO] superset.security.manager: Creating missing database permissions.
+[2025-09-29 11:42:22] [INFO] superset.security.manager: Cleaning faulty perms
+[2025-09-29 11:42:26] [INFO] superset.config: ================================================================================
+[2025-09-29 11:42:26] [INFO] superset.config: 🚀 SUPERSET PERSISTENT LOGGING CONFIGURED
+[2025-09-29 11:42:26] [INFO] superset.config: ================================================================================
+[2025-09-29 11:42:26] [INFO] superset.config: 📁 Log Directory: /app/logs
+[2025-09-29 11:42:26] [INFO] superset.config: 🗄️ Database: SQLite (/app/superset_home/superset.db)
+[2025-09-29 11:42:26] [INFO] superset.config: 🔑 Caching: SQLite-based (No Redis required)
+[2025-09-29 11:42:26] [INFO] superset.config: 🔒 CSRF Protection: ❌ DISABLED (Development Mode)
+[2025-09-29 11:42:26] [INFO] superset.config: 🛡️ Talisman Security: ❌ DISABLED (Development Mode)
+[2025-09-29 11:42:26] [INFO] superset.config: 📊 Row Limit: 5000 (Max: 100000)
+[2025-09-29 11:42:26] [INFO] superset.config: ⏱️ Query Timeouts: SQL Lab=300s, Async=600s
+[2025-09-29 11:42:26] [INFO] superset.config: 📁 Session Storage: filesystem (Filesystem)
+[2025-09-29 11:42:26] [INFO] superset.config: 🗂️ Cache Configuration:
+[2025-09-29 11:42:26] [INFO] superset.config:   • Application Cache: NullCache (disabled)
+[2025-09-29 11:42:26] [INFO] superset.config:   • Data Cache: NullCache (no query result caching)
+[2025-09-29 11:42:26] [INFO] superset.config:   • Filter State: SupersetMetastoreCache (SQLite)
+[2025-09-29 11:42:26] [INFO] superset.config:   • Explore Form Data: SupersetMetastoreCache (SQLite)
+[2025-09-29 11:42:26] [INFO] superset.config: 📋 Log Files:
+[2025-09-29 11:42:26] [INFO] superset.config:   • Application: superset.log
+[2025-09-29 11:42:26] [INFO] superset.config:   • Errors: superset_errors.log
+[2025-09-29 11:42:26] [INFO] superset.config: 🚩 Enhanced Feature Flags:
+[2025-09-29 11:42:26] [INFO] superset.config:   • DASHBOARD_NATIVE_FILTERS: ✅
+[2025-09-29 11:42:26] [INFO] superset.config:   • DASHBOARD_CROSS_FILTERS: ✅
+[2025-09-29 11:42:26] [INFO] superset.config:   • GLOBAL_ASYNC_QUERIES: ❌
+[2025-09-29 11:42:26] [INFO] superset.config:   • DASHBOARD_CACHE: ✅
+[2025-09-29 11:42:26] [INFO] superset.config:   • TAGGING_SYSTEM: ✅
+[2025-09-29 11:42:26] [INFO] superset.config:   • Plus 6 additional features enabled
+[2025-09-29 11:42:26] [INFO] superset.config: 🔧 Performance Optimizations:
+[2025-09-29 11:42:26] [INFO] superset.config:   • Metadata DB: SQLite (persistent, no connection pooling)
+[2025-09-29 11:42:26] [INFO] superset.config:   • SQLite Timeout: N/As
+[2025-09-29 11:42:26] [INFO] superset.config:   • Data Sources: PostgreSQL with optimized connection pooling
+[2025-09-29 11:42:26] [INFO] superset.config:   • SQLAlchemy Warnings: Suppressed for SQLite/Decimal compatibility
+[2025-09-29 11:42:26] [INFO] superset.config:   • Caching Strategy: Simplified (SQLite-based, no Redis)
+[2025-09-29 11:42:26] [INFO] superset.config:   • Time Rotate Logging: ✅
+[2025-09-29 11:42:26] [INFO] superset.config: ================================================================================
+[2025-09-29 11:42:26] [WARNING] superset.initialization: We haven't found any Content Security Policy (CSP) defined in the configurations. Please make sure to configure CSP using the TALISMAN_ENABLED and TALISMAN_CONFIG keys or any other external software. Failing to configure CSP have serious security implications. Check https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP for more information. You can disable this warning using the CONTENT_SECURITY_POLICY_WARNING key.
+[2025-09-29 11:42:26] [INFO] superset.config: ================================================================================
+[2025-09-29 11:42:26] [INFO] superset.config: 🚀 SUPERSET PERSISTENT LOGGING CONFIGURED
+[2025-09-29 11:42:26] [INFO] superset.config: ================================================================================
+[2025-09-29 11:42:26] [INFO] superset.config: 📁 Log Directory: /app/logs
+[2025-09-29 11:42:26] [INFO] superset.config: 🗄️ Database: SQLite (/app/superset_home/superset.db)
+[2025-09-29 11:42:26] [INFO] superset.config: 🔑 Caching: SQLite-based (No Redis required)
+[2025-09-29 11:42:26] [INFO] superset.config: 🔒 CSRF Protection: ❌ DISABLED (Development Mode)
+[2025-09-29 11:42:26] [INFO] superset.config: 🛡️ Talisman Security: ❌ DISABLED (Development Mode)
+[2025-09-29 11:42:26] [INFO] superset.config: 📊 Row Limit: 5000 (Max: 100000)
+[2025-09-29 11:42:26] [INFO] superset.config: ⏱️ Query Timeouts: SQL Lab=300s, Async=600s
+[2025-09-29 11:42:26] [INFO] superset.config: 📁 Session Storage: filesystem (Filesystem)
+[2025-09-29 11:42:26] [INFO] superset.config: 🗂️ Cache Configuration:
+[2025-09-29 11:42:26] [INFO] superset.config:   • Application Cache: NullCache (disabled)
+[2025-09-29 11:42:26] [INFO] superset.config:   • Data Cache: NullCache (no query result caching)
+[2025-09-29 11:42:26] [INFO] superset.config:   • Filter State: SupersetMetastoreCache (SQLite)
+[2025-09-29 11:42:26] [INFO] superset.config:   • Explore Form Data: SupersetMetastoreCache (SQLite)
+[2025-09-29 11:42:26] [INFO] superset.config: 📋 Log Files:
+[2025-09-29 11:42:26] [INFO] superset.config:   • Application: superset.log
+[2025-09-29 11:42:26] [INFO] superset.config:   • Errors: superset_errors.log
+[2025-09-29 11:42:26] [INFO] superset.config: 🚩 Enhanced Feature Flags:
+[2025-09-29 11:42:26] [INFO] superset.config:   • DASHBOARD_NATIVE_FILTERS: ✅
+[2025-09-29 11:42:26] [INFO] superset.config:   • DASHBOARD_CROSS_FILTERS: ✅
+[2025-09-29 11:42:26] [INFO] superset.config:   • GLOBAL_ASYNC_QUERIES: ❌
+[2025-09-29 11:42:26] [INFO] superset.config:   • DASHBOARD_CACHE: ✅
+[2025-09-29 11:42:26] [INFO] superset.config:   • TAGGING_SYSTEM: ✅
+[2025-09-29 11:42:26] [INFO] superset.config:   • Plus 6 additional features enabled
+[2025-09-29 11:42:26] [INFO] superset.config: 🔧 Performance Optimizations:
+[2025-09-29 11:42:26] [INFO] superset.config:   • Metadata DB: SQLite (persistent, no connection pooling)
+[2025-09-29 11:42:26] [INFO] superset.config:   • SQLite Timeout: N/As
+[2025-09-29 11:42:26] [INFO] superset.config:   • Data Sources: PostgreSQL with optimized connection pooling
+[2025-09-29 11:42:26] [INFO] superset.config:   • SQLAlchemy Warnings: Suppressed for SQLite/Decimal compatibility
+[2025-09-29 11:42:26] [INFO] superset.config:   • Caching Strategy: Simplified (SQLite-based, no Redis)
+[2025-09-29 11:42:26] [INFO] superset.config:   • Time Rotate Logging: ✅
+[2025-09-29 11:42:26] [INFO] superset.config: ================================================================================
+[2025-09-29 11:42:26] [WARNING] superset.initialization: We haven't found any Content Security Policy (CSP) defined in the configurations. Please make sure to configure CSP using the TALISMAN_ENABLED and TALISMAN_CONFIG keys or any other external software. Failing to configure CSP have serious security implications. Check https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP for more information. You can disable this warning using the CONTENT_SECURITY_POLICY_WARNING key.
+[2025-09-29 11:42:26] [INFO] superset.config: ================================================================================
+[2025-09-29 11:42:26] [INFO] superset.config: 🚀 SUPERSET PERSISTENT LOGGING CONFIGURED
+[2025-09-29 11:42:26] [INFO] superset.config: ================================================================================
+[2025-09-29 11:42:26] [INFO] superset.config: 📁 Log Directory: /app/logs
+[2025-09-29 11:42:26] [INFO] superset.config: 🗄️ Database: SQLite (/app/superset_home/superset.db)
+[2025-09-29 11:42:26] [INFO] superset.config: 🔑 Caching: SQLite-based (No Redis required)
+[2025-09-29 11:42:26] [INFO] superset.config: 🔒 CSRF Protection: ❌ DISABLED (Development Mode)
+[2025-09-29 11:42:26] [INFO] superset.config: 🛡️ Talisman Security: ❌ DISABLED (Development Mode)
+[2025-09-29 11:42:26] [INFO] superset.config: 📊 Row Limit: 5000 (Max: 100000)
+[2025-09-29 11:42:26] [INFO] superset.config: ⏱️ Query Timeouts: SQL Lab=300s, Async=600s
+[2025-09-29 11:42:26] [INFO] superset.config: 📁 Session Storage: filesystem (Filesystem)
+[2025-09-29 11:42:26] [INFO] superset.config: 🗂️ Cache Configuration:
+[2025-09-29 11:42:26] [INFO] superset.config:   • Application Cache: NullCache (disabled)
+[2025-09-29 11:42:26] [INFO] superset.config:   • Data Cache: NullCache (no query result caching)
+[2025-09-29 11:42:26] [INFO] superset.config:   • Filter State: SupersetMetastoreCache (SQLite)
+[2025-09-29 11:42:26] [INFO] superset.config:   • Explore Form Data: SupersetMetastoreCache (SQLite)
+[2025-09-29 11:42:26] [INFO] superset.config: 📋 Log Files:
+[2025-09-29 11:42:26] [INFO] superset.config:   • Application: superset.log
+[2025-09-29 11:42:26] [INFO] superset.config:   • Errors: superset_errors.log
+[2025-09-29 11:42:26] [INFO] superset.config: 🚩 Enhanced Feature Flags:
+[2025-09-29 11:42:26] [INFO] superset.config:   • DASHBOARD_NATIVE_FILTERS: ✅
+[2025-09-29 11:42:26] [INFO] superset.config:   • DASHBOARD_CROSS_FILTERS: ✅
+[2025-09-29 11:42:26] [INFO] superset.config:   • GLOBAL_ASYNC_QUERIES: ❌
+[2025-09-29 11:42:26] [INFO] superset.config:   • DASHBOARD_CACHE: ✅
+[2025-09-29 11:42:26] [INFO] superset.config:   • TAGGING_SYSTEM: ✅
+[2025-09-29 11:42:26] [INFO] superset.config:   • Plus 6 additional features enabled
+[2025-09-29 11:42:26] [INFO] superset.config: 🔧 Performance Optimizations:
+[2025-09-29 11:42:26] [INFO] superset.config:   • Metadata DB: SQLite (persistent, no connection pooling)
+[2025-09-29 11:42:26] [INFO] superset.config:   • SQLite Timeout: N/As
+[2025-09-29 11:42:26] [INFO] superset.config:   • Data Sources: PostgreSQL with optimized connection pooling
+[2025-09-29 11:42:26] [INFO] superset.config:   • SQLAlchemy Warnings: Suppressed for SQLite/Decimal compatibility
+[2025-09-29 11:42:26] [INFO] superset.config:   • Caching Strategy: Simplified (SQLite-based, no Redis)
+[2025-09-29 11:42:26] [INFO] superset.config:   • Time Rotate Logging: ✅
+[2025-09-29 11:42:26] [INFO] superset.config: ================================================================================
+[2025-09-29 11:42:26] [WARNING] superset.initialization: We haven't found any Content Security Policy (CSP) defined in the configurations. Please make sure to configure CSP using the TALISMAN_ENABLED and TALISMAN_CONFIG keys or any other external software. Failing to configure CSP have serious security implications. Check https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP for more information. You can disable this warning using the CONTENT_SECURITY_POLICY_WARNING key.
+[2025-09-29 11:42:26] [INFO] superset.config: ================================================================================
+[2025-09-29 11:42:26] [INFO] superset.config: 🚀 SUPERSET PERSISTENT LOGGING CONFIGURED
+[2025-09-29 11:42:26] [INFO] superset.config: ================================================================================
+[2025-09-29 11:42:26] [INFO] superset.config: 📁 Log Directory: /app/logs
+[2025-09-29 11:42:26] [INFO] superset.config: 🗄️ Database: SQLite (/app/superset_home/superset.db)
+[2025-09-29 11:42:26] [INFO] superset.config: 🔑 Caching: SQLite-based (No Redis required)
+[2025-09-29 11:42:26] [INFO] superset.config: 🔒 CSRF Protection: ❌ DISABLED (Development Mode)
+[2025-09-29 11:42:26] [INFO] superset.config: 🛡️ Talisman Security: ❌ DISABLED (Development Mode)
+[2025-09-29 11:42:26] [INFO] superset.config: 📊 Row Limit: 5000 (Max: 100000)
+[2025-09-29 11:42:26] [INFO] superset.config: ⏱️ Query Timeouts: SQL Lab=300s, Async=600s
+[2025-09-29 11:42:26] [INFO] superset.config: 📁 Session Storage: filesystem (Filesystem)
+[2025-09-29 11:42:26] [INFO] superset.config: 🗂️ Cache Configuration:
+[2025-09-29 11:42:26] [INFO] superset.config:   • Application Cache: NullCache (disabled)
+[2025-09-29 11:42:26] [INFO] superset.config:   • Data Cache: NullCache (no query result caching)
+[2025-09-29 11:42:26] [INFO] superset.config:   • Filter State: SupersetMetastoreCache (SQLite)
+[2025-09-29 11:42:26] [INFO] superset.config:   • Explore Form Data: SupersetMetastoreCache (SQLite)
+[2025-09-29 11:42:26] [INFO] superset.config: 📋 Log Files:
+[2025-09-29 11:42:26] [INFO] superset.config:   • Application: superset.log
+[2025-09-29 11:42:26] [INFO] superset.config:   • Errors: superset_errors.log
+[2025-09-29 11:42:26] [INFO] superset.config: 🚩 Enhanced Feature Flags:
+[2025-09-29 11:42:26] [INFO] superset.config:   • DASHBOARD_NATIVE_FILTERS: ✅
+[2025-09-29 11:42:26] [INFO] superset.config:   • DASHBOARD_CROSS_FILTERS: ✅
+[2025-09-29 11:42:26] [INFO] superset.config:   • GLOBAL_ASYNC_QUERIES: ❌
+[2025-09-29 11:42:26] [INFO] superset.config:   • DASHBOARD_CACHE: ✅
+[2025-09-29 11:42:26] [INFO] superset.config:   • TAGGING_SYSTEM: ✅
+[2025-09-29 11:42:26] [INFO] superset.config:   • Plus 6 additional features enabled
+[2025-09-29 11:42:26] [INFO] superset.config: 🔧 Performance Optimizations:
+[2025-09-29 11:42:26] [INFO] superset.config:   • Metadata DB: SQLite (persistent, no connection pooling)
+[2025-09-29 11:42:26] [INFO] superset.config:   • SQLite Timeout: N/As
+[2025-09-29 11:42:26] [INFO] superset.config:   • Data Sources: PostgreSQL with optimized connection pooling
+[2025-09-29 11:42:26] [INFO] superset.config:   • SQLAlchemy Warnings: Suppressed for SQLite/Decimal compatibility
+[2025-09-29 11:42:26] [INFO] superset.config:   • Caching Strategy: Simplified (SQLite-based, no Redis)
+[2025-09-29 11:42:26] [INFO] superset.config:   • Time Rotate Logging: ✅
+[2025-09-29 11:42:26] [INFO] superset.config: ================================================================================
+[2025-09-29 11:42:26] [WARNING] superset.initialization: We haven't found any Content Security Policy (CSP) defined in the configurations. Please make sure to configure CSP using the TALISMAN_ENABLED and TALISMAN_CONFIG keys or any other external software. Failing to configure CSP have serious security implications. Check https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP for more information. You can disable this warning using the CONTENT_SECURITY_POLICY_WARNING key.
+[2025-09-29 11:43:16] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: catalog access on [PostgreSQL].[playground]
+[2025-09-29 11:43:16] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: catalog access on [PostgreSQL].[superset]
+[2025-09-29 11:43:16] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: catalog access on [PostgreSQL].[postgres]
+[2025-09-29 11:43:16] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: schema access on [PostgreSQL].[playground].[tiger]
+[2025-09-29 11:43:16] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: schema access on [PostgreSQL].[playground].[nyc_taxi]
+[2025-09-29 11:43:16] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: schema access on [PostgreSQL].[playground].[tiger_data]
+[2025-09-29 11:43:16] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: schema access on [PostgreSQL].[playground].[information_schema]
+[2025-09-29 11:43:16] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: schema access on [PostgreSQL].[playground].[topology]
+[2025-09-29 11:43:16] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: schema access on [PostgreSQL].[playground].[public]
+[2025-09-29 11:43:16] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: schema access on [PostgreSQL].[superset].[public]
+[2025-09-29 11:43:16] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: schema access on [PostgreSQL].[superset].[information_schema]
+[2025-09-29 11:43:16] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: schema access on [PostgreSQL].[postgres].[public]
+[2025-09-29 11:43:16] [INFO] flask_appbuilder.security.sqla.manager: Created Permission View: schema access on [PostgreSQL].[postgres].[information_schema]
+[2025-09-29 11:43:26] [INFO] superset.commands.sql_lab.execute: Triggering query_id: 1
+[2025-09-29 11:43:26] [INFO] superset.sql_lab: Query 1: Executing 1 statement(s)
+[2025-09-29 11:43:26] [INFO] superset.sql_lab: Query 1: Set query to 'running'
+[2025-09-29 11:43:26] [INFO] superset.sql_lab: Query 1: Running statement 1 out of 1

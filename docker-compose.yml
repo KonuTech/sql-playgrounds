@@ -59,7 +59,7 @@ services:
       - "${SUPERSET_PORT:-8088}:8088"
     volumes:
       - superset_data:/app/superset_home
-      - ./superset_config.py:/app/superset_config.py
+      - ./superset/superset_config.py:/app/superset_config.py
       - ./logs/superset:/app/logs
       - ./docker/init-superset.sh:/app/init-superset.sh
     networks:
