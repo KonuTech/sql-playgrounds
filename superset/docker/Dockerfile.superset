@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --target=/app/.venv/lib/python3.10/site-packages pg8000 psycopg2-binary requests Pillow
 
 # Copy database connection script
-COPY docker/create-db-connection.py /app/create-db-connection.py
+COPY superset/docker/create-db-connection.py /app/create-db-connection.py
 RUN chmod +x /app/create-db-connection.py
 
 # Set the final user

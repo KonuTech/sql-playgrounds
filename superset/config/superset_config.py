@@ -61,6 +61,7 @@ FEATURE_FLAGS = {
     "SIP_38_VIZ_REARCHITECTURE": True,      # Enable new viz architecture
     "TAGGING_SYSTEM": True,                 # Enable tagging system for datasets/charts
     "ENABLE_ADVANCED_DATA_TYPES": True,     # Support for advanced data types
+    "SQLLAB_BACKEND_PERSISTENCE": False,   # Disable query editor backend persistence to prevent migration popup
 }
 
 # Disable example data to avoid transaction conflicts
@@ -316,7 +317,7 @@ def configure_logging():
     logger.info(f"  • Application: superset.log")
     logger.info(f"  • Errors: superset_errors.log")
     logger.info("🚩 Enhanced Feature Flags:")
-    key_features = ["DASHBOARD_NATIVE_FILTERS", "DASHBOARD_CROSS_FILTERS", "GLOBAL_ASYNC_QUERIES", "DASHBOARD_CACHE", "TAGGING_SYSTEM"]
+    key_features = ["DASHBOARD_NATIVE_FILTERS", "DASHBOARD_CROSS_FILTERS", "GLOBAL_ASYNC_QUERIES", "DASHBOARD_CACHE", "TAGGING_SYSTEM", "SQLLAB_BACKEND_PERSISTENCE"]
     for flag in key_features:
         if flag in FEATURE_FLAGS:
             logger.info(f"  • {flag}: {'✅' if FEATURE_FLAGS[flag] else '❌'}")

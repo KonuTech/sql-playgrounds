@@ -2,7 +2,7 @@ services:
   postgres:
     build:
       context: .
-      dockerfile: docker/Dockerfile.postgres
+      dockerfile: postgres/docker/Dockerfile.postgres
     container_name: sql-playground-postgres
     restart: unless-stopped
     environment:
@@ -42,7 +42,7 @@ services:
   superset:
     build:
       context: .
-      dockerfile: docker/Dockerfile.superset
+      dockerfile: superset/docker/Dockerfile.superset
     container_name: sql-playground-superset
     restart: unless-stopped
     environment:
@@ -62,7 +62,7 @@ services:
       - superset_data:/app/superset_home
       - ./superset/config/superset_config.py:/app/superset_config.py
       - ./superset/logs:/app/logs
-      - ./docker/init-superset.sh:/app/init-superset.sh
+      - ./superset/docker/init-superset.sh:/app/init-superset.sh
     networks:
       - sql-playground-network
     # No Redis dependency - using SQLite-based caching

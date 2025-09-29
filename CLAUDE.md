@@ -59,13 +59,10 @@ tail -f postgres/logs/$BACKFILL_MONTHS/log_*.log
 tail -f postgres/logs/last_12_months/log_*.log
 ```
 
-### Python Development (Local)
+### Testing (Docker-based)
 ```bash
-# Install dependencies (for local development only)
-uv sync
-
-# Add new dependencies
-uv add package-name
+# All dependencies embedded in Docker containers - no local Python setup needed
+# To modify dependencies, update the Dockerfile pip install commands and rebuild containers
 
 # Run tests (requires Docker environment running)
 pytest tests/ -v
@@ -73,7 +70,7 @@ pytest tests/ -v
 # Run tests with coverage
 pytest tests/ --cov=. --cov-report=html
 
-# Python environment is embedded in Docker - no local Python needed for normal operation
+# Note: All Python dependencies are containerized - no local environment required
 ```
 
 ## Architecture Overview
@@ -94,7 +91,7 @@ pytest tests/ --cov=. --cov-report=html
    - **Reference data**: `https://d37ci6vzurychx.cloudfront.net/misc/taxi_zone_lookup.csv`
    - **Shapefile data**: `https://d37ci6vzurychx.cloudfront.net/misc/taxi_zones.zip`
 2. **Custom Docker Container**: PostgreSQL 17 + PostGIS 3.5 + Python 3.11 environment
-   - **Single initialization script**: `docker/init-data.py` handles complete setup
+   - **Single initialization script**: `postgres/docker/init-data.py` handles complete setup
    - **Custom entrypoint**: Starts PostgreSQL, then runs initialization after DB is ready
    - **All dependencies embedded**: numpy, pandas, geopandas, pyarrow, psycopg2, sqlalchemy, requests, zipfile
    - **Backfill capability**: Automatic download and loading of multiple months
@@ -155,7 +152,7 @@ pytest tests/ --cov=. --cov-report=html
 
 ## Key Integration Points
 
-### Initialization Process (`docker/init-data.py`)
+### Initialization Process (`postgres/docker/init-data.py`)
 **Critical Functions**:
 - `wait_for_postgres()`: Ensures DB is ready before data loading
 - `execute_sql_scripts()`: Runs all SQL files in `postgres/sql-scripts/init-scripts/` in order
@@ -211,7 +208,7 @@ SUPERSET_LOAD_EXAMPLES=false
 ### SQL Script Execution Order
 1. `00-postgis-setup.sql`: PostGIS extensions and spatial reference systems
 2. `01-nyc-taxi-schema.sql`: Complete schema with lowercase column names
-3. Python data loading via `docker/init-data.py`
+3. Python data loading via `postgres/docker/init-data.py`
 4. Analytical queries available in `postgres/sql-scripts/reports-scripts/`
 
 ## Critical Implementation Details
@@ -546,11 +543,7 @@ docker exec sql-playground-postgres psql -U admin -d playground -c "SELECT schem
 ```
 sql-playgrounds/
 ├── configs/                    # Configuration files
-├── docker/                    # Docker build files
-│   ├── Dockerfile.postgres    # PostgreSQL + PostGIS + Python environment
-│   ├── Dockerfile.superset    # Superset with PostgreSQL drivers
-│   ├── init-data.py          # Data loading script
-│   └── init-superset.sh      # Superset initialization
+# Note: Docker files now organized by service in postgres/docker/ and superset/docker/
 ├── docs/                      # Documentation
 │   └── interviews/           # SQL technical interview questions
 ├── postgres/                  # PostgreSQL-related files
@@ -559,22 +552,28 @@ sql-playgrounds/
 │   │   └── yellow/           # Trip data (parquet files)
 │   ├── logs/                 # PostgreSQL persistent logging
 │   │   └── [BACKFILL_MONTHS]/    # Organized by backfill configuration
-│   └── sql-scripts/          # SQL scripts
-│       ├── init-scripts/     # Database schema initialization
-│       ├── model-scripts/    # Star schema and dimensional modeling
-│       └── reports-scripts/  # Analytical queries
+│   ├── sql-scripts/          # SQL scripts
+│   │   ├── init-scripts/     # Database schema initialization
+│   │   ├── model-scripts/    # Star schema and dimensional modeling
+│   │   └── reports-scripts/  # Analytical queries
+│   └── docker/               # PostgreSQL Docker files
+│       ├── Dockerfile.postgres # PostgreSQL + PostGIS + Python environment
+│       └── init-data.py      # Data loading script
 ├── superset/                  # Apache Superset configuration and logs
 │   ├── config/               # Superset configuration files
 │   │   └── superset_config.py # Superset configuration (SQLite + logging)
-│   └── logs/                 # Superset application logs
+│   ├── logs/                 # Superset application logs
+│   └── docker/               # Superset Docker files
+│       ├── Dockerfile.superset # Superset with PostgreSQL drivers
+│       ├── create-db-connection.py # Database connection script
+│       └── init-superset.sh  # Superset initialization
 ├── tests/                     # Comprehensive test suite
 │   ├── test_docker_setup.py  # Container and service tests
 │   ├── test_data_loading.py  # Data integrity and schema tests
 │   ├── conftest.py           # Test fixtures and configuration
 │   └── requirements-test.txt # Test dependencies
 ├── docker-compose.yml         # 3-container setup (no Redis)
-├── pyproject.toml            # UV/Python dependency management
-├── uv.lock                   # UV lockfile for reproducible installs
+# Note: Python dependencies embedded in Docker - no local Python setup required
 ├── .env                      # Environment configuration
 └── CLAUDE.md                 # This documentation
 ```
@@ -582,8 +581,8 @@ sql-playgrounds/
 ### Configuration Management
 - **Centralized configs**: All configuration files in `configs/` directory
 - **Environment variables**: Control via `.env` file for easy deployment
-- **Package management**: UV-based dependency management with `pyproject.toml`
-- **Reproducible builds**: Lockfile (`uv.lock`) ensures consistent dependencies
+- **Container-based dependencies**: All Python dependencies embedded in Docker images
+- **No local setup required**: Development environment fully containerized
 - **Testing infrastructure**: Comprehensive test suite with isolated dependencies
 - **Logging separation**: Application logs separate from data processing logs
 - **Volume organization**: Clear separation between persistent data and temporary files

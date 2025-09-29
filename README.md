@@ -316,7 +316,7 @@ The system features a **flexible backfill system** that automatically downloads 
 - **Reference Data**: Vendors, payment types, rate codes with proper relationships
 
 ### Complete Initialization Process
-The `docker/init-data.py` script orchestrates the entire process:
+The `postgres/docker/init-data.py` script orchestrates the entire process:
 
 1. **PostgreSQL Readiness**: Waits for database to be fully operational
 2. **Idempotent Schema Creation**: Executes SQL scripts with `IF NOT EXISTS` clauses for safe restarts
@@ -395,11 +395,17 @@ sql-playgrounds/
 │       └── reports-scripts/        # Pre-built analytical queries (available in PGAdmin)
 │           ├── nyc-taxi-analytics.sql # Trip volume, financial, and temporal analysis
 │           └── geospatial-taxi-analytics.sql # PostGIS spatial queries and zone analysis
-├── docker/                         # Custom PostgreSQL container
-│   ├── Dockerfile.postgres         # Custom image: PostgreSQL + PostGIS + Python environment
-│   └── init-data.py                # Comprehensive initialization script with backfill system
-├── pyproject.toml                  # Python dependencies (for local development only)
-└── uv.lock                         # Dependency lock file (uv package manager)
+│   └── docker/                       # PostgreSQL Docker files
+│       ├── Dockerfile.postgres       # Custom image: PostgreSQL + PostGIS + Python environment
+│       └── init-data.py              # Comprehensive initialization script with backfill system
+├── superset/                         # Apache Superset configuration and logs
+│   ├── config/                       # Superset configuration files
+│   ├── logs/                         # Superset application logs
+│   └── docker/                       # Superset Docker files
+│       ├── Dockerfile.superset       # Superset with PostgreSQL drivers
+│       ├── create-db-connection.py   # Database connection script
+│       └── init-superset.sh          # Superset initialization
+# Note: Python dependencies embedded in Docker containers - no local setup required
 ```
 
 ## Container Architecture
