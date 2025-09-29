@@ -167,6 +167,10 @@ from datetime import datetime
 LOG_DIR = '/app/logs'
 os.makedirs(LOG_DIR, exist_ok=True)
 
+# Use environment variable for timestamped log filename (set by startup script)
+# Falls back to generic name if not set
+LOG_FILENAME = os.getenv('SUPERSET_LOG_FILENAME', 'superset.log')
+
 # Superset-native logging configuration (this is what Superset actually uses)
 LOGGING_CONFIG = {
     'version': 1,
@@ -183,22 +187,10 @@ LOGGING_CONFIG = {
     },
     'handlers': {
         'superset_file': {
-            'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': f'{LOG_DIR}/superset.log',
-            'when': 'midnight',
-            'interval': 1,
-            'backupCount': 30,
+            'class': 'logging.FileHandler',
+            'filename': f'{LOG_DIR}/{LOG_FILENAME}',
             'formatter': 'detailed',
             'level': 'INFO'
-        },
-        'error_file': {
-            'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': f'{LOG_DIR}/superset_errors.log',
-            'when': 'midnight',
-            'interval': 1,
-            'backupCount': 14,
-            'formatter': 'detailed',
-            'level': 'ERROR'
         },
         'console': {
             'class': 'logging.StreamHandler',
@@ -209,33 +201,33 @@ LOGGING_CONFIG = {
     'loggers': {
         # Main Superset application logger
         'superset': {
-            'handlers': ['superset_file', 'error_file', 'console'],
+            'handlers': ['superset_file', 'console'],
             'level': 'INFO',
             'propagate': False
         },
         # Superset-specific modules
         'superset.charts': {
-            'handlers': ['superset_file', 'error_file'],
+            'handlers': ['superset_file'],
             'level': 'INFO',
             'propagate': False
         },
         'superset.dashboards': {
-            'handlers': ['superset_file', 'error_file'],
+            'handlers': ['superset_file'],
             'level': 'INFO',
             'propagate': False
         },
         'superset.views': {
-            'handlers': ['superset_file', 'error_file'],
+            'handlers': ['superset_file'],
             'level': 'INFO',
             'propagate': False
         },
         'superset.sql_lab': {
-            'handlers': ['superset_file', 'error_file'],
+            'handlers': ['superset_file'],
             'level': 'INFO',
             'propagate': False
         },
         'superset.connectors': {
-            'handlers': ['superset_file', 'error_file'],
+            'handlers': ['superset_file'],
             'level': 'INFO',
             'propagate': False
         },
@@ -257,12 +249,12 @@ LOGGING_CONFIG = {
             'propagate': False
         },
         'flask_appbuilder': {
-            'handlers': ['superset_file', 'error_file'],
+            'handlers': ['superset_file'],
             'level': 'INFO',
             'propagate': False
         },
         'flask_appbuilder.security': {
-            'handlers': ['superset_file', 'error_file'],
+            'handlers': ['superset_file'],
             'level': 'INFO',
             'propagate': False
         },
@@ -273,7 +265,7 @@ LOGGING_CONFIG = {
             'propagate': False
         },
         'gunicorn.error': {
-            'handlers': ['error_file'],
+            'handlers': ['superset_file'],
             'level': 'ERROR',
             'propagate': False
         },

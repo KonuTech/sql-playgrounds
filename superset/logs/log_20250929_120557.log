@@ -1,0 +1,404 @@
+[2025-09-29 12:05:57] [INFO] superset.config: ================================================================================
+[2025-09-29 12:05:57] [INFO] superset.config: 🚀 SUPERSET PERSISTENT LOGGING CONFIGURED
+[2025-09-29 12:05:57] [INFO] superset.config: ================================================================================
+[2025-09-29 12:05:57] [INFO] superset.config: 📁 Log Directory: /app/logs
+[2025-09-29 12:05:57] [INFO] superset.config: 🗄️ Database: SQLite (/app/superset_home/superset.db)
+[2025-09-29 12:05:57] [INFO] superset.config: 🔑 Caching: SQLite-based (No Redis required)
+[2025-09-29 12:05:57] [INFO] superset.config: 🔒 CSRF Protection: ❌ DISABLED (Development Mode)
+[2025-09-29 12:05:57] [INFO] superset.config: 🛡️ Talisman Security: ❌ DISABLED (Development Mode)
+[2025-09-29 12:05:57] [INFO] superset.config: 📊 Row Limit: 5000 (Max: 100000)
+[2025-09-29 12:05:57] [INFO] superset.config: ⏱️ Query Timeouts: SQL Lab=300s, Async=600s
+[2025-09-29 12:05:57] [INFO] superset.config: 📁 Session Storage: filesystem (Filesystem)
+[2025-09-29 12:05:57] [INFO] superset.config: 🗂️ Cache Configuration:
+[2025-09-29 12:05:57] [INFO] superset.config:   • Application Cache: NullCache (disabled)
+[2025-09-29 12:05:57] [INFO] superset.config:   • Data Cache: NullCache (no query result caching)
+[2025-09-29 12:05:57] [INFO] superset.config:   • Filter State: SupersetMetastoreCache (SQLite)
+[2025-09-29 12:05:57] [INFO] superset.config:   • Explore Form Data: SupersetMetastoreCache (SQLite)
+[2025-09-29 12:05:57] [INFO] superset.config: 📋 Log Files:
+[2025-09-29 12:05:57] [INFO] superset.config:   • Application: superset.log
+[2025-09-29 12:05:57] [INFO] superset.config:   • Errors: superset_errors.log
+[2025-09-29 12:05:57] [INFO] superset.config: 🚩 Enhanced Feature Flags:
+[2025-09-29 12:05:57] [INFO] superset.config:   • DASHBOARD_NATIVE_FILTERS: ✅
+[2025-09-29 12:05:57] [INFO] superset.config:   • DASHBOARD_CROSS_FILTERS: ✅
+[2025-09-29 12:05:57] [INFO] superset.config:   • GLOBAL_ASYNC_QUERIES: ❌
+[2025-09-29 12:05:57] [INFO] superset.config:   • DASHBOARD_CACHE: ✅
+[2025-09-29 12:05:57] [INFO] superset.config:   • TAGGING_SYSTEM: ✅
+[2025-09-29 12:05:57] [INFO] superset.config:   • Plus 6 additional features enabled
+[2025-09-29 12:05:57] [INFO] superset.config: 🔧 Performance Optimizations:
+[2025-09-29 12:05:57] [INFO] superset.config:   • Metadata DB: SQLite (persistent, no connection pooling)
+[2025-09-29 12:05:57] [INFO] superset.config:   • SQLite Timeout: N/As
+[2025-09-29 12:05:57] [INFO] superset.config:   • Data Sources: PostgreSQL with optimized connection pooling
+[2025-09-29 12:05:57] [INFO] superset.config:   • SQLAlchemy Warnings: Suppressed for SQLite/Decimal compatibility
+[2025-09-29 12:05:57] [INFO] superset.config:   • Caching Strategy: Simplified (SQLite-based, no Redis)
+[2025-09-29 12:05:57] [INFO] superset.config:   • Time Rotate Logging: ✅
+[2025-09-29 12:05:57] [INFO] superset.config: ================================================================================
+[2025-09-29 12:05:57] [INFO] superset.config: ================================================================================
+[2025-09-29 12:05:57] [INFO] superset.config: 🚀 SUPERSET PERSISTENT LOGGING CONFIGURED
+[2025-09-29 12:05:57] [INFO] superset.config: ================================================================================
+[2025-09-29 12:05:57] [INFO] superset.config: 📁 Log Directory: /app/logs
+[2025-09-29 12:05:57] [INFO] superset.config: 🗄️ Database: SQLite (/app/superset_home/superset.db)
+[2025-09-29 12:05:57] [INFO] superset.config: 🔑 Caching: SQLite-based (No Redis required)
+[2025-09-29 12:05:57] [INFO] superset.config: 🔒 CSRF Protection: ❌ DISABLED (Development Mode)
+[2025-09-29 12:05:57] [INFO] superset.config: 🛡️ Talisman Security: ❌ DISABLED (Development Mode)
+[2025-09-29 12:05:57] [INFO] superset.config: 📊 Row Limit: 5000 (Max: 100000)
+[2025-09-29 12:05:57] [INFO] superset.config: ⏱️ Query Timeouts: SQL Lab=300s, Async=600s
+[2025-09-29 12:05:57] [INFO] superset.config: 📁 Session Storage: filesystem (Filesystem)
+[2025-09-29 12:05:57] [INFO] superset.config: 🗂️ Cache Configuration:
+[2025-09-29 12:05:57] [INFO] superset.config:   • Application Cache: NullCache (disabled)
+[2025-09-29 12:05:57] [INFO] superset.config:   • Data Cache: NullCache (no query result caching)
+[2025-09-29 12:05:57] [INFO] superset.config:   • Filter State: SupersetMetastoreCache (SQLite)
+[2025-09-29 12:05:57] [INFO] superset.config:   • Explore Form Data: SupersetMetastoreCache (SQLite)
+[2025-09-29 12:05:57] [INFO] superset.config: 📋 Log Files:
+[2025-09-29 12:05:57] [INFO] superset.config:   • Application: superset.log
+[2025-09-29 12:05:57] [INFO] superset.config:   • Errors: superset_errors.log
+[2025-09-29 12:05:57] [INFO] superset.config: 🚩 Enhanced Feature Flags:
+[2025-09-29 12:05:57] [INFO] superset.config:   • DASHBOARD_NATIVE_FILTERS: ✅
+[2025-09-29 12:05:57] [INFO] superset.config:   • DASHBOARD_CROSS_FILTERS: ✅
+[2025-09-29 12:05:57] [INFO] superset.config:   • GLOBAL_ASYNC_QUERIES: ❌
+[2025-09-29 12:05:57] [INFO] superset.config:   • DASHBOARD_CACHE: ✅
+[2025-09-29 12:05:57] [INFO] superset.config:   • TAGGING_SYSTEM: ✅
+[2025-09-29 12:05:57] [INFO] superset.config:   • Plus 6 additional features enabled
+[2025-09-29 12:05:57] [INFO] superset.config: 🔧 Performance Optimizations:
+[2025-09-29 12:05:57] [INFO] superset.config:   • Metadata DB: SQLite (persistent, no connection pooling)
+[2025-09-29 12:05:57] [INFO] superset.config:   • SQLite Timeout: N/As
+[2025-09-29 12:05:57] [INFO] superset.config:   • Data Sources: PostgreSQL with optimized connection pooling
+[2025-09-29 12:05:57] [INFO] superset.config:   • SQLAlchemy Warnings: Suppressed for SQLite/Decimal compatibility
+[2025-09-29 12:05:57] [INFO] superset.config:   • Caching Strategy: Simplified (SQLite-based, no Redis)
+[2025-09-29 12:05:57] [INFO] superset.config:   • Time Rotate Logging: ✅
+[2025-09-29 12:05:57] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:00] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:00] [INFO] superset.config: 🚀 SUPERSET PERSISTENT LOGGING CONFIGURED
+[2025-09-29 12:06:00] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:00] [INFO] superset.config: 📁 Log Directory: /app/logs
+[2025-09-29 12:06:00] [INFO] superset.config: 🗄️ Database: SQLite (/app/superset_home/superset.db)
+[2025-09-29 12:06:00] [INFO] superset.config: 🔑 Caching: SQLite-based (No Redis required)
+[2025-09-29 12:06:00] [INFO] superset.config: 🔒 CSRF Protection: ❌ DISABLED (Development Mode)
+[2025-09-29 12:06:00] [INFO] superset.config: 🛡️ Talisman Security: ❌ DISABLED (Development Mode)
+[2025-09-29 12:06:00] [INFO] superset.config: 📊 Row Limit: 5000 (Max: 100000)
+[2025-09-29 12:06:00] [INFO] superset.config: ⏱️ Query Timeouts: SQL Lab=300s, Async=600s
+[2025-09-29 12:06:00] [INFO] superset.config: 📁 Session Storage: filesystem (Filesystem)
+[2025-09-29 12:06:00] [INFO] superset.config: 🗂️ Cache Configuration:
+[2025-09-29 12:06:00] [INFO] superset.config:   • Application Cache: NullCache (disabled)
+[2025-09-29 12:06:00] [INFO] superset.config:   • Data Cache: NullCache (no query result caching)
+[2025-09-29 12:06:00] [INFO] superset.config:   • Filter State: SupersetMetastoreCache (SQLite)
+[2025-09-29 12:06:00] [INFO] superset.config:   • Explore Form Data: SupersetMetastoreCache (SQLite)
+[2025-09-29 12:06:00] [INFO] superset.config: 📋 Log Files:
+[2025-09-29 12:06:00] [INFO] superset.config:   • Application: superset.log
+[2025-09-29 12:06:00] [INFO] superset.config:   • Errors: superset_errors.log
+[2025-09-29 12:06:00] [INFO] superset.config: 🚩 Enhanced Feature Flags:
+[2025-09-29 12:06:00] [INFO] superset.config:   • DASHBOARD_NATIVE_FILTERS: ✅
+[2025-09-29 12:06:00] [INFO] superset.config:   • DASHBOARD_CROSS_FILTERS: ✅
+[2025-09-29 12:06:00] [INFO] superset.config:   • GLOBAL_ASYNC_QUERIES: ❌
+[2025-09-29 12:06:00] [INFO] superset.config:   • DASHBOARD_CACHE: ✅
+[2025-09-29 12:06:00] [INFO] superset.config:   • TAGGING_SYSTEM: ✅
+[2025-09-29 12:06:00] [INFO] superset.config:   • Plus 6 additional features enabled
+[2025-09-29 12:06:00] [INFO] superset.config: 🔧 Performance Optimizations:
+[2025-09-29 12:06:00] [INFO] superset.config:   • Metadata DB: SQLite (persistent, no connection pooling)
+[2025-09-29 12:06:00] [INFO] superset.config:   • SQLite Timeout: N/As
+[2025-09-29 12:06:00] [INFO] superset.config:   • Data Sources: PostgreSQL with optimized connection pooling
+[2025-09-29 12:06:00] [INFO] superset.config:   • SQLAlchemy Warnings: Suppressed for SQLite/Decimal compatibility
+[2025-09-29 12:06:00] [INFO] superset.config:   • Caching Strategy: Simplified (SQLite-based, no Redis)
+[2025-09-29 12:06:00] [INFO] superset.config:   • Time Rotate Logging: ✅
+[2025-09-29 12:06:00] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:00] [WARNING] superset.initialization: We haven't found any Content Security Policy (CSP) defined in the configurations. Please make sure to configure CSP using the TALISMAN_ENABLED and TALISMAN_CONFIG keys or any other external software. Failing to configure CSP have serious security implications. Check https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP for more information. You can disable this warning using the CONTENT_SECURITY_POLICY_WARNING key.
+[2025-09-29 12:06:03] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:03] [INFO] superset.config: 🚀 SUPERSET PERSISTENT LOGGING CONFIGURED
+[2025-09-29 12:06:03] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:03] [INFO] superset.config: 📁 Log Directory: /app/logs
+[2025-09-29 12:06:03] [INFO] superset.config: 🗄️ Database: SQLite (/app/superset_home/superset.db)
+[2025-09-29 12:06:03] [INFO] superset.config: 🔑 Caching: SQLite-based (No Redis required)
+[2025-09-29 12:06:03] [INFO] superset.config: 🔒 CSRF Protection: ❌ DISABLED (Development Mode)
+[2025-09-29 12:06:03] [INFO] superset.config: 🛡️ Talisman Security: ❌ DISABLED (Development Mode)
+[2025-09-29 12:06:03] [INFO] superset.config: 📊 Row Limit: 5000 (Max: 100000)
+[2025-09-29 12:06:03] [INFO] superset.config: ⏱️ Query Timeouts: SQL Lab=300s, Async=600s
+[2025-09-29 12:06:03] [INFO] superset.config: 📁 Session Storage: filesystem (Filesystem)
+[2025-09-29 12:06:03] [INFO] superset.config: 🗂️ Cache Configuration:
+[2025-09-29 12:06:03] [INFO] superset.config:   • Application Cache: NullCache (disabled)
+[2025-09-29 12:06:03] [INFO] superset.config:   • Data Cache: NullCache (no query result caching)
+[2025-09-29 12:06:03] [INFO] superset.config:   • Filter State: SupersetMetastoreCache (SQLite)
+[2025-09-29 12:06:03] [INFO] superset.config:   • Explore Form Data: SupersetMetastoreCache (SQLite)
+[2025-09-29 12:06:03] [INFO] superset.config: 📋 Log Files:
+[2025-09-29 12:06:03] [INFO] superset.config:   • Application: superset.log
+[2025-09-29 12:06:03] [INFO] superset.config:   • Errors: superset_errors.log
+[2025-09-29 12:06:03] [INFO] superset.config: 🚩 Enhanced Feature Flags:
+[2025-09-29 12:06:03] [INFO] superset.config:   • DASHBOARD_NATIVE_FILTERS: ✅
+[2025-09-29 12:06:03] [INFO] superset.config:   • DASHBOARD_CROSS_FILTERS: ✅
+[2025-09-29 12:06:03] [INFO] superset.config:   • GLOBAL_ASYNC_QUERIES: ❌
+[2025-09-29 12:06:03] [INFO] superset.config:   • DASHBOARD_CACHE: ✅
+[2025-09-29 12:06:03] [INFO] superset.config:   • TAGGING_SYSTEM: ✅
+[2025-09-29 12:06:03] [INFO] superset.config:   • Plus 6 additional features enabled
+[2025-09-29 12:06:03] [INFO] superset.config: 🔧 Performance Optimizations:
+[2025-09-29 12:06:03] [INFO] superset.config:   • Metadata DB: SQLite (persistent, no connection pooling)
+[2025-09-29 12:06:03] [INFO] superset.config:   • SQLite Timeout: N/As
+[2025-09-29 12:06:03] [INFO] superset.config:   • Data Sources: PostgreSQL with optimized connection pooling
+[2025-09-29 12:06:03] [INFO] superset.config:   • SQLAlchemy Warnings: Suppressed for SQLite/Decimal compatibility
+[2025-09-29 12:06:03] [INFO] superset.config:   • Caching Strategy: Simplified (SQLite-based, no Redis)
+[2025-09-29 12:06:03] [INFO] superset.config:   • Time Rotate Logging: ✅
+[2025-09-29 12:06:03] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:04] [WARNING] superset.initialization: We haven't found any Content Security Policy (CSP) defined in the configurations. Please make sure to configure CSP using the TALISMAN_ENABLED and TALISMAN_CONFIG keys or any other external software. Failing to configure CSP have serious security implications. Check https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP for more information. You can disable this warning using the CONTENT_SECURITY_POLICY_WARNING key.
+[2025-09-29 12:06:07] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:07] [INFO] superset.config: 🚀 SUPERSET PERSISTENT LOGGING CONFIGURED
+[2025-09-29 12:06:07] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:07] [INFO] superset.config: 📁 Log Directory: /app/logs
+[2025-09-29 12:06:07] [INFO] superset.config: 🗄️ Database: SQLite (/app/superset_home/superset.db)
+[2025-09-29 12:06:07] [INFO] superset.config: 🔑 Caching: SQLite-based (No Redis required)
+[2025-09-29 12:06:07] [INFO] superset.config: 🔒 CSRF Protection: ❌ DISABLED (Development Mode)
+[2025-09-29 12:06:07] [INFO] superset.config: 🛡️ Talisman Security: ❌ DISABLED (Development Mode)
+[2025-09-29 12:06:07] [INFO] superset.config: 📊 Row Limit: 5000 (Max: 100000)
+[2025-09-29 12:06:07] [INFO] superset.config: ⏱️ Query Timeouts: SQL Lab=300s, Async=600s
+[2025-09-29 12:06:07] [INFO] superset.config: 📁 Session Storage: filesystem (Filesystem)
+[2025-09-29 12:06:07] [INFO] superset.config: 🗂️ Cache Configuration:
+[2025-09-29 12:06:07] [INFO] superset.config:   • Application Cache: NullCache (disabled)
+[2025-09-29 12:06:07] [INFO] superset.config:   • Data Cache: NullCache (no query result caching)
+[2025-09-29 12:06:07] [INFO] superset.config:   • Filter State: SupersetMetastoreCache (SQLite)
+[2025-09-29 12:06:07] [INFO] superset.config:   • Explore Form Data: SupersetMetastoreCache (SQLite)
+[2025-09-29 12:06:07] [INFO] superset.config: 📋 Log Files:
+[2025-09-29 12:06:07] [INFO] superset.config:   • Application: superset.log
+[2025-09-29 12:06:07] [INFO] superset.config:   • Errors: superset_errors.log
+[2025-09-29 12:06:07] [INFO] superset.config: 🚩 Enhanced Feature Flags:
+[2025-09-29 12:06:07] [INFO] superset.config:   • DASHBOARD_NATIVE_FILTERS: ✅
+[2025-09-29 12:06:07] [INFO] superset.config:   • DASHBOARD_CROSS_FILTERS: ✅
+[2025-09-29 12:06:07] [INFO] superset.config:   • GLOBAL_ASYNC_QUERIES: ❌
+[2025-09-29 12:06:07] [INFO] superset.config:   • DASHBOARD_CACHE: ✅
+[2025-09-29 12:06:07] [INFO] superset.config:   • TAGGING_SYSTEM: ✅
+[2025-09-29 12:06:07] [INFO] superset.config:   • Plus 6 additional features enabled
+[2025-09-29 12:06:07] [INFO] superset.config: 🔧 Performance Optimizations:
+[2025-09-29 12:06:07] [INFO] superset.config:   • Metadata DB: SQLite (persistent, no connection pooling)
+[2025-09-29 12:06:07] [INFO] superset.config:   • SQLite Timeout: N/As
+[2025-09-29 12:06:07] [INFO] superset.config:   • Data Sources: PostgreSQL with optimized connection pooling
+[2025-09-29 12:06:07] [INFO] superset.config:   • SQLAlchemy Warnings: Suppressed for SQLite/Decimal compatibility
+[2025-09-29 12:06:07] [INFO] superset.config:   • Caching Strategy: Simplified (SQLite-based, no Redis)
+[2025-09-29 12:06:07] [INFO] superset.config:   • Time Rotate Logging: ✅
+[2025-09-29 12:06:07] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:07] [WARNING] superset.initialization: We haven't found any Content Security Policy (CSP) defined in the configurations. Please make sure to configure CSP using the TALISMAN_ENABLED and TALISMAN_CONFIG keys or any other external software. Failing to configure CSP have serious security implications. Check https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP for more information. You can disable this warning using the CONTENT_SECURITY_POLICY_WARNING key.
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Chart.can_tag Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Chart.can_write Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Chart.can_warm_up_cache Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Chart.can_export Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Chart.can_tag Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_view_query Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_view_chart_as_table Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_drill Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_tag Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_read Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_warm_up_cache Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_duplicate Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_export Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_get_or_create_dataset Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_read Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_warm_up_cache Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_duplicate Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_export Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_get_or_create_dataset Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Datasource.can_samples Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Datasource.can_get Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Datasource.can_save Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Datasource.can_external_metadata Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Datasource.can_external_metadata_by_name Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists ReportSchedule.can_write Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Row Level Security.menu_access Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists SavedQuery.can_list Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Database.can_write Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Database.can_upload Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Database.can_export Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_set_embedded Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_cache_dashboard_screenshot Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_export Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_get_embedded Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_delete_embedded Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_view_query Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_view_chart_as_table Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_drill Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_tag Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Chart.can_warm_up_cache Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Chart.can_export Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Chart.can_tag Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_read Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_set_embedded Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_cache_dashboard_screenshot Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_export Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_get_embedded Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_delete_embedded Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_view_query Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_view_chart_as_table Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_drill Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dashboard.can_tag Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Datasource.can_get_column_values Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_write Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_warm_up_cache Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_duplicate Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_export Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_get_or_create_dataset Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists SavedQuery.can_read Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists SavedQuery.can_write Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists SavedQuery.can_export Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists SQLLab.can_format_sql Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists SQLLab.can_get_results Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists SQLLab.can_estimate_query_cost Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists SQLLab.can_execute_sql_query Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists SQLLab.can_export_csv Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Superset.can_csv Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Superset.can_share_dashboard Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Superset.can_share_chart Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Superset.can_sqllab Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_write Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_warm_up_cache Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_duplicate Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_export Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Dataset.can_get_or_create_dataset Admin
+[2025-09-29 12:06:08] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Tags.menu_access Admin
+[2025-09-29 12:06:09] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists ReportSchedule.can_write Admin
+[2025-09-29 12:06:09] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Tags.menu_access Admin
+[2025-09-29 12:06:09] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Log.can_write Admin
+[2025-09-29 12:06:09] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Log.can_recent_activity Admin
+[2025-09-29 12:06:09] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists ReportSchedule.can_write Admin
+[2025-09-29 12:06:09] [WARNING] flask_appbuilder.security.sqla.manager: Refused to delete permission view, assoc with role exists Annotation.can_write Admin
+[2025-09-29 12:06:09] [INFO] superset.security.manager: Syncing role definition
+[2025-09-29 12:06:09] [INFO] superset.security.manager: Syncing Admin perms
+[2025-09-29 12:06:09] [INFO] superset.security.manager: Syncing Alpha perms
+[2025-09-29 12:06:09] [INFO] superset.security.manager: Syncing Gamma perms
+[2025-09-29 12:06:09] [INFO] superset.security.manager: Syncing sql_lab perms
+[2025-09-29 12:06:09] [INFO] superset.security.manager: Fetching a set of all perms to lookup which ones are missing
+[2025-09-29 12:06:09] [INFO] superset.security.manager: Creating missing datasource permissions.
+[2025-09-29 12:06:09] [INFO] superset.security.manager: Creating missing database permissions.
+[2025-09-29 12:06:09] [INFO] superset.security.manager: Cleaning faulty perms
+[2025-09-29 12:06:12] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:12] [INFO] superset.config: 🚀 SUPERSET PERSISTENT LOGGING CONFIGURED
+[2025-09-29 12:06:12] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:12] [INFO] superset.config: 📁 Log Directory: /app/logs
+[2025-09-29 12:06:12] [INFO] superset.config: 🗄️ Database: SQLite (/app/superset_home/superset.db)
+[2025-09-29 12:06:12] [INFO] superset.config: 🔑 Caching: SQLite-based (No Redis required)
+[2025-09-29 12:06:12] [INFO] superset.config: 🔒 CSRF Protection: ❌ DISABLED (Development Mode)
+[2025-09-29 12:06:12] [INFO] superset.config: 🛡️ Talisman Security: ❌ DISABLED (Development Mode)
+[2025-09-29 12:06:12] [INFO] superset.config: 📊 Row Limit: 5000 (Max: 100000)
+[2025-09-29 12:06:12] [INFO] superset.config: ⏱️ Query Timeouts: SQL Lab=300s, Async=600s
+[2025-09-29 12:06:12] [INFO] superset.config: 📁 Session Storage: filesystem (Filesystem)
+[2025-09-29 12:06:12] [INFO] superset.config: 🗂️ Cache Configuration:
+[2025-09-29 12:06:12] [INFO] superset.config:   • Application Cache: NullCache (disabled)
+[2025-09-29 12:06:12] [INFO] superset.config:   • Data Cache: NullCache (no query result caching)
+[2025-09-29 12:06:12] [INFO] superset.config:   • Filter State: SupersetMetastoreCache (SQLite)
+[2025-09-29 12:06:12] [INFO] superset.config:   • Explore Form Data: SupersetMetastoreCache (SQLite)
+[2025-09-29 12:06:12] [INFO] superset.config: 📋 Log Files:
+[2025-09-29 12:06:12] [INFO] superset.config:   • Application: superset.log
+[2025-09-29 12:06:12] [INFO] superset.config:   • Errors: superset_errors.log
+[2025-09-29 12:06:12] [INFO] superset.config: 🚩 Enhanced Feature Flags:
+[2025-09-29 12:06:12] [INFO] superset.config:   • DASHBOARD_NATIVE_FILTERS: ✅
+[2025-09-29 12:06:12] [INFO] superset.config:   • DASHBOARD_CROSS_FILTERS: ✅
+[2025-09-29 12:06:12] [INFO] superset.config:   • GLOBAL_ASYNC_QUERIES: ❌
+[2025-09-29 12:06:12] [INFO] superset.config:   • DASHBOARD_CACHE: ✅
+[2025-09-29 12:06:12] [INFO] superset.config:   • TAGGING_SYSTEM: ✅
+[2025-09-29 12:06:12] [INFO] superset.config:   • Plus 6 additional features enabled
+[2025-09-29 12:06:12] [INFO] superset.config: 🔧 Performance Optimizations:
+[2025-09-29 12:06:12] [INFO] superset.config:   • Metadata DB: SQLite (persistent, no connection pooling)
+[2025-09-29 12:06:12] [INFO] superset.config:   • SQLite Timeout: N/As
+[2025-09-29 12:06:12] [INFO] superset.config:   • Data Sources: PostgreSQL with optimized connection pooling
+[2025-09-29 12:06:12] [INFO] superset.config:   • SQLAlchemy Warnings: Suppressed for SQLite/Decimal compatibility
+[2025-09-29 12:06:12] [INFO] superset.config:   • Caching Strategy: Simplified (SQLite-based, no Redis)
+[2025-09-29 12:06:12] [INFO] superset.config:   • Time Rotate Logging: ✅
+[2025-09-29 12:06:12] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:12] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:12] [INFO] superset.config: 🚀 SUPERSET PERSISTENT LOGGING CONFIGURED
+[2025-09-29 12:06:12] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:12] [INFO] superset.config: 📁 Log Directory: /app/logs
+[2025-09-29 12:06:12] [INFO] superset.config: 🗄️ Database: SQLite (/app/superset_home/superset.db)
+[2025-09-29 12:06:12] [INFO] superset.config: 🔑 Caching: SQLite-based (No Redis required)
+[2025-09-29 12:06:12] [INFO] superset.config: 🔒 CSRF Protection: ❌ DISABLED (Development Mode)
+[2025-09-29 12:06:12] [INFO] superset.config: 🛡️ Talisman Security: ❌ DISABLED (Development Mode)
+[2025-09-29 12:06:12] [INFO] superset.config: 📊 Row Limit: 5000 (Max: 100000)
+[2025-09-29 12:06:12] [INFO] superset.config: ⏱️ Query Timeouts: SQL Lab=300s, Async=600s
+[2025-09-29 12:06:12] [INFO] superset.config: 📁 Session Storage: filesystem (Filesystem)
+[2025-09-29 12:06:12] [INFO] superset.config: 🗂️ Cache Configuration:
+[2025-09-29 12:06:12] [INFO] superset.config:   • Application Cache: NullCache (disabled)
+[2025-09-29 12:06:12] [INFO] superset.config:   • Data Cache: NullCache (no query result caching)
+[2025-09-29 12:06:12] [INFO] superset.config:   • Filter State: SupersetMetastoreCache (SQLite)
+[2025-09-29 12:06:12] [INFO] superset.config:   • Explore Form Data: SupersetMetastoreCache (SQLite)
+[2025-09-29 12:06:12] [INFO] superset.config: 📋 Log Files:
+[2025-09-29 12:06:12] [INFO] superset.config:   • Application: superset.log
+[2025-09-29 12:06:12] [INFO] superset.config:   • Errors: superset_errors.log
+[2025-09-29 12:06:12] [INFO] superset.config: 🚩 Enhanced Feature Flags:
+[2025-09-29 12:06:12] [INFO] superset.config:   • DASHBOARD_NATIVE_FILTERS: ✅
+[2025-09-29 12:06:12] [INFO] superset.config:   • DASHBOARD_CROSS_FILTERS: ✅
+[2025-09-29 12:06:12] [INFO] superset.config:   • GLOBAL_ASYNC_QUERIES: ❌
+[2025-09-29 12:06:12] [INFO] superset.config:   • DASHBOARD_CACHE: ✅
+[2025-09-29 12:06:12] [INFO] superset.config:   • TAGGING_SYSTEM: ✅
+[2025-09-29 12:06:12] [INFO] superset.config:   • Plus 6 additional features enabled
+[2025-09-29 12:06:12] [INFO] superset.config: 🔧 Performance Optimizations:
+[2025-09-29 12:06:12] [WARNING] superset.initialization: We haven't found any Content Security Policy (CSP) defined in the configurations. Please make sure to configure CSP using the TALISMAN_ENABLED and TALISMAN_CONFIG keys or any other external software. Failing to configure CSP have serious security implications. Check https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP for more information. You can disable this warning using the CONTENT_SECURITY_POLICY_WARNING key.
+[2025-09-29 12:06:12] [INFO] superset.config:   • Metadata DB: SQLite (persistent, no connection pooling)
+[2025-09-29 12:06:12] [INFO] superset.config:   • SQLite Timeout: N/As
+[2025-09-29 12:06:12] [INFO] superset.config:   • Data Sources: PostgreSQL with optimized connection pooling
+[2025-09-29 12:06:12] [INFO] superset.config:   • SQLAlchemy Warnings: Suppressed for SQLite/Decimal compatibility
+[2025-09-29 12:06:12] [INFO] superset.config:   • Caching Strategy: Simplified (SQLite-based, no Redis)
+[2025-09-29 12:06:12] [INFO] superset.config:   • Time Rotate Logging: ✅
+[2025-09-29 12:06:12] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:12] [WARNING] superset.initialization: We haven't found any Content Security Policy (CSP) defined in the configurations. Please make sure to configure CSP using the TALISMAN_ENABLED and TALISMAN_CONFIG keys or any other external software. Failing to configure CSP have serious security implications. Check https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP for more information. You can disable this warning using the CONTENT_SECURITY_POLICY_WARNING key.
+[2025-09-29 12:06:12] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:12] [INFO] superset.config: 🚀 SUPERSET PERSISTENT LOGGING CONFIGURED
+[2025-09-29 12:06:12] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:12] [INFO] superset.config: 📁 Log Directory: /app/logs
+[2025-09-29 12:06:12] [INFO] superset.config: 🗄️ Database: SQLite (/app/superset_home/superset.db)
+[2025-09-29 12:06:12] [INFO] superset.config: 🔑 Caching: SQLite-based (No Redis required)
+[2025-09-29 12:06:12] [INFO] superset.config: 🔒 CSRF Protection: ❌ DISABLED (Development Mode)
+[2025-09-29 12:06:12] [INFO] superset.config: 🛡️ Talisman Security: ❌ DISABLED (Development Mode)
+[2025-09-29 12:06:12] [INFO] superset.config: 📊 Row Limit: 5000 (Max: 100000)
+[2025-09-29 12:06:12] [INFO] superset.config: ⏱️ Query Timeouts: SQL Lab=300s, Async=600s
+[2025-09-29 12:06:12] [INFO] superset.config: 📁 Session Storage: filesystem (Filesystem)
+[2025-09-29 12:06:12] [INFO] superset.config: 🗂️ Cache Configuration:
+[2025-09-29 12:06:12] [INFO] superset.config:   • Application Cache: NullCache (disabled)
+[2025-09-29 12:06:12] [INFO] superset.config:   • Data Cache: NullCache (no query result caching)
+[2025-09-29 12:06:12] [INFO] superset.config:   • Filter State: SupersetMetastoreCache (SQLite)
+[2025-09-29 12:06:12] [INFO] superset.config:   • Explore Form Data: SupersetMetastoreCache (SQLite)
+[2025-09-29 12:06:12] [INFO] superset.config: 📋 Log Files:
+[2025-09-29 12:06:12] [INFO] superset.config:   • Application: superset.log
+[2025-09-29 12:06:12] [INFO] superset.config:   • Errors: superset_errors.log
+[2025-09-29 12:06:12] [INFO] superset.config: 🚩 Enhanced Feature Flags:
+[2025-09-29 12:06:12] [INFO] superset.config:   • DASHBOARD_NATIVE_FILTERS: ✅
+[2025-09-29 12:06:12] [INFO] superset.config:   • DASHBOARD_CROSS_FILTERS: ✅
+[2025-09-29 12:06:12] [INFO] superset.config:   • GLOBAL_ASYNC_QUERIES: ❌
+[2025-09-29 12:06:12] [INFO] superset.config:   • DASHBOARD_CACHE: ✅
+[2025-09-29 12:06:12] [INFO] superset.config:   • TAGGING_SYSTEM: ✅
+[2025-09-29 12:06:12] [INFO] superset.config:   • Plus 6 additional features enabled
+[2025-09-29 12:06:12] [INFO] superset.config: 🔧 Performance Optimizations:
+[2025-09-29 12:06:12] [INFO] superset.config:   • Metadata DB: SQLite (persistent, no connection pooling)
+[2025-09-29 12:06:12] [INFO] superset.config:   • SQLite Timeout: N/As
+[2025-09-29 12:06:12] [INFO] superset.config:   • Data Sources: PostgreSQL with optimized connection pooling
+[2025-09-29 12:06:12] [INFO] superset.config:   • SQLAlchemy Warnings: Suppressed for SQLite/Decimal compatibility
+[2025-09-29 12:06:12] [INFO] superset.config:   • Caching Strategy: Simplified (SQLite-based, no Redis)
+[2025-09-29 12:06:12] [INFO] superset.config:   • Time Rotate Logging: ✅
+[2025-09-29 12:06:12] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:12] [WARNING] superset.initialization: We haven't found any Content Security Policy (CSP) defined in the configurations. Please make sure to configure CSP using the TALISMAN_ENABLED and TALISMAN_CONFIG keys or any other external software. Failing to configure CSP have serious security implications. Check https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP for more information. You can disable this warning using the CONTENT_SECURITY_POLICY_WARNING key.
+[2025-09-29 12:06:12] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:12] [INFO] superset.config: 🚀 SUPERSET PERSISTENT LOGGING CONFIGURED
+[2025-09-29 12:06:12] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:12] [INFO] superset.config: 📁 Log Directory: /app/logs
+[2025-09-29 12:06:12] [INFO] superset.config: 🗄️ Database: SQLite (/app/superset_home/superset.db)
+[2025-09-29 12:06:12] [INFO] superset.config: 🔑 Caching: SQLite-based (No Redis required)
+[2025-09-29 12:06:12] [INFO] superset.config: 🔒 CSRF Protection: ❌ DISABLED (Development Mode)
+[2025-09-29 12:06:12] [INFO] superset.config: 🛡️ Talisman Security: ❌ DISABLED (Development Mode)
+[2025-09-29 12:06:12] [INFO] superset.config: 📊 Row Limit: 5000 (Max: 100000)
+[2025-09-29 12:06:12] [INFO] superset.config: ⏱️ Query Timeouts: SQL Lab=300s, Async=600s
+[2025-09-29 12:06:12] [INFO] superset.config: 📁 Session Storage: filesystem (Filesystem)
+[2025-09-29 12:06:12] [INFO] superset.config: 🗂️ Cache Configuration:
+[2025-09-29 12:06:12] [INFO] superset.config:   • Application Cache: NullCache (disabled)
+[2025-09-29 12:06:12] [INFO] superset.config:   • Data Cache: NullCache (no query result caching)
+[2025-09-29 12:06:12] [INFO] superset.config:   • Filter State: SupersetMetastoreCache (SQLite)
+[2025-09-29 12:06:12] [INFO] superset.config:   • Explore Form Data: SupersetMetastoreCache (SQLite)
+[2025-09-29 12:06:12] [INFO] superset.config: 📋 Log Files:
+[2025-09-29 12:06:12] [INFO] superset.config:   • Application: superset.log
+[2025-09-29 12:06:12] [INFO] superset.config:   • Errors: superset_errors.log
+[2025-09-29 12:06:12] [INFO] superset.config: 🚩 Enhanced Feature Flags:
+[2025-09-29 12:06:12] [INFO] superset.config:   • DASHBOARD_NATIVE_FILTERS: ✅
+[2025-09-29 12:06:12] [INFO] superset.config:   • DASHBOARD_CROSS_FILTERS: ✅
+[2025-09-29 12:06:12] [INFO] superset.config:   • GLOBAL_ASYNC_QUERIES: ❌
+[2025-09-29 12:06:12] [INFO] superset.config:   • DASHBOARD_CACHE: ✅
+[2025-09-29 12:06:12] [INFO] superset.config:   • TAGGING_SYSTEM: ✅
+[2025-09-29 12:06:12] [INFO] superset.config:   • Plus 6 additional features enabled
+[2025-09-29 12:06:12] [INFO] superset.config: 🔧 Performance Optimizations:
+[2025-09-29 12:06:12] [INFO] superset.config:   • Metadata DB: SQLite (persistent, no connection pooling)
+[2025-09-29 12:06:12] [INFO] superset.config:   • SQLite Timeout: N/As
+[2025-09-29 12:06:12] [INFO] superset.config:   • Data Sources: PostgreSQL with optimized connection pooling
+[2025-09-29 12:06:12] [INFO] superset.config:   • SQLAlchemy Warnings: Suppressed for SQLite/Decimal compatibility
+[2025-09-29 12:06:12] [INFO] superset.config:   • Caching Strategy: Simplified (SQLite-based, no Redis)
+[2025-09-29 12:06:12] [INFO] superset.config:   • Time Rotate Logging: ✅
+[2025-09-29 12:06:12] [INFO] superset.config: ================================================================================
+[2025-09-29 12:06:12] [WARNING] superset.initialization: We haven't found any Content Security Policy (CSP) defined in the configurations. Please make sure to configure CSP using the TALISMAN_ENABLED and TALISMAN_CONFIG keys or any other external software. Failing to configure CSP have serious security implications. Check https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP for more information. You can disable this warning using the CONTENT_SECURITY_POLICY_WARNING key.

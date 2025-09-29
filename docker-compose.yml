@@ -59,14 +59,15 @@ services:
       - "${SUPERSET_PORT:-8088}:8088"
     volumes:
       - superset_data:/app/superset_home
-      - ./superset/superset_config.py:/app/superset_config.py
-      - ./logs/superset:/app/logs
+      - ./superset/config/superset_config.py:/app/superset_config.py
+      - ./superset/logs:/app/logs
       - ./docker/init-superset.sh:/app/init-superset.sh
     networks:
       - sql-playground-network
     # No Redis dependency - using SQLite-based caching
     command: >
       bash -c "
+      export SUPERSET_LOG_FILENAME=log_$(date +%Y%m%d_%H%M%S).log &&
       /app/init-superset.sh &&
       gunicorn --bind 0.0.0.0:8088 --workers 4 --timeout 120 'superset.app:create_app()'
       "

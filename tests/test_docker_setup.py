@@ -124,7 +124,7 @@ class TestConfigFiles:
 
     def test_superset_config_exists(self):
         """Test that Superset configuration file exists"""
-        config_path = Path("superset/superset_config.py")
+        config_path = Path("superset/config/superset_config.py")
         assert config_path.exists(), "Superset config file should exist in superset directory"
 
     def test_docker_compose_structure(self):

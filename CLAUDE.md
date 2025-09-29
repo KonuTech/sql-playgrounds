@@ -139,7 +139,7 @@ pytest tests/ --cov=. --cov-report=html
     - Keeps PostgreSQL running in foreground
 - **PGAdmin Container**: `dpage/pgadmin4:latest` for web-based database management
 - **Superset Container**: Custom Apache Superset build with PostgreSQL connectivity
-  - **Configuration**: Custom `superset/superset_config.py` with simplified, Redis-free settings
+  - **Configuration**: Custom `superset/config/superset_config.py` with simplified, Redis-free settings
   - **Metadata Database**: SQLite for persistent dashboard/chart storage (`/app/superset_home/superset.db`)
   - **Caching Strategy**: SQLite-based using SupersetMetastoreCache and NullCache (no Redis needed)
   - **Initialization**: Automated database connection setup via `init-superset.sh`
@@ -150,6 +150,7 @@ pytest tests/ --cov=. --cov-report=html
   - `superset_data`: Superset configuration and dashboards
   - `./sql-scripts:/sql-scripts`: SQL scripts and unified data location
   - `./logs:/sql-scripts/logs`: Persistent logging with organized folder structure
+  - `./superset/logs:/app/logs`: Superset application logs
 
 ## Key Integration Points
 
@@ -552,8 +553,7 @@ sql-playgrounds/
 ├── docs/                      # Documentation
 │   └── interviews/           # SQL technical interview questions
 ├── logs/                      # Persistent logging
-│   ├── [BACKFILL_MONTHS]/    # Organized by backfill configuration
-│   └── superset/             # Superset application logs
+│   └── [BACKFILL_MONTHS]/    # Organized by backfill configuration
 ├── sql-scripts/               # SQL scripts and data
 │   ├── init-scripts/         # Database schema initialization
 │   ├── model-scripts/        # Star schema and dimensional modeling
@@ -561,8 +561,10 @@ sql-playgrounds/
 │   └── data/                 # Unified data location
 │       ├── zones/            # NYC taxi zone data (CSV + shapefiles)
 │       └── yellow/           # Trip data (parquet files)
-├── superset/                  # Apache Superset configuration
-│   └── superset_config.py    # Superset configuration (SQLite + logging)
+├── superset/                  # Apache Superset configuration and logs
+│   ├── config/               # Superset configuration files
+│   │   └── superset_config.py # Superset configuration (SQLite + logging)
+│   └── logs/                 # Superset application logs
 ├── tests/                     # Comprehensive test suite
 │   ├── test_docker_setup.py  # Container and service tests
 │   ├── test_data_loading.py  # Data integrity and schema tests
