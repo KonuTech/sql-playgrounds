@@ -25,15 +25,21 @@ This playground is an **ideal resource for SQL technical interviews and database
 - **Production Challenges**: Data quality issues, performance optimization, scale considerations
 - **Complete ETL Pipeline**: Hash-based duplicate prevention, chunked processing, error recovery
 - **Advanced Features**: PostGIS spatial analysis, time-series data, multi-borough analytics
+- **🎯 Business Intelligence**: Apache Superset for creating professional dashboards and data visualizations
+- **📈 Data Storytelling**: Transform SQL queries into compelling visual narratives and interactive reports
 
 ---
 
-A production-ready Docker-based SQL playground featuring PostgreSQL 17 + PostGIS 3.5 and PGAdmin with authentic NYC Yellow Taxi trip data. Features automated data backfill system that can load multiple months (3-5 million records per month) with single-command deployment and unified data management.
+A production-ready Docker-based SQL playground featuring PostgreSQL 17 + PostGIS 3.5, PGAdmin, and **Apache Superset** for business intelligence with authentic NYC Yellow Taxi trip data. Query millions of records through **interactive dashboards, SQL Lab, and custom visualizations** while leveraging automated data backfill system that can load multiple months (3-5 million records per month) with single-command deployment.
 
 ## Features
 
 - **PostgreSQL 17 + PostGIS 3.5** with geospatial support and custom Python environment
 - **PGAdmin 4** (latest) for web-based database management and query execution
+- **🚀 Apache Superset** modern business intelligence platform with interactive dashboards, SQL Lab, and advanced visualizations
+- **📊 Visual Analytics** - Create charts, graphs, and dashboards from millions of NYC taxi records
+- **🔍 SQL Lab Integration** - Write complex queries with autocomplete and export results directly from Superset
+- **📱 Interactive Dashboards** - Cross-filtering, drill-down capabilities, and real-time data exploration
 - **Automated Backfill System** - Download and load multiple months of authentic NYC taxi data
 - **Flexible Data Loading** - Load specific months, last 6/12 months, or all available data (2009-2025)
 - **Complete Geospatial Data** - 263 official NYC taxi zones with polygon boundaries (auto-downloaded)
@@ -45,6 +51,26 @@ A production-ready Docker-based SQL playground featuring PostgreSQL 17 + PostGIS
 - **Hash-Based Duplicate Prevention** - Ultimate protection against duplicate data with SHA-256 row hashing
 - **Star Schema Support** - Dimensional modeling with fact and dimension tables for advanced analytics
 - **Historical Data Support** - Complete NYC TLC data coverage from 2009 to present
+
+## 📚 Table of Contents
+
+- [🚀 Quick Start](#quick-start)
+- [🏗️ Data Pipeline Architecture](#data-pipeline-architecture)
+- [🔧 Architecture & Data Loading](#architecture--data-loading)
+- [📁 Project Structure](#project-structure)
+- [🐳 Container Architecture](#container-architecture)
+- [⏸️ Pause and Resume Capability](#pause-and-resume-capability)
+- [⚙️ Configuration & Development](#configuration--development)
+- [🗄️ Database Schema & Analytics](#database-schema--analytics)
+- [🚀 Apache Superset Business Intelligence Features](#-apache-superset-business-intelligence-features)
+  - [📊 Rich Visualization Gallery](#-rich-visualization-gallery)
+  - [⚡ Advanced SQL Lab](#-advanced-sql-lab)
+  - [🎛️ Interactive Dashboard Features](#️-interactive-dashboard-features)
+  - [📈 Perfect for Data Presentations](#-perfect-for-data-presentations)
+  - [🔧 Enterprise-Ready Configuration](#-enterprise-ready-configuration)
+  - [Sample Dashboard Ideas](#sample-dashboard-ideas)
+- [📈 Data Sources & Authenticity](#data-sources--authenticity)
+- [📊 Sample Analytics Queries](#sample-analytics-queries)
 
 ## Quick Start
 
@@ -90,6 +116,17 @@ A production-ready Docker-based SQL playground featuring PostgreSQL 17 + PostGIS
    - **Username**: admin
    - **Password**: admin123
    - **Schema**: nyc_taxi
+
+6. **🚀 Access Apache Superset for Advanced Business Intelligence:**
+   - **URL**: http://localhost:8088
+   - **Login**: admin / admin123
+   - **🎨 Create Professional Dashboards**: Build interactive visualizations from millions of taxi records
+   - **⚡ SQL Lab**: Advanced SQL editor with autocomplete, query history, and result exports
+   - **📊 Chart Gallery**: 50+ visualization types including maps, time series, and statistical plots
+   - **🔄 Real-time Filtering**: Cross-dashboard filtering and drill-down capabilities
+   - **Auto-connected**: Pre-configured PostgreSQL connection to playground database
+   - **Persistent**: All dashboards and charts saved in SQLite backend
+   - **Connection string**: postgresql+pg8000://admin:admin123@postgres:5432/playground
 
 ## Data Pipeline Architecture
 
@@ -377,7 +414,7 @@ The `postgres/docker/init-data.py` script orchestrates the entire process:
 
 ```
 sql-playgrounds/
-├── docker-compose.yml              # Multi-service configuration (PostgreSQL + PGAdmin)
+├── docker-compose.yml              # Multi-service configuration (PostgreSQL + PGAdmin + Superset)
 ├── .env                            # Environment variables (credentials, ports, backfill config)
 ├── CLAUDE.md                       # Detailed architecture guide for Claude Code
 ├── postgres/                       # PostgreSQL-related files
@@ -398,8 +435,9 @@ sql-playgrounds/
 │   └── docker/                       # PostgreSQL Docker files
 │       ├── Dockerfile.postgres       # Custom image: PostgreSQL + PostGIS + Python environment
 │       └── init-data.py              # Comprehensive initialization script with backfill system
-├── superset/                         # Apache Superset configuration and logs
+├── superset/                         # Apache Superset business intelligence platform
 │   ├── config/                       # Superset configuration files
+│   │   └── superset_config.py        # SQLite-based config (no Redis dependency)
 │   ├── logs/                         # Superset application logs
 │   └── docker/                       # Superset Docker files
 │       ├── Dockerfile.superset       # Superset with PostgreSQL drivers
@@ -416,12 +454,22 @@ sql-playgrounds/
 - **Custom Entrypoint**: Starts PostgreSQL, waits for readiness, runs initialization
 - **Embedded Dependencies**: pandas, geopandas, pyarrow, psycopg2, sqlalchemy
 
+### Apache Superset Container
+- **Base**: `apache/superset:latest` with custom PostgreSQL drivers
+- **Metadata Database**: SQLite for persistent dashboard/chart storage
+- **Caching Strategy**: SQLite-based using SupersetMetastoreCache (no Redis required)
+- **Auto-initialization**: Pre-configured database connection and admin setup
+- **Features**: Interactive dashboards, SQL Lab, chart creation, native filters
+
 ### Volume Strategy
 - **Database Persistence**: `postgres_data` volume (survives container restarts)
 - **PGAdmin Configuration**: `pgadmin_data` volume (settings, connections)
+- **Superset Configuration**: `superset_data` volume (dashboards, charts, user settings)
 - **SQL Scripts**: `./postgres/sql-scripts:/sql-scripts` (database schema and reports)
 - **NYC Taxi Data**: `./postgres/data:/postgres/data` (auto-downloaded data files)
 - **PostgreSQL Persistent Logging**: `./postgres/logs:/postgres/logs` (organized by backfill configuration)
+- **Superset Configuration**: `./superset/config:/app/config` (SQLite-based setup files)
+- **Superset Logging**: `./superset/logs:/app/logs` (application logs)
 - **Script Access**: SQL scripts available both for initialization and PGAdmin queries
 
 ### Memory & Performance
@@ -493,6 +541,13 @@ POSTGRES_PORT=5432
 PGADMIN_EMAIL=admin@admin.com
 PGADMIN_PASSWORD=admin123
 PGADMIN_PORT=8080
+
+# Apache Superset Configuration
+SUPERSET_PORT=8088
+SUPERSET_ADMIN_USER=admin
+SUPERSET_ADMIN_EMAIL=admin@admin.com
+SUPERSET_ADMIN_PASSWORD=admin123
+SUPERSET_LOAD_EXAMPLES=false
 
 # Data Loading Control
 DATA_CHUNK_SIZE=100000
@@ -597,6 +652,83 @@ uv add package-name
 - **Time-Series Indexes**: On pickup_datetime and dropoff_datetime
 - **Location Indexes**: On pickup and dropoff location IDs
 - **Composite Indexes**: Combined indexes for common analytical patterns
+
+## Data Sources & Authenticity
+
+### NYC Yellow Taxi Trip Records
+**Source**: [NYC TLC Trip Record Data](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
+- **Format**: Official parquet files (updated monthly by NYC TLC)
+- **Available Data**: 2009-2025 (monthly files, ~60MB/3-5 M records per month)
+- **Auto-Download**: System automatically downloads configured months from official sources
+- **Coverage**: Complete historical coverage of taxi trip data from NYC Taxi & Limousine Commission
+- **Data Quality**: Handles missing columns across different data periods with graceful fallbacks
+
+### NYC Taxi Zone Reference Data
+**Source**: [NYC TLC Taxi Zone Maps and Lookup Tables](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
+- **Lookup Table**: `taxi_zone_lookup.csv` - 263 official taxi zones (automatically downloaded)
+- **Geospatial Data**: Complete shapefile ZIP with polygon boundaries (automatically downloaded and extracted)
+- **Coordinate System**: Converted to NYC State Plane (EPSG:2263) for optimal spatial analysis
+- **Components**: `.shp`, `.dbf`, `.shx`, `.prj`, `.sbn`, `.sbx` files extracted automatically
+
+### Data Authenticity & Scale
+This is **production-scale real-world data** from New York City's official transportation authority:
+- ✅ **Authentic NYC taxi trips** - every record represents a real taxi ride
+- ✅ **Flexible temporal coverage** - load specific months, last N months, or all available data
+- ✅ **Official geospatial boundaries** - precise NYC taxi zone polygons
+- ✅ **Rich analytical dimensions** - financial, temporal, spatial, and operational data
+- ✅ **Always current** - downloads latest data directly from official NYC TLC sources
+
+Perfect for learning advanced SQL, big data analytics, and geospatial analysis with realistic datasets that mirror production database challenges. The flexible backfill system allows you to work with datasets ranging from a single month to 16+ years of historical data (2009-2025).
+
+## 🚀 Apache Superset Business Intelligence Features
+
+### Transform Raw Data into Visual Stories
+The playground includes a fully configured Apache Superset instance that transforms your NYC taxi data analysis into professional business intelligence:
+
+#### 📊 **Rich Visualization Gallery**
+- **Geospatial Maps**: Visualize pickup/dropoff patterns across NYC boroughs with PostGIS integration
+- **Time Series Charts**: Track taxi demand patterns, revenue trends, and seasonal variations
+- **Statistical Distributions**: Payment type breakdowns, trip distance histograms, fare analysis
+- **Cross-Tab Tables**: Multi-dimensional analysis with drill-down capabilities
+- **Custom Metrics**: Calculate KPIs like average trip duration, revenue per mile, tip percentages
+
+#### ⚡ **Advanced SQL Lab**
+- **Intelligent Autocomplete**: Schema-aware query suggestions for all tables and columns
+- **Query History**: Save and reuse complex analytical queries
+- **Result Visualization**: Instantly convert query results into charts and graphs
+- **Data Export**: Download results in CSV, Excel, or JSON formats
+- **Query Performance**: Built-in query optimization and execution plan analysis
+
+#### 🎛️ **Interactive Dashboard Features**
+- **Real-time Filtering**: Apply filters across multiple charts simultaneously
+- **Cross-Dashboard Navigation**: Link related dashboards for comprehensive analysis
+- **Responsive Design**: Dashboards work seamlessly on desktop and mobile devices
+- **Scheduled Reports**: Automate dashboard delivery via email
+- **Public Sharing**: Share dashboards with stakeholders via secure URLs
+
+#### 📈 **Perfect for Data Presentations**
+- **Executive Dashboards**: High-level KPIs and trends for decision makers
+- **Operational Reports**: Daily/weekly performance monitoring and alerts
+- **Analytical Deep-Dives**: Detailed exploration of taxi industry patterns
+- **Geographic Analysis**: Borough-by-borough performance comparisons
+- **Financial Insights**: Revenue analysis, payment pattern trends, profitability metrics
+
+#### 🔧 **Enterprise-Ready Configuration**
+- **SQLite Metadata Backend**: No Redis dependency, simplified deployment
+- **Persistent Storage**: All dashboards, charts, and user settings preserved
+- **Security Features**: Role-based access control, user management
+- **Performance Optimized**: Efficient caching and query optimization
+- **Scalable Architecture**: Ready for production deployment
+
+### Sample Dashboard Ideas
+Get started with these dashboard concepts using your NYC taxi data:
+1. **📍 Geographic Performance**: Map visualizations showing hotspot areas and trip flows
+2. **⏰ Temporal Analysis**: Hourly, daily, and seasonal demand patterns
+3. **💰 Financial Dashboard**: Revenue trends, payment type analysis, profitability metrics
+4. **🚗 Operations Monitor**: Trip volume, average duration, distance distributions
+5. **🏙️ Borough Comparison**: Cross-borough analytics and performance benchmarks
+
+Transform your SQL skills into compelling data stories with Superset's powerful visualization engine!
 
 ### Sample Analytics Queries
 
@@ -821,29 +953,4 @@ WHERE trip_distance > 20
 ORDER BY trip_distance DESC
 LIMIT 4000;
 ```
-## Data Sources & Authenticity
 
-### NYC Yellow Taxi Trip Records
-**Source**: [NYC TLC Trip Record Data](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
-- **Format**: Official parquet files (updated monthly by NYC TLC)
-- **Available Data**: 2009-2025 (monthly files, ~60MB/3-5 M records per month)
-- **Auto-Download**: System automatically downloads configured months from official sources
-- **Coverage**: Complete historical coverage of taxi trip data from NYC Taxi & Limousine Commission
-- **Data Quality**: Handles missing columns across different data periods with graceful fallbacks
-
-### NYC Taxi Zone Reference Data
-**Source**: [NYC TLC Taxi Zone Maps and Lookup Tables](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
-- **Lookup Table**: `taxi_zone_lookup.csv` - 263 official taxi zones (automatically downloaded)
-- **Geospatial Data**: Complete shapefile ZIP with polygon boundaries (automatically downloaded and extracted)
-- **Coordinate System**: Converted to NYC State Plane (EPSG:2263) for optimal spatial analysis
-- **Components**: `.shp`, `.dbf`, `.shx`, `.prj`, `.sbn`, `.sbx` files extracted automatically
-
-### Data Authenticity & Scale
-This is **production-scale real-world data** from New York City's official transportation authority:
-- ✅ **Authentic NYC taxi trips** - every record represents a real taxi ride
-- ✅ **Flexible temporal coverage** - load specific months, last N months, or all available data
-- ✅ **Official geospatial boundaries** - precise NYC taxi zone polygons
-- ✅ **Rich analytical dimensions** - financial, temporal, spatial, and operational data
-- ✅ **Always current** - downloads latest data directly from official NYC TLC sources
-
-Perfect for learning advanced SQL, big data analytics, and geospatial analysis with realistic datasets that mirror production database challenges. The flexible backfill system allows you to work with datasets ranging from a single month to 16+ years of historical data (2009-2025).

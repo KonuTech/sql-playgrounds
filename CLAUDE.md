@@ -188,7 +188,7 @@ DATA_CHUNK_SIZE=100000
 INIT_LOAD_ALL_DATA=true
 
 # Backfill Configuration Options:
-BACKFILL_MONTHS=last_12_months      # Default: Load last 12 months
+BACKFILL_MONTHS="2024-09,2024-10,2024-11,2024-12,2025-01,2025-02,2025-03,2025-04,2025-05,2025-06,2025-07,2025-08"  # Current default: 12 months
 # BACKFILL_MONTHS=                  # Empty: Load only existing local files
 # BACKFILL_MONTHS=2024-01           # Single month
 # BACKFILL_MONTHS=2024-01,2024-02   # Specific months (comma-separated)
@@ -269,6 +269,11 @@ SUPERSET_LOAD_EXAMPLES=false
 **Schema files**: `postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql` (must use lowercase column names)
 
 **No Manual Data Management Required**: System automatically downloads all required data files from official NYC TLC sources into organized subdirectories
+
+### Superset Configuration Notes
+- **SQLab Backend Persistence**: Disabled via `SQLLAB_BACKEND_PERSISTENCE: False` to prevent "Unable to migrate query editor state to backend" popup
+- **Caching Strategy**: Uses SQLite-based caching (SupersetMetastoreCache) instead of Redis for simplified architecture
+- **Query Editor State**: Stored in browser localStorage for optimal performance and simplicity
 
 ### Production Deployment Notes
 - **First startup**: Takes 30-45 minutes to load 3.47M records
