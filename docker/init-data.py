@@ -104,43 +104,10 @@ def wait_for_postgres(host='localhost', port=5432, database='playground',
     logger.error("❌ PostgreSQL not available after maximum attempts")
     return False
 
-def create_superset_database():
-    """Create superset database using direct psycopg2 connection with autocommit"""
-    try:
-        # Connect to postgres database (not playground) to create new database
-        conn = psycopg2.connect(
-            host='localhost',
-            port=5432,
-            database='postgres',  # Connect to postgres database first
-            user='admin',
-            password='admin123'
-        )
-        conn.autocommit = True  # Required for CREATE DATABASE
-
-        with conn.cursor() as cursor:
-            # Check if database exists
-            cursor.execute("SELECT 1 FROM pg_database WHERE datname = 'superset'")
-            if cursor.fetchone() is None:
-                logger.info("🔧 Creating superset database...")
-                cursor.execute("CREATE DATABASE superset")
-                cursor.execute("GRANT ALL PRIVILEGES ON DATABASE superset TO admin")
-                logger.info("✅ Superset database created successfully")
-            else:
-                logger.info("ℹ️ Superset database already exists")
-
-        conn.close()
-        return True
-
-    except Exception as e:
-        logger.error(f"❌ Error creating superset database: {e}")
-        return False
 
 def execute_sql_scripts(engine):
     """Execute SQL initialization scripts in order"""
     logger.info("🗃️ Executing SQL initialization scripts...")
-
-    # First, handle superset database creation separately
-    create_superset_database()
 
     # Define the script directory and order
     script_dir = '/sql-scripts/init-scripts'
@@ -151,9 +118,6 @@ def execute_sql_scripts(engine):
 
     # Get all SQL files and sort them (ensuring proper execution order)
     sql_files = sorted(glob.glob(os.path.join(script_dir, "*.sql")))
-
-    # Filter out superset database script since we handle it separately
-    sql_files = [f for f in sql_files if 'superset-database' not in f]
 
     if not sql_files:
         logger.warning("⚠️ No SQL scripts found to execute")
@@ -234,7 +198,7 @@ def load_taxi_zones(engine):
         logger.info("✅ Dictionary tables cleaned")
 
         # Ensure data directory exists and download all taxi zone data files
-        data_dir = '/sql-scripts/data'
+        data_dir = '/postgres/data'
         zones_dir = os.path.join(data_dir, 'zones')
 
         # Always download fresh taxi zone data during initialization
@@ -466,7 +430,7 @@ def populate_star_schema_dimensions(engine):
         })
         return False
 
-def download_taxi_zone_data(data_dir='/sql-scripts/data'):
+def download_taxi_zone_data(data_dir='/postgres/data'):
     """Download taxi zone reference data (CSV and shapefiles)"""
     logger.info("📥 Downloading taxi zone reference data...")
 
@@ -529,7 +493,7 @@ def download_taxi_zone_data(data_dir='/sql-scripts/data'):
     logger.info("✅ All taxi zone reference data files are available")
     return True
 
-def download_taxi_data(year, month, data_dir='/sql-scripts/data'):
+def download_taxi_data(year, month, data_dir='/postgres/data'):
     """Download taxi data for a specific year and month"""
     # Ensure yellow subdirectory exists
     yellow_dir = os.path.join(data_dir, 'yellow')
@@ -1413,7 +1377,7 @@ def load_trip_data(engine, load_all=True):
             return False
 
         # Ensure data directory exists
-        data_dir = '/sql-scripts/data'
+        data_dir = '/postgres/data'
         os.makedirs(data_dir, exist_ok=True)
 
         # Download and load each month
@@ -1467,7 +1431,7 @@ def load_trip_data(engine, load_all=True):
     else:
         # Original single-file loading logic
         try:
-            data_dir = '/sql-scripts/data'
+            data_dir = '/postgres/data'
             yellow_dir = os.path.join(data_dir, 'yellow')
             parquet_path = os.path.join(yellow_dir, 'yellow_tripdata_2025-01.parquet')
             if not os.path.exists(parquet_path):

@@ -208,11 +208,11 @@ class TestFileStructure:
         sql_scripts_path = Path("sql-scripts")
         assert sql_scripts_path.exists(), "sql-scripts directory should exist"
 
-        data_path = Path("sql-scripts/data")
+        data_path = Path("postgres/data")
         assert data_path.exists(), "data directory should exist"
 
-        zones_path = Path("sql-scripts/data/zones")
-        yellow_path = Path("sql-scripts/data/yellow")
+        zones_path = Path("postgres/data/zones")
+        yellow_path = Path("postgres/data/yellow")
         # These directories are created during data loading, so they might not exist initially
         # Just check that the parent data directory exists
 

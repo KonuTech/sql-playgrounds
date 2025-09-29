@@ -380,23 +380,21 @@ sql-playgrounds/
 ├── docker-compose.yml              # Multi-service configuration (PostgreSQL + PGAdmin)
 ├── .env                            # Environment variables (credentials, ports, backfill config)
 ├── CLAUDE.md                       # Detailed architecture guide for Claude Code
-├── sql-scripts/                    # SQL scripts and unified data location
-│   ├── data/                       # Unified data location (auto-populated during initialization)
+├── postgres/                       # PostgreSQL-related files
+│   ├── data/                       # NYC taxi data storage (auto-populated during initialization)
 │   │   ├── zones/                  # NYC taxi zone reference data (auto-downloaded)
 │   │   │   ├── taxi_zone_lookup.csv # 263 official taxi zones
 │   │   │   └── taxi_zones.* (shp/dbf/shx/prj/sbn/sbx) # Extracted shapefiles
 │   │   └── yellow/                 # NYC Yellow taxi trip data (auto-downloaded)
 │   │       └── yellow_tripdata_*.parquet # Trip data files based on backfill config
+│   └── logs/                       # PostgreSQL persistent logging
+├── sql-scripts/                    # SQL scripts only
 │   ├── init-scripts/               # Database schema creation (executed automatically)
 │   │   ├── 00-postgis-setup.sql    # PostGIS extensions and spatial references
 │   │   └── 01-nyc-taxi-schema.sql  # Complete NYC taxi schema (lowercase columns)
 │   └── reports-scripts/            # Pre-built analytical queries (available in PGAdmin)
 │       ├── nyc-taxi-analytics.sql  # Trip volume, financial, and temporal analysis
 │       └── geospatial-taxi-analytics.sql # PostGIS spatial queries and zone analysis
-├── logs/                           # Persistent logging (organized by backfill configuration)
-│   ├── last_12_months/             # Logs for 12-month backfill
-│   ├── all/                        # Logs for complete data backfill
-│   └── [config]/                   # Logs organized by BACKFILL_MONTHS setting
 ├── docker/                         # Custom PostgreSQL container
 │   ├── Dockerfile.postgres         # Custom image: PostgreSQL + PostGIS + Python environment
 │   └── init-data.py                # Comprehensive initialization script with backfill system
@@ -415,7 +413,8 @@ sql-playgrounds/
 ### Volume Strategy
 - **Database Persistence**: `postgres_data` volume (survives container restarts)
 - **PGAdmin Configuration**: `pgadmin_data` volume (settings, connections)
-- **Unified Data Location**: `./sql-scripts:/sql-scripts` (contains auto-downloaded data files)
+- **SQL Scripts**: `./sql-scripts:/sql-scripts` (database schema and reports)
+- **NYC Taxi Data**: `./postgres/data:/postgres/data` (auto-downloaded data files)
 - **PostgreSQL Persistent Logging**: `./postgres/logs:/postgres/logs` (organized by backfill configuration)
 - **Script Access**: SQL scripts available both for initialization and PGAdmin queries
 

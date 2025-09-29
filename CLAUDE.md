@@ -87,7 +87,7 @@ pytest tests/ --cov=. --cov-report=html
 
 ### Data Flow Architecture
 1. **Raw Data Sources**:
-   - **Unified data location**: `/sql-scripts/data/` (single consolidated location)
+   - **Unified data location**: `/postgres/data/` (single consolidated location)
    - **Remote data**: NYC TLC Trip Record Data (automatically downloaded via backfill)
    - **URL Pattern**: `https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_YYYY-MM.parquet`
    - **Available data**: 2020-2025 (monthly files, ~59MB/3.47M+ records per month)
@@ -148,7 +148,8 @@ pytest tests/ --cov=. --cov-report=html
   - `postgres_data`: PostgreSQL data persistence
   - `pgadmin_data`: PGAdmin settings persistence
   - `superset_data`: Superset configuration and dashboards
-  - `./sql-scripts:/sql-scripts`: SQL scripts and unified data location
+  - `./sql-scripts:/sql-scripts`: SQL scripts only
+  - `./postgres/data:/postgres/data`: NYC taxi data storage
   - `./postgres/logs:/postgres/logs`: PostgreSQL persistent logging with organized folder structure
   - `./superset/logs:/app/logs`: Superset application logs
 
@@ -259,13 +260,13 @@ SUPERSET_LOAD_EXAMPLES=false
 - **Consistent state**: Every initialization produces identical reference tables
 
 ### Unified Data System
-**Data Storage Location**: All data files organized in `/sql-scripts/data/` with logical subdirectories:
+**Data Storage Location**: All data files organized in `/postgres/data/` with logical subdirectories:
 
-**Zone Data**: `/sql-scripts/data/zones/`
+**Zone Data**: `/postgres/data/zones/`
 - **Zone CSV**: `taxi_zone_lookup.csv` (downloaded during each initialization)
 - **Shapefile components**: `taxi_zones.{shp,dbf,shx,prj,sbn,sbx}` (extracted from ZIP during initialization)
 
-**Trip Data**: `/sql-scripts/data/yellow/`
+**Trip Data**: `/postgres/data/yellow/`
 - **Trip data**: `yellow_tripdata_YYYY-MM.parquet` files (automatically downloaded via backfill)
 
 **Schema files**: `sql-scripts/init-scripts/01-nyc-taxi-schema.sql` (must use lowercase column names)
@@ -553,15 +554,15 @@ sql-playgrounds/
 ├── docs/                      # Documentation
 │   └── interviews/           # SQL technical interview questions
 ├── postgres/                  # PostgreSQL-related files
+│   ├── data/                 # NYC taxi data storage
+│   │   ├── zones/            # Taxi zone data (CSV + shapefiles)
+│   │   └── yellow/           # Trip data (parquet files)
 │   └── logs/                 # PostgreSQL persistent logging
 │       └── [BACKFILL_MONTHS]/    # Organized by backfill configuration
-├── sql-scripts/               # SQL scripts and data (no logs subdirectory)
+├── sql-scripts/               # SQL scripts only (no data or logs subdirectories)
 │   ├── init-scripts/         # Database schema initialization
 │   ├── model-scripts/        # Star schema and dimensional modeling
-│   ├── reports-scripts/      # Analytical queries
-│   └── data/                 # Unified data location
-│       ├── zones/            # NYC taxi zone data (CSV + shapefiles)
-│       └── yellow/           # Trip data (parquet files)
+│   └── reports-scripts/      # Analytical queries
 ├── superset/                  # Apache Superset configuration and logs
 │   ├── config/               # Superset configuration files
 │   │   └── superset_config.py # Superset configuration (SQLite + logging)
