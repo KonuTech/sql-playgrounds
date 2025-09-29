@@ -74,14 +74,19 @@ A production-ready Docker-based SQL playground featuring PostgreSQL 17 + PostGIS
 
 ## Quick Start
 
-1. **Start the complete SQL playground:**
+1. **Copy environment configuration:**
+   ```bash
+   cp env .env
+   ```
+
+2. **Start the complete SQL playground:**
    ```bash
    docker-compose up -d --build
    ```
 
    ⏱️ **Default configuration loads last 12 months of data** (configure via `.env` file). First startup takes time based on data volume selected.
 
-2. **Configure data backfill (optional):**
+3. **Configure data backfill (optional):**
    Edit `.env` file to customize data loading:
    ```bash
    # Load last 12 months (default)
@@ -94,7 +99,7 @@ A production-ready Docker-based SQL playground featuring PostgreSQL 17 + PostGIS
    BACKFILL_MONTHS=all
    ```
 
-3. **Monitor the initialization progress:**
+4. **Monitor the initialization progress:**
    ```bash
    docker logs -f sql-playground-postgres
    ```
@@ -105,11 +110,11 @@ A production-ready Docker-based SQL playground featuring PostgreSQL 17 + PostGIS
    - Downloads and processes trip data in chunks (10K rows each)
    - Performs data integrity verification
 
-4. **Access PGAdmin Web Interface:**
+5. **Access PGAdmin Web Interface:**
    - **URL**: http://localhost:8080
    - **Login**: admin@admin.com / admin123
 
-5. **Connect to PostgreSQL in PGAdmin:**
+6. **Connect to PostgreSQL in PGAdmin:**
    - **Host**: postgres
    - **Port**: 5432
    - **Database**: playground
@@ -117,7 +122,7 @@ A production-ready Docker-based SQL playground featuring PostgreSQL 17 + PostGIS
    - **Password**: admin123
    - **Schema**: nyc_taxi
 
-6. **🚀 Access Apache Superset for Advanced Business Intelligence:**
+7. **🚀 Access Apache Superset for Advanced Business Intelligence:**
    - **URL**: http://localhost:8088
    - **Login**: admin / admin123
    - **🎨 Create Professional Dashboards**: Build interactive visualizations from millions of taxi records

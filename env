@@ -20,7 +20,7 @@ SUPERSET_ADMIN_PASSWORD=admin123
 SUPERSET_LOAD_EXAMPLES=false
 
 # Data Loading Configuration
-DATA_CHUNK_SIZE=10000
+DATA_CHUNK_SIZE=100000
 MAX_TEST_ROWS=50000
 INIT_LOAD_ALL_DATA=true
 
@@ -32,4 +32,4 @@ INIT_LOAD_ALL_DATA=true
 # - "last_6_months": Load last 6 months
 # - "last_12_months": Load last 12 months
 # - "all": Load all available data from 2020 to current month (WARNING: Very large!)
-BACKFILL_MONTHS=last_12_months
+BACKFILL_MONTHS="2024-09,2024-10,2024-11,2024-12,2025-01,2025-02,2025-03,2025-04,2025-05,2025-06,2025-07,2025-08"
