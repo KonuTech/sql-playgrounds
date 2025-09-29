@@ -15,13 +15,8 @@ mkdir -p /app/superset_home
 chmod 755 /app/superset_home
 echo "✅ Superset home directory ready!"
 
-# Wait for Redis to be ready (only needed for caching)
-echo "⏳ Waiting for Redis to be ready..."
-until redis-cli -h redis ping > /dev/null 2>&1; do
-  echo "Redis is unavailable - sleeping"
-  sleep 2
-done
-echo "✅ Redis is ready!"
+# Redis is no longer required - using SQLite-based caching
+echo "ℹ️ Using SQLite-based caching (no Redis dependency)"
 
 # Load Superset configuration and initialize logging
 echo "📋 Loading Superset configuration..."

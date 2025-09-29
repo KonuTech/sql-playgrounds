@@ -14,56 +14,37 @@ PREVENT_UNSAFE_DEFAULT_SECRET_KEY = False
 # SQLite-specific options are included in the URI to avoid affecting PostgreSQL connections
 SQLALCHEMY_DATABASE_URI = "sqlite:////app/superset_home/superset.db?check_same_thread=false&timeout=30"
 
-# Enhanced Redis configuration for caching and query results
-REDIS_HOST = "redis"
-REDIS_PORT = 6379
+# Simplified caching configuration - no Redis required
+# Uses Superset's built-in SQLite-based caching and NullCache for optimal simplicity
 
-# Main cache configuration (for application caching)
+# Main cache configuration (application caching) - disabled for simplicity
 CACHE_CONFIG = {
-    'CACHE_TYPE': 'RedisCache',
-    'CACHE_DEFAULT_TIMEOUT': 300,      # 5 minutes default
-    'CACHE_KEY_PREFIX': 'superset_',
-    'CACHE_REDIS_HOST': REDIS_HOST,
-    'CACHE_REDIS_PORT': REDIS_PORT,
-    'CACHE_REDIS_DB': 1,
-    'CACHE_REDIS_URL': f'redis://{REDIS_HOST}:{REDIS_PORT}/1'
+    'CACHE_TYPE': 'NullCache',
+    'CACHE_DEFAULT_TIMEOUT': 300
 }
 
-# Data cache configuration (for query result caching)
+# Data cache configuration - disabled (no query result caching needed for development)
 DATA_CACHE_CONFIG = {
-    'CACHE_TYPE': 'RedisCache',
-    'CACHE_DEFAULT_TIMEOUT': 86400,    # 24 hours for data caching
-    'CACHE_KEY_PREFIX': 'superset_data_',
-    'CACHE_REDIS_HOST': REDIS_HOST,
-    'CACHE_REDIS_PORT': REDIS_PORT,
-    'CACHE_REDIS_DB': 2,
-    'CACHE_REDIS_URL': f'redis://{REDIS_HOST}:{REDIS_PORT}/2'
+    'CACHE_TYPE': 'NullCache',
+    'CACHE_DEFAULT_TIMEOUT': 86400
 }
 
 # Query result backend for async query results
 # Disabled for development - enables synchronous query execution in SQL Lab
 RESULTS_BACKEND = None
 
-# Filter state cache configuration
+# Filter state cache - uses SQLite metadata database (SupersetMetastoreCache)
 FILTER_STATE_CACHE_CONFIG = {
-    'CACHE_TYPE': 'RedisCache',
+    'CACHE_TYPE': 'SupersetMetastoreCache',
     'CACHE_DEFAULT_TIMEOUT': 86400,    # 24 hours
-    'CACHE_KEY_PREFIX': 'superset_filter_',
-    'CACHE_REDIS_HOST': REDIS_HOST,
-    'CACHE_REDIS_PORT': REDIS_PORT,
-    'CACHE_REDIS_DB': 4,
-    'CACHE_REDIS_URL': f'redis://{REDIS_HOST}:{REDIS_PORT}/4'
+    'REFRESH_TIMEOUT_ON_RETRIEVAL': True
 }
 
-# Explore form data cache
+# Explore form data cache - uses SQLite metadata database (SupersetMetastoreCache)
 EXPLORE_FORM_DATA_CACHE_CONFIG = {
-    'CACHE_TYPE': 'RedisCache',
+    'CACHE_TYPE': 'SupersetMetastoreCache',
     'CACHE_DEFAULT_TIMEOUT': 3600,     # 1 hour
-    'CACHE_KEY_PREFIX': 'superset_explore_',
-    'CACHE_REDIS_HOST': REDIS_HOST,
-    'CACHE_REDIS_PORT': REDIS_PORT,
-    'CACHE_REDIS_DB': 5,
-    'CACHE_REDIS_URL': f'redis://{REDIS_HOST}:{REDIS_PORT}/5'
+    'REFRESH_TIMEOUT_ON_RETRIEVAL': True
 }
 
 # Enhanced feature flags for better functionality
@@ -328,18 +309,17 @@ def configure_logging():
     logger.info("=" * 80)
     logger.info(f"📁 Log Directory: {LOG_DIR}")
     logger.info(f"🗄️ Database: SQLite (/app/superset_home/superset.db)")
-    logger.info(f"🔑 Redis Cache: {REDIS_HOST}:{REDIS_PORT}")
+    logger.info("🔑 Caching: SQLite-based (No Redis required)")
     logger.info(f"🔒 CSRF Protection: {'❌ DISABLED (Development Mode)' if not WTF_CSRF_ENABLED else '✅ ENABLED'}")
     logger.info(f"🛡️ Talisman Security: {'❌ DISABLED (Development Mode)' if not TALISMAN_ENABLED else '✅ ENABLED'}")
     logger.info(f"📊 Row Limit: {ROW_LIMIT} (Max: {SQL_MAX_ROW})")
     logger.info(f"⏱️ Query Timeouts: SQL Lab={SQLLAB_TIMEOUT}s, Async={SQLLAB_ASYNC_TIME_LIMIT_SEC}s")
     logger.info(f"📁 Session Storage: {SESSION_TYPE} ({'Filesystem' if SESSION_TYPE == 'filesystem' else 'Other'})")
-    logger.info("🗂️ Redis Databases:")
-    logger.info("  • DB 1: Application Cache")
-    logger.info("  • DB 2: Data Cache (24h)")
-    logger.info("  • DB 3: Query Results Backend")
-    logger.info("  • DB 4: Filter State Cache")
-    logger.info("  • DB 5: Explore Form Data Cache")
+    logger.info("🗂️ Cache Configuration:")
+    logger.info("  • Application Cache: NullCache (disabled)")
+    logger.info("  • Data Cache: NullCache (no query result caching)")
+    logger.info("  • Filter State: SupersetMetastoreCache (SQLite)")
+    logger.info("  • Explore Form Data: SupersetMetastoreCache (SQLite)")
     logger.info("📋 Log Files:")
     logger.info(f"  • Application: superset.log")
     logger.info(f"  • Errors: superset_errors.log")
@@ -354,7 +334,7 @@ def configure_logging():
     logger.info(f"  • SQLite Timeout: {SQLALCHEMY_ENGINE_OPTIONS.get('connect_args', {}).get('timeout', 'N/A')}s")
     logger.info("  • Data Sources: PostgreSQL with optimized connection pooling")
     logger.info(f"  • SQLAlchemy Warnings: Suppressed for SQLite/Decimal compatibility")
-    logger.info(f"  • Cache Timeout: {CACHE_DEFAULT_TIMEOUT}s default")
+    logger.info("  • Caching Strategy: Simplified (SQLite-based, no Redis)")
     logger.info(f"  • Time Rotate Logging: {'✅' if ENABLE_TIME_ROTATE else '❌'}")
     logger.info("=" * 80)
 

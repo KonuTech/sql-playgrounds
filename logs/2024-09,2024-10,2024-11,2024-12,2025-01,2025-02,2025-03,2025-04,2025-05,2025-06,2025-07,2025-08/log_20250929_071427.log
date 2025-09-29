@@ -299,3 +299,790 @@
 2025-09-29 08:09:34,635 - WARNING - ⚠️ Skipping 1071 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
 2025-09-29 08:10:04,109 - INFO - 📥 yellow_tripdata_2024-10.parquet: Processed 2,000,000 rows - Loaded: 1,999,999 normalized, 1,973,292 star, 0 duplicates, 0 invalid (20/39 chunks)
 2025-09-29 08:10:04,112 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:10:07,420 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:10:31,807 - INFO - 📝 Storing 1013 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:10:35,181 - WARNING - ⚠️ Skipping 1013 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:11:03,957 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:11:07,221 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:11:31,270 - INFO - 📝 Storing 1318 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:11:35,627 - WARNING - ⚠️ Skipping 1318 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:12:04,037 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:12:07,232 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:12:30,889 - INFO - 📝 Storing 1126 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:12:34,612 - WARNING - ⚠️ Skipping 1126 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:13:01,127 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:13:04,325 - WARNING - ⚠️ Found 1 hash collisions within batch - removing duplicates
+2025-09-29 08:13:04,332 - INFO - ✅ Generated 99,999 unique row hashes
+2025-09-29 08:13:30,823 - INFO - 📝 Storing 1061 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:13:32,010 - WARNING - ⚠️ Skipping 1061 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:14:00,796 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:14:03,988 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:14:28,040 - INFO - 📝 Storing 870 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:14:30,903 - WARNING - ⚠️ Skipping 870 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:15:00,656 - INFO - 📥 yellow_tripdata_2024-10.parquet: Processed 2,500,000 rows - Loaded: 2,499,998 normalized, 2,467,903 star, 0 duplicates, 0 invalid (25/39 chunks)
+2025-09-29 08:15:00,658 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:15:03,983 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:15:27,912 - INFO - 📝 Storing 867 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:15:30,778 - WARNING - ⚠️ Skipping 867 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:15:59,572 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:16:02,786 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:16:26,265 - INFO - 📝 Storing 1045 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:16:29,725 - WARNING - ⚠️ Skipping 1045 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:16:59,319 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:17:02,662 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:17:26,381 - INFO - 📝 Storing 964 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:17:29,524 - WARNING - ⚠️ Skipping 964 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:17:58,624 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:18:01,953 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:18:26,508 - INFO - 📝 Storing 1023 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:18:29,867 - WARNING - ⚠️ Skipping 1023 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:18:59,255 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:19:02,528 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:19:26,781 - INFO - 📝 Storing 1405 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:19:29,180 - WARNING - ⚠️ Skipping 1405 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:19:58,201 - INFO - 📥 yellow_tripdata_2024-10.parquet: Processed 3,000,000 rows - Loaded: 2,999,998 normalized, 2,962,599 star, 0 duplicates, 0 invalid (30/39 chunks)
+2025-09-29 08:19:58,203 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:20:01,473 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:20:27,171 - INFO - 📝 Storing 1134 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:20:30,942 - WARNING - ⚠️ Skipping 1134 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:21:00,823 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:21:04,223 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:21:30,831 - INFO - 📝 Storing 917 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:21:33,718 - WARNING - ⚠️ Skipping 917 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:22:04,466 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:22:07,919 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:22:34,208 - INFO - 📝 Storing 991 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:22:37,524 - WARNING - ⚠️ Skipping 991 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:23:10,826 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:23:12,042 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:23:38,164 - INFO - 📝 Storing 1043 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:23:41,610 - WARNING - ⚠️ Skipping 1043 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:24:13,119 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:24:16,608 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:24:44,234 - INFO - 📝 Storing 548 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:24:46,097 - WARNING - ⚠️ Skipping 548 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:25:18,864 - INFO - 📥 yellow_tripdata_2024-10.parquet: Processed 3,500,000 rows - Loaded: 3,499,998 normalized, 3,457,966 star, 0 duplicates, 0 invalid (35/39 chunks)
+2025-09-29 08:25:18,867 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:25:22,681 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:25:49,897 - INFO - 📝 Storing 186 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:25:50,544 - WARNING - ⚠️ Skipping 186 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:26:23,161 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:26:24,420 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:26:54,100 - INFO - 📝 Storing 161 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:26:52,504 - WARNING - ⚠️ Skipping 161 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:27:26,132 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:27:30,118 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:27:58,556 - INFO - 📝 Storing 183 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:27:59,158 - WARNING - ⚠️ Skipping 183 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:28:31,852 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:28:33,112 - INFO - ✅ Generated 33,771 unique row hashes
+2025-09-29 08:28:42,621 - INFO - 📝 Storing 48 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:28:42,791 - WARNING - ⚠️ Skipping 48 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:28:52,240 - INFO - 📥 yellow_tripdata_2024-10.parquet: Processed 3,833,771 rows - Loaded: 3,833,769 normalized, 3,791,159 star, 0 duplicates, 0 invalid (39/39 chunks)
+2025-09-29 08:28:52,241 - INFO - ✅ yellow_tripdata_2024-10.parquet: Completed - 3,833,769 loaded to normalized, 3,791,159 to star schema, 0 duplicates, 0 invalid rows
+2025-09-29 08:28:52,276 - INFO - ✅ Completed processing log for 2024-10: 3,833,769 records
+2025-09-29 08:28:52,277 - INFO - ✅ 2024-10: 3,833,769 rows loaded (total: 7,466,799)
+2025-09-29 08:28:52,277 - INFO - 📅 Processing 2024-11...
+2025-09-29 08:28:52,282 - INFO - 📂 File already exists: yellow_tripdata_2024-11.parquet
+2025-09-29 08:28:52,287 - INFO - 📝 Started processing log for 2024-11
+2025-09-29 08:28:52,287 - INFO - 📥 Loading yellow_tripdata_2024-11.parquet...
+2025-09-29 08:28:52,816 - INFO - 📊 File contains 3,646,369 rows
+2025-09-29 08:28:53,466 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:28:57,105 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:29:24,065 - INFO - 📝 Storing 917 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:29:27,175 - WARNING - ⚠️ Skipping 917 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:29:59,742 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:30:03,310 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:30:30,130 - INFO - 📝 Storing 929 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:30:33,211 - WARNING - ⚠️ Skipping 929 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:31:04,607 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:31:08,330 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:31:36,978 - INFO - 📝 Storing 984 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:31:40,604 - WARNING - ⚠️ Skipping 984 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:32:15,196 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:32:18,979 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:32:48,079 - INFO - 📝 Storing 1183 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:32:52,161 - WARNING - ⚠️ Skipping 1183 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:33:23,664 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:33:27,555 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:33:55,636 - INFO - 📝 Storing 974 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:33:58,913 - WARNING - ⚠️ Skipping 974 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:34:33,441 - INFO - 📥 yellow_tripdata_2024-11.parquet: Processed 500,000 rows - Loaded: 500,000 normalized, 495,013 star, 0 duplicates, 0 invalid (5/37 chunks)
+2025-09-29 08:34:33,445 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:34:37,354 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:35:05,059 - INFO - 📝 Storing 904 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:35:08,088 - WARNING - ⚠️ Skipping 904 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:35:40,596 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:35:44,493 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:36:12,830 - INFO - 📝 Storing 863 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:36:15,717 - WARNING - ⚠️ Skipping 863 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:36:50,899 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:36:54,686 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:37:22,828 - INFO - 📝 Storing 919 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:37:26,017 - WARNING - ⚠️ Skipping 919 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:37:58,552 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:38:02,302 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:38:30,677 - INFO - 📝 Storing 980 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:38:34,131 - WARNING - ⚠️ Skipping 980 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:39:08,552 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:39:12,310 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:39:41,239 - INFO - 📝 Storing 934 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:39:44,611 - WARNING - ⚠️ Skipping 934 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:40:16,471 - INFO - 📥 yellow_tripdata_2024-11.parquet: Processed 1,000,000 rows - Loaded: 1,000,000 normalized, 990,413 star, 0 duplicates, 0 invalid (10/37 chunks)
+2025-09-29 08:40:16,474 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:40:20,261 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:40:49,305 - INFO - 📝 Storing 1050 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:40:52,992 - WARNING - ⚠️ Skipping 1050 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:41:28,179 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:41:32,038 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:42:01,168 - INFO - 📝 Storing 1141 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:42:05,009 - WARNING - ⚠️ Skipping 1141 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:42:37,639 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:42:41,426 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:43:10,651 - INFO - 📝 Storing 939 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:43:13,923 - WARNING - ⚠️ Skipping 939 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:43:48,435 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:43:52,366 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:44:20,882 - INFO - 📝 Storing 1012 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:44:24,412 - WARNING - ⚠️ Skipping 1012 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:44:57,150 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:45:01,043 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:45:30,581 - INFO - 📝 Storing 1018 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:45:34,019 - WARNING - ⚠️ Skipping 1018 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:46:09,353 - INFO - 📥 yellow_tripdata_2024-11.parquet: Processed 1,500,000 rows - Loaded: 1,500,000 normalized, 1,485,253 star, 0 duplicates, 0 invalid (15/37 chunks)
+2025-09-29 08:46:09,356 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:46:13,230 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:46:42,079 - INFO - 📝 Storing 1092 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:46:43,491 - WARNING - ⚠️ Skipping 1092 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:47:18,972 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:47:22,853 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:47:52,277 - INFO - 📝 Storing 1036 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:47:55,803 - WARNING - ⚠️ Skipping 1036 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:48:30,547 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:48:34,458 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:49:04,230 - INFO - 📝 Storing 844 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:49:04,806 - WARNING - ⚠️ Skipping 844 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:49:39,676 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:49:43,520 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:50:12,976 - INFO - 📝 Storing 1116 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:50:16,752 - WARNING - ⚠️ Skipping 1116 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:50:52,308 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:50:53,953 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:51:24,203 - INFO - 📝 Storing 1103 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:51:28,111 - WARNING - ⚠️ Skipping 1103 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:52:03,948 - INFO - 📥 yellow_tripdata_2024-11.parquet: Processed 2,000,000 rows - Loaded: 2,000,000 normalized, 1,980,062 star, 0 duplicates, 0 invalid (20/37 chunks)
+2025-09-29 08:52:03,951 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:52:07,772 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:52:38,713 - INFO - 📝 Storing 952 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:52:41,920 - WARNING - ⚠️ Skipping 952 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:53:14,549 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:53:18,468 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:53:47,608 - INFO - 📝 Storing 888 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:53:50,675 - WARNING - ⚠️ Skipping 888 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:54:26,059 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:54:30,004 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:54:58,969 - INFO - 📝 Storing 878 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:55:01,966 - WARNING - ⚠️ Skipping 878 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:55:36,199 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:55:40,140 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:56:09,459 - INFO - 📝 Storing 971 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:56:12,803 - WARNING - ⚠️ Skipping 971 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:56:46,578 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:56:50,059 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:57:16,519 - INFO - 📝 Storing 870 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:57:19,475 - WARNING - ⚠️ Skipping 870 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:57:49,780 - INFO - 📥 yellow_tripdata_2024-11.parquet: Processed 2,500,000 rows - Loaded: 2,500,000 normalized, 2,475,503 star, 0 duplicates, 0 invalid (25/37 chunks)
+2025-09-29 08:57:49,783 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:57:53,379 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:58:20,414 - INFO - 📝 Storing 938 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:58:23,664 - WARNING - ⚠️ Skipping 938 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 08:58:56,166 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 08:58:59,791 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 08:59:27,346 - INFO - 📝 Storing 1058 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 08:59:30,836 - WARNING - ⚠️ Skipping 1058 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:00:02,308 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:00:05,709 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:00:32,861 - INFO - 📝 Storing 1009 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:00:36,212 - WARNING - ⚠️ Skipping 1009 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:01:04,091 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:01:07,390 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:01:32,281 - INFO - 📝 Storing 925 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:01:35,783 - WARNING - ⚠️ Skipping 925 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:02:05,496 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:02:08,831 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:02:33,551 - INFO - 📝 Storing 1016 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:02:36,896 - WARNING - ⚠️ Skipping 1016 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:03:06,420 - INFO - 📥 yellow_tripdata_2024-11.parquet: Processed 3,000,000 rows - Loaded: 3,000,000 normalized, 2,970,557 star, 0 duplicates, 0 invalid (30/37 chunks)
+2025-09-29 09:03:06,423 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:03:09,712 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:03:34,620 - INFO - 📝 Storing 1121 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:03:38,271 - WARNING - ⚠️ Skipping 1121 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:04:07,089 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:04:10,346 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:04:36,254 - INFO - 📝 Storing 1011 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:04:39,721 - WARNING - ⚠️ Skipping 1011 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:05:08,182 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:05:11,444 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:05:37,165 - INFO - 📝 Storing 766 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:05:39,690 - WARNING - ⚠️ Skipping 766 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:06:08,421 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:06:09,367 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:06:36,817 - INFO - 📝 Storing 209 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:06:35,238 - WARNING - ⚠️ Skipping 209 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:07:04,294 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:07:07,486 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:07:31,624 - INFO - 📝 Storing 149 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:07:32,132 - WARNING - ⚠️ Skipping 149 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:08:00,901 - INFO - 📥 yellow_tripdata_2024-11.parquet: Processed 3,500,000 rows - Loaded: 3,500,000 normalized, 3,467,301 star, 0 duplicates, 0 invalid (35/37 chunks)
+2025-09-29 09:08:00,904 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:08:04,100 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:08:29,473 - INFO - 📝 Storing 166 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:08:30,037 - WARNING - ⚠️ Skipping 166 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:08:58,729 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:09:00,199 - INFO - ✅ Generated 46,369 unique row hashes
+2025-09-29 09:09:12,437 - INFO - 📝 Storing 122 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:09:12,848 - WARNING - ⚠️ Skipping 122 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:09:24,993 - INFO - 📥 yellow_tripdata_2024-11.parquet: Processed 3,646,369 rows - Loaded: 3,646,369 normalized, 3,613,382 star, 0 duplicates, 0 invalid (37/37 chunks)
+2025-09-29 09:09:24,993 - INFO - ✅ yellow_tripdata_2024-11.parquet: Completed - 3,646,369 loaded to normalized, 3,613,382 to star schema, 0 duplicates, 0 invalid rows
+2025-09-29 09:09:25,021 - INFO - ✅ Completed processing log for 2024-11: 3,646,369 records
+2025-09-29 09:09:25,022 - INFO - ✅ 2024-11: 3,646,369 rows loaded (total: 11,113,168)
+2025-09-29 09:09:25,022 - INFO - 📅 Processing 2024-12...
+2025-09-29 09:09:25,028 - INFO - 📂 File already exists: yellow_tripdata_2024-12.parquet
+2025-09-29 09:09:25,031 - INFO - 📝 Started processing log for 2024-12
+2025-09-29 09:09:25,031 - INFO - 📥 Loading yellow_tripdata_2024-12.parquet...
+2025-09-29 09:09:25,689 - INFO - 📊 File contains 3,668,371 rows
+2025-09-29 09:09:26,306 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:09:29,583 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:09:54,936 - INFO - 📝 Storing 1355 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:09:59,421 - WARNING - ⚠️ Skipping 1355 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:10:28,749 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:10:32,116 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:10:56,915 - INFO - 📝 Storing 1027 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:11:00,308 - WARNING - ⚠️ Skipping 1027 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:11:31,371 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:11:34,635 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:11:59,640 - INFO - 📝 Storing 903 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:12:02,658 - WARNING - ⚠️ Skipping 903 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:12:30,848 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:12:34,089 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:12:58,379 - INFO - 📝 Storing 946 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:13:01,320 - WARNING - ⚠️ Skipping 946 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:13:29,822 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:13:30,796 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:13:56,971 - INFO - 📝 Storing 984 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:14:00,198 - WARNING - ⚠️ Skipping 984 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:14:26,791 - INFO - 📥 yellow_tripdata_2024-12.parquet: Processed 500,000 rows - Loaded: 500,000 normalized, 494,785 star, 0 duplicates, 0 invalid (5/37 chunks)
+2025-09-29 09:14:26,793 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:14:30,028 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:14:54,706 - INFO - 📝 Storing 1162 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:14:58,503 - WARNING - ⚠️ Skipping 1162 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:15:26,982 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:15:30,159 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:15:54,685 - INFO - 📝 Storing 945 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:15:57,825 - WARNING - ⚠️ Skipping 945 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:16:26,009 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:16:29,202 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:16:53,249 - INFO - 📝 Storing 1031 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:16:56,675 - WARNING - ⚠️ Skipping 1031 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:17:25,307 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:17:28,461 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:17:52,947 - INFO - 📝 Storing 1114 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:17:56,987 - WARNING - ⚠️ Skipping 1114 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:18:26,238 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:18:29,420 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:18:54,704 - INFO - 📝 Storing 1044 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:18:58,176 - WARNING - ⚠️ Skipping 1044 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:19:27,472 - INFO - 📥 yellow_tripdata_2024-12.parquet: Processed 1,000,000 rows - Loaded: 1,000,000 normalized, 989,489 star, 0 duplicates, 0 invalid (10/37 chunks)
+2025-09-29 09:19:27,475 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:19:30,695 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:19:55,068 - INFO - 📝 Storing 936 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:19:58,117 - WARNING - ⚠️ Skipping 936 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:20:26,804 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:20:27,735 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:20:54,439 - INFO - 📝 Storing 1038 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:20:55,559 - WARNING - ⚠️ Skipping 1038 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:21:24,821 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:21:28,053 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:21:53,019 - INFO - 📝 Storing 821 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:21:55,761 - WARNING - ⚠️ Skipping 821 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:22:26,276 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:22:29,923 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:22:55,490 - INFO - 📝 Storing 1197 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:22:59,497 - WARNING - ⚠️ Skipping 1197 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:23:30,299 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:23:33,695 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:23:59,704 - INFO - 📝 Storing 1209 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:24:03,755 - WARNING - ⚠️ Skipping 1209 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:24:32,520 - INFO - 📥 yellow_tripdata_2024-12.parquet: Processed 1,500,000 rows - Loaded: 1,500,000 normalized, 1,484,288 star, 0 duplicates, 0 invalid (15/37 chunks)
+2025-09-29 09:24:32,523 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:24:35,706 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:25:00,905 - INFO - 📝 Storing 907 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:25:03,952 - WARNING - ⚠️ Skipping 907 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:25:32,551 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:25:33,643 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:25:59,063 - INFO - 📝 Storing 1047 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:26:02,527 - WARNING - ⚠️ Skipping 1047 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:26:31,665 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:26:34,820 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:26:59,757 - INFO - 📝 Storing 1127 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:27:03,432 - WARNING - ⚠️ Skipping 1127 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:27:31,980 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:27:35,164 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:28:00,601 - INFO - 📝 Storing 1031 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:28:04,596 - WARNING - ⚠️ Skipping 1031 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:28:32,977 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:28:36,179 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:29:03,605 - INFO - 📝 Storing 830 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:29:06,447 - WARNING - ⚠️ Skipping 830 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:29:37,638 - INFO - 📥 yellow_tripdata_2024-12.parquet: Processed 2,000,000 rows - Loaded: 2,000,000 normalized, 1,979,346 star, 0 duplicates, 0 invalid (20/37 chunks)
+2025-09-29 09:29:37,641 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:29:41,116 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:30:07,806 - INFO - 📝 Storing 910 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:30:11,558 - WARNING - ⚠️ Skipping 910 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:30:41,197 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:30:44,448 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:31:11,110 - INFO - 📝 Storing 786 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:31:13,841 - WARNING - ⚠️ Skipping 786 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:31:42,526 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:31:45,724 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:32:10,012 - INFO - 📝 Storing 884 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:32:12,957 - WARNING - ⚠️ Skipping 884 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:32:41,347 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:32:44,536 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:33:09,233 - INFO - 📝 Storing 967 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:33:12,407 - WARNING - ⚠️ Skipping 967 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:33:41,140 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:33:44,360 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:34:09,384 - INFO - 📝 Storing 906 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:34:12,383 - WARNING - ⚠️ Skipping 906 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:34:40,964 - INFO - 📥 yellow_tripdata_2024-12.parquet: Processed 2,500,000 rows - Loaded: 2,500,000 normalized, 2,474,893 star, 0 duplicates, 0 invalid (25/37 chunks)
+2025-09-29 09:34:40,966 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:34:44,153 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:35:08,388 - INFO - 📝 Storing 1189 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:35:12,282 - WARNING - ⚠️ Skipping 1189 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:35:40,873 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:35:41,737 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:36:08,125 - INFO - 📝 Storing 1214 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:36:10,275 - WARNING - ⚠️ Skipping 1214 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:36:38,483 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:36:41,702 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:37:07,468 - INFO - 📝 Storing 1079 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:37:11,046 - WARNING - ⚠️ Skipping 1079 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:37:39,634 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:37:42,869 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:38:07,641 - INFO - 📝 Storing 1140 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:38:11,420 - WARNING - ⚠️ Skipping 1140 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:38:39,632 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:38:42,817 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:39:07,847 - INFO - 📝 Storing 999 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:39:11,180 - WARNING - ⚠️ Skipping 999 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:39:39,969 - INFO - 📥 yellow_tripdata_2024-12.parquet: Processed 3,000,000 rows - Loaded: 3,000,000 normalized, 2,969,272 star, 0 duplicates, 0 invalid (30/37 chunks)
+2025-09-29 09:39:39,972 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:39:43,280 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:40:07,962 - INFO - 📝 Storing 1009 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:40:11,280 - WARNING - ⚠️ Skipping 1009 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:40:41,026 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:40:44,260 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:41:09,194 - INFO - 📝 Storing 1211 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:41:13,170 - WARNING - ⚠️ Skipping 1211 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:41:41,328 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:41:42,221 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:42:09,750 - INFO - 📝 Storing 1034 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:42:10,914 - WARNING - ⚠️ Skipping 1034 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:42:39,946 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:42:43,210 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:43:09,602 - INFO - 📝 Storing 633 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:43:11,808 - WARNING - ⚠️ Skipping 633 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:43:41,409 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:43:44,651 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:44:10,450 - INFO - 📝 Storing 300 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:44:11,426 - WARNING - ⚠️ Skipping 300 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:44:41,004 - INFO - 📥 yellow_tripdata_2024-12.parquet: Processed 3,500,000 rows - Loaded: 3,500,000 normalized, 3,465,085 star, 0 duplicates, 0 invalid (35/37 chunks)
+2025-09-29 09:44:41,007 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:44:44,294 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:45:09,045 - INFO - 📝 Storing 213 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:45:09,752 - WARNING - ⚠️ Skipping 213 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:45:39,368 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:45:41,674 - INFO - ✅ Generated 68,371 unique row hashes
+2025-09-29 09:45:57,439 - INFO - 📝 Storing 170 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:45:58,015 - WARNING - ⚠️ Skipping 170 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:46:18,993 - INFO - 📥 yellow_tripdata_2024-12.parquet: Processed 3,668,371 rows - Loaded: 3,668,371 normalized, 3,633,073 star, 0 duplicates, 0 invalid (37/37 chunks)
+2025-09-29 09:46:18,993 - INFO - ✅ yellow_tripdata_2024-12.parquet: Completed - 3,668,371 loaded to normalized, 3,633,073 to star schema, 0 duplicates, 0 invalid rows
+2025-09-29 09:46:19,023 - INFO - ✅ Completed processing log for 2024-12: 3,668,371 records
+2025-09-29 09:46:19,023 - INFO - ✅ 2024-12: 3,668,371 rows loaded (total: 14,781,539)
+2025-09-29 09:46:19,024 - INFO - 📅 Processing 2025-01...
+2025-09-29 09:46:19,029 - INFO - 📥 Downloading yellow_tripdata_2025-01.parquet from NYC TLC...
+2025-09-29 09:46:17,841 - INFO - 📥 Progress: 17.7% (10,485,760/59,158,238 bytes)
+2025-09-29 09:46:18,800 - INFO - 📥 Progress: 35.4% (20,971,520/59,158,238 bytes)
+2025-09-29 09:46:19,760 - INFO - 📥 Progress: 53.2% (31,457,280/59,158,238 bytes)
+2025-09-29 09:46:20,720 - INFO - 📥 Progress: 70.9% (41,943,040/59,158,238 bytes)
+2025-09-29 09:46:21,680 - INFO - 📥 Progress: 88.6% (52,428,800/59,158,238 bytes)
+2025-09-29 09:46:22,296 - INFO - ✅ Downloaded: yellow_tripdata_2025-01.parquet (59,158,238 bytes)
+2025-09-29 09:46:22,302 - INFO - 📝 Started processing log for 2025-01
+2025-09-29 09:46:22,302 - INFO - 📥 Loading yellow_tripdata_2025-01.parquet...
+2025-09-29 09:46:22,782 - INFO - 📊 File contains 3,475,226 rows
+2025-09-29 09:46:23,450 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:46:26,677 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:46:50,868 - INFO - 📝 Storing 1208 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:46:54,928 - WARNING - ⚠️ Skipping 1208 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:47:23,452 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:47:26,583 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:47:51,350 - INFO - 📝 Storing 1030 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:47:54,743 - WARNING - ⚠️ Skipping 1030 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:48:22,773 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:48:25,943 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:48:51,293 - INFO - 📝 Storing 988 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:48:54,559 - WARNING - ⚠️ Skipping 988 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:49:24,004 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:49:27,266 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:49:51,330 - INFO - 📝 Storing 1090 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:49:54,993 - WARNING - ⚠️ Skipping 1090 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:50:24,547 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:50:27,730 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:50:53,141 - INFO - 📝 Storing 1068 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:50:56,679 - WARNING - ⚠️ Skipping 1068 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:51:26,567 - INFO - 📥 yellow_tripdata_2025-01.parquet: Processed 500,000 rows - Loaded: 500,000 normalized, 494,616 star, 0 duplicates, 0 invalid (5/35 chunks)
+2025-09-29 09:51:26,570 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:51:29,787 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:51:54,614 - INFO - 📝 Storing 890 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:51:57,551 - WARNING - ⚠️ Skipping 890 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:52:27,193 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:52:30,445 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:52:55,416 - INFO - 📝 Storing 923 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:52:58,484 - WARNING - ⚠️ Skipping 923 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:53:28,347 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:53:31,565 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:53:55,846 - INFO - 📝 Storing 978 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:53:59,035 - WARNING - ⚠️ Skipping 978 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:54:29,049 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:54:32,320 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:54:57,853 - INFO - 📝 Storing 905 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:55:01,048 - WARNING - ⚠️ Skipping 905 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:55:30,436 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:55:33,743 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:55:59,658 - INFO - 📝 Storing 763 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:55:59,934 - WARNING - ⚠️ Skipping 763 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:56:30,158 - INFO - 📥 yellow_tripdata_2025-01.parquet: Processed 1,000,000 rows - Loaded: 1,000,000 normalized, 990,157 star, 0 duplicates, 0 invalid (10/35 chunks)
+2025-09-29 09:56:30,161 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:56:33,664 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:56:58,785 - INFO - 📝 Storing 923 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:57:01,998 - WARNING - ⚠️ Skipping 923 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:57:32,300 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:57:35,527 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:58:00,314 - INFO - 📝 Storing 974 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:58:03,559 - WARNING - ⚠️ Skipping 974 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:58:32,705 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:58:35,920 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 09:59:01,233 - INFO - 📝 Storing 902 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 09:59:04,218 - WARNING - ⚠️ Skipping 902 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 09:59:33,843 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 09:59:37,105 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:00:01,768 - INFO - 📝 Storing 955 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:00:05,245 - WARNING - ⚠️ Skipping 955 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:00:34,171 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:00:37,373 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:01:01,908 - INFO - 📝 Storing 908 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:01:04,892 - WARNING - ⚠️ Skipping 908 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:01:32,027 - INFO - 📥 yellow_tripdata_2025-01.parquet: Processed 1,500,000 rows - Loaded: 1,500,000 normalized, 1,485,495 star, 0 duplicates, 0 invalid (15/35 chunks)
+2025-09-29 10:01:32,029 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:01:35,222 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:02:01,661 - INFO - 📝 Storing 914 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:02:02,421 - WARNING - ⚠️ Skipping 914 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:02:31,148 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:02:34,400 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:02:58,876 - INFO - 📝 Storing 826 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:03:01,677 - WARNING - ⚠️ Skipping 826 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:03:30,261 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:03:33,432 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:03:57,263 - INFO - 📝 Storing 1098 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:04:00,887 - WARNING - ⚠️ Skipping 1098 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:04:29,413 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:04:32,591 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:04:57,847 - INFO - 📝 Storing 949 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:05:01,003 - WARNING - ⚠️ Skipping 949 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:05:29,177 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:05:32,395 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:05:56,395 - INFO - 📝 Storing 899 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:05:59,377 - WARNING - ⚠️ Skipping 899 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:06:28,045 - INFO - 📥 yellow_tripdata_2025-01.parquet: Processed 2,000,000 rows - Loaded: 2,000,000 normalized, 1,980,809 star, 0 duplicates, 0 invalid (20/35 chunks)
+2025-09-29 10:06:28,047 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:06:31,235 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:06:55,142 - INFO - 📝 Storing 891 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:06:58,100 - WARNING - ⚠️ Skipping 891 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:07:26,846 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:07:30,071 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:07:54,198 - INFO - 📝 Storing 969 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:07:57,412 - WARNING - ⚠️ Skipping 969 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:08:26,148 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:08:29,368 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:08:53,633 - INFO - 📝 Storing 818 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:08:56,328 - WARNING - ⚠️ Skipping 818 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:09:22,890 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:09:26,081 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:09:52,709 - INFO - 📝 Storing 908 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:09:53,414 - WARNING - ⚠️ Skipping 908 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:10:21,756 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:10:24,950 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:10:49,304 - INFO - 📝 Storing 1002 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:10:52,573 - WARNING - ⚠️ Skipping 1002 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:11:21,554 - INFO - 📥 yellow_tripdata_2025-01.parquet: Processed 2,500,000 rows - Loaded: 2,500,000 normalized, 2,476,221 star, 0 duplicates, 0 invalid (25/35 chunks)
+2025-09-29 10:11:21,556 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:11:24,724 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:11:48,716 - INFO - 📝 Storing 898 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:11:51,657 - WARNING - ⚠️ Skipping 898 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:12:20,213 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:12:23,421 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:12:47,411 - INFO - 📝 Storing 881 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:12:50,223 - WARNING - ⚠️ Skipping 881 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:13:18,931 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:13:22,084 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:13:46,843 - INFO - 📝 Storing 848 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:13:49,650 - WARNING - ⚠️ Skipping 848 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:14:19,582 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:14:22,810 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:14:46,950 - INFO - 📝 Storing 919 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:14:49,989 - WARNING - ⚠️ Skipping 919 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:15:19,130 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:15:22,296 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:15:47,624 - INFO - 📝 Storing 452 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:15:49,122 - WARNING - ⚠️ Skipping 452 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:16:17,958 - INFO - 📥 yellow_tripdata_2025-01.parquet: Processed 3,000,000 rows - Loaded: 3,000,000 normalized, 2,972,223 star, 0 duplicates, 0 invalid (30/35 chunks)
+2025-09-29 10:16:17,961 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:16:18,786 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:16:45,486 - INFO - 📝 Storing 129 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:16:45,923 - WARNING - ⚠️ Skipping 129 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:17:14,070 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:17:14,983 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:17:42,113 - INFO - 📝 Storing 111 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:17:42,507 - WARNING - ⚠️ Skipping 111 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:18:10,690 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:18:11,551 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:18:38,824 - INFO - 📝 Storing 104 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:18:39,181 - WARNING - ⚠️ Skipping 104 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:19:05,161 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:19:08,293 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:19:32,791 - INFO - 📝 Storing 151 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:19:33,310 - WARNING - ⚠️ Skipping 151 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:20:01,442 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:20:03,806 - INFO - ✅ Generated 75,226 unique row hashes
+2025-09-29 10:20:23,286 - INFO - 📝 Storing 85 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:20:23,580 - WARNING - ⚠️ Skipping 85 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:20:45,109 - INFO - 📥 yellow_tripdata_2025-01.parquet: Processed 3,475,226 rows - Loaded: 3,475,226 normalized, 3,446,869 star, 0 duplicates, 0 invalid (35/35 chunks)
+2025-09-29 10:20:45,109 - INFO - ✅ yellow_tripdata_2025-01.parquet: Completed - 3,475,226 loaded to normalized, 3,446,869 to star schema, 0 duplicates, 0 invalid rows
+2025-09-29 10:20:45,122 - INFO - ✅ Completed processing log for 2025-01: 3,475,226 records
+2025-09-29 10:20:45,122 - INFO - ✅ 2025-01: 3,475,226 rows loaded (total: 18,256,765)
+2025-09-29 10:20:45,122 - INFO - 📅 Processing 2025-02...
+2025-09-29 10:20:45,127 - INFO - 📥 Downloading yellow_tripdata_2025-02.parquet from NYC TLC...
+2025-09-29 10:20:46,219 - INFO - 📥 Progress: 17.4% (10,485,760/60,343,086 bytes)
+2025-09-29 10:20:47,178 - INFO - 📥 Progress: 34.8% (20,971,520/60,343,086 bytes)
+2025-09-29 10:20:48,138 - INFO - 📥 Progress: 52.1% (31,457,280/60,343,086 bytes)
+2025-09-29 10:20:49,096 - INFO - 📥 Progress: 69.5% (41,943,040/60,343,086 bytes)
+2025-09-29 10:20:50,055 - INFO - 📥 Progress: 86.9% (52,428,800/60,343,086 bytes)
+2025-09-29 10:20:50,781 - INFO - ✅ Downloaded: yellow_tripdata_2025-02.parquet (60,343,086 bytes)
+2025-09-29 10:20:50,787 - INFO - 📝 Started processing log for 2025-02
+2025-09-29 10:20:50,787 - INFO - 📥 Loading yellow_tripdata_2025-02.parquet...
+2025-09-29 10:20:51,323 - INFO - 📊 File contains 3,577,543 rows
+2025-09-29 10:20:51,594 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:20:54,803 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:21:21,368 - INFO - 📝 Storing 786 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:21:23,989 - WARNING - ⚠️ Skipping 786 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:21:52,740 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:21:53,687 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:22:20,224 - INFO - 📝 Storing 1099 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:22:21,789 - WARNING - ⚠️ Skipping 1099 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:22:50,867 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:22:54,065 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:23:18,904 - INFO - 📝 Storing 885 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:23:21,922 - WARNING - ⚠️ Skipping 885 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:23:50,465 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:23:53,653 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:24:17,826 - INFO - 📝 Storing 830 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:24:20,404 - WARNING - ⚠️ Skipping 830 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:24:49,091 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:24:52,279 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:25:16,639 - INFO - 📝 Storing 904 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:25:19,738 - WARNING - ⚠️ Skipping 904 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:25:48,680 - INFO - 📥 yellow_tripdata_2025-02.parquet: Processed 500,000 rows - Loaded: 500,000 normalized, 495,496 star, 0 duplicates, 0 invalid (5/36 chunks)
+2025-09-29 10:25:48,683 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:25:51,879 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:26:16,157 - INFO - 📝 Storing 831 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:26:18,901 - WARNING - ⚠️ Skipping 831 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:26:47,644 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:26:50,855 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:27:15,167 - INFO - 📝 Storing 740 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:27:17,640 - WARNING - ⚠️ Skipping 740 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:27:46,417 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:27:49,618 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:28:15,390 - INFO - 📝 Storing 836 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:28:18,335 - WARNING - ⚠️ Skipping 836 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:28:46,855 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:28:47,747 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:29:14,182 - INFO - 📝 Storing 1100 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:29:16,577 - WARNING - ⚠️ Skipping 1100 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:29:45,855 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:29:49,051 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:30:14,757 - INFO - 📝 Storing 853 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:30:17,917 - WARNING - ⚠️ Skipping 853 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:30:46,444 - INFO - 📥 yellow_tripdata_2025-02.parquet: Processed 1,000,000 rows - Loaded: 1,000,000 normalized, 991,136 star, 0 duplicates, 0 invalid (10/36 chunks)
+2025-09-29 10:30:46,446 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:30:49,760 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:31:14,343 - INFO - 📝 Storing 656 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:31:16,496 - WARNING - ⚠️ Skipping 656 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:31:46,897 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:31:50,112 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:32:15,221 - INFO - 📝 Storing 774 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:32:17,775 - WARNING - ⚠️ Skipping 774 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:32:45,904 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:32:49,121 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:33:13,441 - INFO - 📝 Storing 782 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:33:16,033 - WARNING - ⚠️ Skipping 782 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:33:44,684 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:33:47,921 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:34:13,211 - INFO - 📝 Storing 800 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:34:15,899 - WARNING - ⚠️ Skipping 800 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:34:45,073 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:34:48,341 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:35:13,298 - INFO - 📝 Storing 896 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:35:16,454 - WARNING - ⚠️ Skipping 896 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:35:44,128 - INFO - 📥 yellow_tripdata_2025-02.parquet: Processed 1,500,000 rows - Loaded: 1,500,000 normalized, 1,487,228 star, 0 duplicates, 0 invalid (15/36 chunks)
+2025-09-29 10:35:44,130 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:35:47,495 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:36:12,651 - INFO - 📝 Storing 943 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:36:15,740 - WARNING - ⚠️ Skipping 943 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:36:45,201 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:36:48,455 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:37:12,614 - INFO - 📝 Storing 1058 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:37:16,180 - WARNING - ⚠️ Skipping 1058 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:37:45,675 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:37:48,912 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:38:13,469 - INFO - 📝 Storing 924 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:38:16,504 - WARNING - ⚠️ Skipping 924 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:38:45,275 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:38:48,548 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:39:13,150 - INFO - 📝 Storing 900 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:39:16,115 - WARNING - ⚠️ Skipping 900 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:39:45,211 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:39:48,473 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:40:12,484 - INFO - 📝 Storing 927 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:40:15,686 - WARNING - ⚠️ Skipping 927 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:40:44,579 - INFO - 📥 yellow_tripdata_2025-02.parquet: Processed 2,000,000 rows - Loaded: 2,000,000 normalized, 1,982,476 star, 0 duplicates, 0 invalid (20/36 chunks)
+2025-09-29 10:40:44,581 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:40:47,935 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:41:13,096 - INFO - 📝 Storing 949 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:41:16,231 - WARNING - ⚠️ Skipping 949 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:41:42,662 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:41:45,904 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:42:10,784 - INFO - 📝 Storing 966 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:42:13,997 - WARNING - ⚠️ Skipping 966 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:42:43,098 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:42:46,311 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:43:12,087 - INFO - 📝 Storing 957 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:43:15,250 - WARNING - ⚠️ Skipping 957 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:43:43,917 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:43:47,183 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:44:12,251 - INFO - 📝 Storing 887 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:44:15,177 - WARNING - ⚠️ Skipping 887 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:44:43,368 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:44:46,594 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:45:10,662 - INFO - 📝 Storing 777 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:45:13,232 - WARNING - ⚠️ Skipping 777 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:45:41,222 - INFO - 📥 yellow_tripdata_2025-02.parquet: Processed 2,500,000 rows - Loaded: 2,500,000 normalized, 2,477,940 star, 0 duplicates, 0 invalid (25/36 chunks)
+2025-09-29 10:45:41,225 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:45:44,422 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:46:09,258 - INFO - 📝 Storing 774 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:46:11,822 - WARNING - ⚠️ Skipping 774 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:46:40,539 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:46:43,809 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:47:07,766 - INFO - 📝 Storing 913 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:47:10,800 - WARNING - ⚠️ Skipping 913 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:47:39,453 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:47:42,665 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:48:07,780 - INFO - 📝 Storing 551 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:48:09,616 - WARNING - ⚠️ Skipping 551 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:48:38,330 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:48:39,185 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:49:06,311 - INFO - 📝 Storing 114 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:49:06,703 - WARNING - ⚠️ Skipping 114 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:49:34,773 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:49:35,606 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:50:02,440 - INFO - 📝 Storing 70 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:50:02,691 - WARNING - ⚠️ Skipping 70 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:50:28,840 - INFO - 📥 yellow_tripdata_2025-02.parquet: Processed 3,000,000 rows - Loaded: 3,000,000 normalized, 2,975,518 star, 0 duplicates, 0 invalid (30/36 chunks)
+2025-09-29 10:50:28,842 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:50:32,011 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:50:56,972 - INFO - 📝 Storing 111 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:50:57,354 - WARNING - ⚠️ Skipping 111 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:51:26,545 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:51:29,727 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:51:54,322 - INFO - 📝 Storing 78 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:51:54,593 - WARNING - ⚠️ Skipping 78 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:52:22,619 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:52:25,791 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:52:49,948 - INFO - 📝 Storing 72 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:52:50,209 - WARNING - ⚠️ Skipping 72 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:53:18,800 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:53:21,969 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:53:46,546 - INFO - 📝 Storing 106 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:53:46,913 - WARNING - ⚠️ Skipping 106 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:54:15,528 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:54:18,685 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:54:42,905 - INFO - 📝 Storing 104 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:54:43,261 - WARNING - ⚠️ Skipping 104 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:55:11,603 - INFO - 📥 yellow_tripdata_2025-02.parquet: Processed 3,500,000 rows - Loaded: 3,500,000 normalized, 3,475,047 star, 0 duplicates, 0 invalid (35/36 chunks)
+2025-09-29 10:55:11,606 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:55:14,051 - INFO - ✅ Generated 77,543 unique row hashes
+2025-09-29 10:55:34,417 - INFO - 📝 Storing 55 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:55:34,610 - WARNING - ⚠️ Skipping 55 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:55:55,908 - INFO - 📥 yellow_tripdata_2025-02.parquet: Processed 3,577,543 rows - Loaded: 3,577,543 normalized, 3,552,535 star, 0 duplicates, 0 invalid (36/36 chunks)
+2025-09-29 10:55:55,908 - INFO - ✅ yellow_tripdata_2025-02.parquet: Completed - 3,577,543 loaded to normalized, 3,552,535 to star schema, 0 duplicates, 0 invalid rows
+2025-09-29 10:55:55,920 - INFO - ✅ Completed processing log for 2025-02: 3,577,543 records
+2025-09-29 10:55:55,920 - INFO - ✅ 2025-02: 3,577,543 rows loaded (total: 21,834,308)
+2025-09-29 10:55:55,920 - INFO - 📅 Processing 2025-03...
+2025-09-29 10:55:55,925 - INFO - 📥 Downloading yellow_tripdata_2025-03.parquet from NYC TLC...
+2025-09-29 10:55:57,079 - INFO - 📥 Progress: 15.0% (10,485,760/69,964,745 bytes)
+2025-09-29 10:55:58,038 - INFO - 📥 Progress: 30.0% (20,971,520/69,964,745 bytes)
+2025-09-29 10:55:58,997 - INFO - 📥 Progress: 45.0% (31,457,280/69,964,745 bytes)
+2025-09-29 10:55:59,957 - INFO - 📥 Progress: 59.9% (41,943,040/69,964,745 bytes)
+2025-09-29 10:56:00,917 - INFO - 📥 Progress: 74.9% (52,428,800/69,964,745 bytes)
+2025-09-29 10:56:01,876 - INFO - 📥 Progress: 89.9% (62,914,560/69,964,745 bytes)
+2025-09-29 10:56:02,522 - INFO - ✅ Downloaded: yellow_tripdata_2025-03.parquet (69,964,745 bytes)
+2025-09-29 10:56:02,531 - INFO - 📝 Started processing log for 2025-03
+2025-09-29 10:56:02,532 - INFO - 📥 Loading yellow_tripdata_2025-03.parquet...
+2025-09-29 10:56:03,117 - INFO - 📊 File contains 4,145,257 rows
+2025-09-29 10:56:03,410 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:56:04,394 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:56:29,650 - INFO - 📝 Storing 774 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:56:32,204 - WARNING - ⚠️ Skipping 774 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:57:01,020 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:57:04,283 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:57:27,949 - INFO - 📝 Storing 1003 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:57:31,275 - WARNING - ⚠️ Skipping 1003 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:57:59,855 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:58:03,073 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:58:29,823 - INFO - 📝 Storing 853 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:58:32,710 - WARNING - ⚠️ Skipping 853 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 10:59:01,675 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 10:59:04,904 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 10:59:29,356 - INFO - 📝 Storing 777 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 10:59:31,970 - WARNING - ⚠️ Skipping 777 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 11:00:02,052 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 11:00:05,294 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 11:00:30,505 - INFO - 📝 Storing 677 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 11:00:32,746 - WARNING - ⚠️ Skipping 677 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 11:01:01,946 - INFO - 📥 yellow_tripdata_2025-03.parquet: Processed 500,000 rows - Loaded: 500,000 normalized, 495,916 star, 0 duplicates, 0 invalid (5/42 chunks)
+2025-09-29 11:01:01,949 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 11:01:05,174 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 11:01:30,345 - INFO - 📝 Storing 815 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 11:01:33,038 - WARNING - ⚠️ Skipping 815 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 11:02:01,536 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 11:02:02,541 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 11:02:29,899 - INFO - 📝 Storing 934 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 11:02:30,621 - WARNING - ⚠️ Skipping 934 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 11:03:01,130 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 11:03:04,392 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 11:03:29,889 - INFO - 📝 Storing 778 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 11:03:32,360 - WARNING - ⚠️ Skipping 778 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)
+2025-09-29 11:04:03,004 - INFO - 🔐 Calculating row hashes for duplicate prevention...
+2025-09-29 11:04:06,308 - INFO - ✅ Generated 100,000 unique row hashes
+2025-09-29 11:04:35,687 - INFO - 📝 Storing 943 invalid rows in yellow_taxi_trips_invalid table
+2025-09-29 11:04:38,810 - WARNING - ⚠️ Skipping 943 rows with missing dimension keys or invalid dates (stored in yellow_taxi_trips_invalid)

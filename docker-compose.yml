@@ -64,24 +64,13 @@ services:
       - ./docker/init-superset.sh:/app/init-superset.sh
     networks:
       - sql-playground-network
-    depends_on:
-      - redis
+    # No Redis dependency - using SQLite-based caching
     command: >
       bash -c "
       /app/init-superset.sh &&
       gunicorn --bind 0.0.0.0:8088 --workers 4 --timeout 120 'superset.app:create_app()'
       "
 
-  redis:
-    image: redis:7-alpine
-    container_name: sql-playground-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - sql-playground-network
 
 volumes:
   postgres_data:
@@ -89,8 +78,6 @@ volumes:
   pgadmin_data:
     driver: local
   superset_data:
-    driver: local
-  redis_data:
     driver: local
 
 networks:
