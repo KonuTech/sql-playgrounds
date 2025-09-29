@@ -9,13 +9,19 @@ set -e
 
 echo "🚀 Starting Superset initialization..."
 
-# Wait for database to be ready
-echo "⏳ Waiting for PostgreSQL to be ready..."
-until PGPASSWORD=$POSTGRES_PASSWORD psql -h postgres -U admin -d superset -c '\q'; do
-  echo "PostgreSQL is unavailable - sleeping"
+# Create Superset home directory and ensure it's writable
+echo "📁 Setting up Superset home directory..."
+mkdir -p /app/superset_home
+chmod 755 /app/superset_home
+echo "✅ Superset home directory ready!"
+
+# Wait for Redis to be ready (only needed for caching)
+echo "⏳ Waiting for Redis to be ready..."
+until redis-cli -h redis ping > /dev/null 2>&1; do
+  echo "Redis is unavailable - sleeping"
   sleep 2
 done
-echo "✅ PostgreSQL is ready!"
+echo "✅ Redis is ready!"
 
 # Load Superset configuration and initialize logging
 echo "📋 Loading Superset configuration..."
@@ -35,11 +41,11 @@ echo "✅ Database schema initialized"
 # Create admin user (handle existing user gracefully)
 echo "👤 Creating admin user..."
 superset fab create-admin \
-    --username admin \
-    --firstname Admin \
-    --lastname User \
-    --email admin@admin.com \
-    --password admin123 \
+    --username "${SUPERSET_ADMIN_USER:-admin}" \
+    --firstname "${SUPERSET_ADMIN_FIRSTNAME:-Admin}" \
+    --lastname "${SUPERSET_ADMIN_LASTNAME:-User}" \
+    --email "${SUPERSET_ADMIN_EMAIL:-admin@admin.com}" \
+    --password "${SUPERSET_ADMIN_PASSWORD:-admin123}" \
     2>/dev/null || echo "ℹ️ Admin user already exists, skipping creation"
 echo "✅ Admin user ready"
 
