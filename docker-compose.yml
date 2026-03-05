@@ -70,7 +70,7 @@ services:
       bash -c "
       export SUPERSET_LOG_FILENAME=log_$(date +%Y%m%d_%H%M%S).log &&
       /app/init-superset.sh &&
-      gunicorn --bind 0.0.0.0:8088 --workers 4 --timeout 120 'superset.app:create_app()'
+      gunicorn --bind 0.0.0.0:8088 --workers 4 --timeout 300 'superset.app:create_app()'
       "
 
 

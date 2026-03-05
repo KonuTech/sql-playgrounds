@@ -8,6 +8,11 @@
 *.shx
 *.zip
 *.parquet
+*.7z
+
+# Log files
+postgres/logs/
+superset/logs/
 *.csv
 # Byte-compiled / optimized / DLL files
 __pycache__/
