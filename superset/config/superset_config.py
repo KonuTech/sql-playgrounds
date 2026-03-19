@@ -10,30 +10,6 @@ SECRET_KEY = 'M5QwzH1CORRyE/gLMRIdmNGGyxj+tV0RfoLdSExzNqzZoUf/f+ehg3AS'
 # Explicitly disable the default secret key check
 PREVENT_UNSAFE_DEFAULT_SECRET_KEY = False
 
-# Custom Security Manager — Option 2: Dataset admin access for OPT2_Sublime_UserMgmt role
-# Overrides raise_for_ownership() so users with OPT2_Sublime_UserMgmt role can
-# edit/delete ANY dataset, while dashboard/chart ownership checks stay unchanged.
-import logging as _logging
-from flask import g as _g
-from superset.security.manager import SupersetSecurityManager as _BaseSM
-
-class _CustomSecurityManager(_BaseSM):
-    def raise_for_ownership(self, resource):
-        if self.is_admin():
-            return
-        if resource.__class__.__name__ == "SqlaTable":
-            user_roles = [r.name for r in self.get_user_roles()]
-            if "OPT2_Sublime_UserMgmt" in user_roles:
-                _logging.getLogger("superset.security").info(
-                    "OPT2 dataset-admin bypass for user=%s on dataset=%s",
-                    getattr(_g, "user", {}).username if hasattr(getattr(_g, "user", None), "username") else "?",
-                    getattr(resource, "id", "?"),
-                )
-                return
-        super().raise_for_ownership(resource)
-
-CUSTOM_SECURITY_MANAGER = _CustomSecurityManager
-
 # Database configuration for Superset metadata - using SQLite for simplicity and persistence
 # SQLite-specific options are included in the URI to avoid affecting PostgreSQL connections
 SQLALCHEMY_DATABASE_URI = "sqlite:////app/superset_home/superset.db?check_same_thread=false&timeout=30"
