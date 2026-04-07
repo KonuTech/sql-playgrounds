@@ -1676,8 +1676,25 @@ def main():
         if not load_trip_data(engine, load_all=load_all_data):
             logger.warning("⚠️ Failed to load trip data, continuing without it")
 
-        # Step 4: Verify everything loaded correctly
-        logger.info("🔍 Step 4: Data Verification")
+        # Step 4: Refresh materialized views
+        logger.info("📊 Step 4: Refreshing Materialized Views")
+        materialized_views = [
+            'nyc_taxi.trip_hourly_summary',
+            'nyc_taxi.trip_location_summary',
+            'nyc_taxi.trip_distance_summary',
+        ]
+        try:
+            with engine.connect() as conn:
+                for view_name in materialized_views:
+                    conn.execute(text(f"REFRESH MATERIALIZED VIEW {view_name}"))
+                    conn.commit()
+                    row_count = conn.execute(text(f"SELECT COUNT(*) FROM {view_name}")).scalar()
+                    logger.info(f"✅ {view_name} refreshed ({row_count:,} rows)")
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to refresh materialized views: {e}")
+
+        # Step 5: Verify everything loaded correctly
+        logger.info("🔍 Step 5: Data Verification")
         verify_data_load(engine)
 
         logger.info("🎉 Complete database initialization finished successfully!")

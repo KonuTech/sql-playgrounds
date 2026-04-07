@@ -159,7 +159,7 @@ CREATE TABLE data_processing_log (
 ```sql
 INSERT INTO yellow_taxi_trips (...)
 VALUES (...)
-ON CONFLICT (row_hash) DO NOTHING;
+ON CONFLICT (row_hash) UPDATE;
 ```
 
 ### Question 4: ETL Pipeline Design

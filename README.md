@@ -57,11 +57,30 @@ A production-ready Docker-based SQL playground featuring PostgreSQL 17 + PostGIS
 - [🚀 Quick Start](#quick-start)
 - [🏗️ Data Pipeline Architecture](#data-pipeline-architecture)
 - [🔧 Architecture & Data Loading](#architecture--data-loading)
+  - [Automated Backfill System](#automated-backfill-system)
+  - [Complete Initialization Process](#complete-initialization-process)
+  - [Architecture Benefits](#architecture-benefits)
 - [📁 Project Structure](#project-structure)
 - [🐳 Container Architecture](#container-architecture)
+  - [Custom PostgreSQL Container](#custom-postgresql-container)
+  - [Apache Superset Container](#apache-superset-container)
+  - [Volume Strategy](#volume-strategy)
+  - [Memory & Performance](#memory--performance)
 - [⏸️ Pause and Resume Capability](#pause-and-resume-capability)
+  - [Safe Interruption and Continuation](#safe-interruption-and-continuation)
+  - [Intelligent Resume System](#intelligent-resume-system)
 - [⚙️ Configuration & Development](#configuration--development)
+  - [Environment Variables](#environment-variables-env)
+  - [System Requirements](#system-requirements)
+  - [Development Commands](#development-commands)
 - [🗄️ Database Schema & Analytics](#database-schema--analytics)
+  - [NYC Taxi Data Structure](#nyc-taxi-data-structure)
+  - [Performance Optimizations](#performance-optimizations)
+    - [Database Indexes](#database-indexes)
+    - [Materialized Views](#materialized-views)
+    - [PostgreSQL Runtime Tuning](#postgresql-runtime-tuning)
+    - [PostgreSQL vs BigQuery: Architectural Differences](#postgresql-vs-bigquery-architectural-differences)
+- [📈 Data Sources & Authenticity](#data-sources--authenticity)
 - [🚀 Apache Superset Business Intelligence Features](#-apache-superset-business-intelligence-features)
   - [📊 Rich Visualization Gallery](#-rich-visualization-gallery)
   - [⚡ Advanced SQL Lab](#-advanced-sql-lab)
@@ -69,8 +88,22 @@ A production-ready Docker-based SQL playground featuring PostgreSQL 17 + PostGIS
   - [📈 Perfect for Data Presentations](#-perfect-for-data-presentations)
   - [🔧 Enterprise-Ready Configuration](#-enterprise-ready-configuration)
   - [Sample Dashboard Ideas](#sample-dashboard-ideas)
-- [📈 Data Sources & Authenticity](#data-sources--authenticity)
 - [📊 Sample Analytics Queries](#sample-analytics-queries)
+  - [1. Trip Volume by Hour](#1-trip-volume-by-hour)
+  - [2. Largest Taxi Zones by Area (PostGIS)](#2-largest-taxi-zones-by-area-postgis)
+  - [3. Cross-Borough Trip Analysis](#3-cross-borough-trip-analysis)
+  - [4. Payment Patterns by Borough](#4-payment-patterns-by-borough)
+  - [Why Pre-Aggregation Helps: Hash Join Explained](#why-pre-aggregation-helps-hash-join-explained)
+  - [5. Basic Data Overview](#5-basic-data-overview)
+  - [6. Payment Method Analysis](#6-payment-method-analysis)
+  - [7. Top Revenue Generating Trips](#7-top-revenue-generating-trips)
+  - [8. Trip Distance Distribution](#8-trip-distance-distribution)
+  - [9. Daily Trip Patterns](#9-daily-trip-patterns)
+  - [10. Rush Hour Analysis](#10-rush-hour-analysis)
+  - [11. Tip Analysis by Payment Type](#11-tip-analysis-by-payment-type)
+  - [12. Weekend vs Weekday Analysis](#12-weekend-vs-weekday-analysis)
+  - [13. Long Distance Trips (Over 20 Miles)](#13-long-distance-trips-over-20-miles)
+- [📊 Materialized View Queries](#sample-analytics-queries--materialized-view-versions)
 
 ## Quick Start
 
@@ -81,8 +114,20 @@ A production-ready Docker-based SQL playground featuring PostgreSQL 17 + PostGIS
 
 2. **Start the complete SQL playground:**
    ```bash
-   docker-compose up -d --build
+   ./start.sh
    ```
+
+   The `start.sh` script automatically detects port conflicts and falls back to alternative ports:
+
+   | Service    | Default | Fallbacks   |
+   |------------|---------|-------------|
+   | PostgreSQL | 5432    | 5433, 5434  |
+   | PGAdmin    | 8080    | 8081, 8082  |
+   | Superset   | 8088    | 8089, 8090  |
+
+   The actual ports are printed at startup so you always know where to connect. You can still override defaults via `.env` (e.g. `POSTGRES_PORT=5555`).
+
+   > **Alternative**: You can still use `docker-compose up -d --build` directly if you prefer fixed ports.
 
    ⏱️ **Default configuration loads last 12 months of data** (configure via `.env` file). First startup takes time based on data volume selected.
 
@@ -394,27 +439,6 @@ The `postgres/docker/init-data.py` script orchestrates the entire process:
 - **Resumable Processing**: Safe pause/resume capability with automatic continuation from interruption point
 - **High-Performance Processing**: 67-100x faster data loading with optimized algorithms
 
-### Recent System Improvements (September 2025)
-
-#### ✅ Schema Resilience & Idempotency
-- **Problem Solved**: Container restart failures due to "relation already exists" errors
-- **Solution**: Added `IF NOT EXISTS` to all 18 CREATE TABLE and 26 CREATE INDEX statements
-- **Data Handling**: Updated to `ON CONFLICT ... DO UPDATE` for consistent data overwriting
-- **Benefit**: Zero-downtime container restarts and reliable deployment
-
-#### ✅ Performance Optimization Implementation
-- **67-100x Performance Improvement**: Complete ETL pipeline optimization with Phase 1 and Phase 2A implementations
-- **Dimension Caching**: Eliminated 18M individual SQL lookups with in-memory caching
-- **Vectorized Operations**: Replaced row-by-row processing with pandas/NumPy vectorized calculations
-- **Bulk Transactions**: Single bulk operations instead of 3.6M individual transactions
-- **Processing Time**: Reduced from ~3.3 hours to ~22 minutes for 3.6M records
-
-#### ✅ Enhanced Error Handling
-- **Function Parameter Fix**: Resolved `source_file` parameter passing through processing chain
-- **Type Safety**: Fixed `isinstance()` error in invalid row storage functionality
-- **Bulk Validation**: Comprehensive error classification with proper invalid row handling
-- **Graceful Degradation**: System continues processing despite individual row errors
-
 ## Project Structure
 
 ```
@@ -606,6 +630,9 @@ uv add package-name
 ## Database Schema & Analytics
 
 ### NYC Taxi Data Structure
+
+Schema defined in [`01-nyc-taxi-schema.sql`](postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql).
+
 **Main Table**: `nyc_taxi.yellow_taxi_trips` (variable records based on backfill configuration, 21 columns)
 - **Primary Key**: row_hash (SHA-256 hash of all row values for ultimate duplicate prevention)
 - **Trip Identifiers**: vendorid, pickup/dropoff timestamps
@@ -653,10 +680,117 @@ uv add package-name
 - **Hash Generation**: Maintains 30K rows/second with larger chunks
 
 #### Database Indexes
-- **Spatial Index**: GIST index on geometry column for fast spatial queries
-- **Time-Series Indexes**: On pickup_datetime and dropoff_datetime
-- **Location Indexes**: On pickup and dropoff location IDs
-- **Composite Indexes**: Combined indexes for common analytical patterns
+
+The `yellow_taxi_trips` table carries 13 indexes totaling more storage than the data itself:
+
+| Component | Size |
+|-----------|------|
+| Table data | 6.8 GB |
+| Indexes (13 total) | 11 GB |
+| **Combined** | **17 GB** |
+
+**Index breakdown by size:**
+
+| Index | Size | Purpose |
+|-------|------|---------|
+| `yellow_taxi_trips_pkey` (row_hash) | 3.9 GB | SHA-256 primary key for duplicate prevention |
+| `idx_yellow_taxi_location_datetime` | 1.5 GB | Composite: location + datetime queries |
+| `idx_yellow_taxi_datetime_vendor` | 990 MB | Composite: datetime + vendor queries |
+| `yellow_taxi_trips_id_key` | 702 MB | Unique constraint |
+| `idx_yellow_taxi_total_amount` | 696 MB | Top revenue queries (12ms vs ~2s without) |
+| `idx_yellow_taxi_pickup_datetime` | 689 MB | Time-series lookups, hourly analysis |
+| `idx_yellow_taxi_dropoff_datetime` | 686 MB | Dropoff time lookups |
+| `idx_yellow_taxi_trip_distance` | 669 MB | Distance filtering (12ms vs ~2s without) |
+| 5 smaller indexes | ~1 GB | Payment type, locations, vendor, date+payment |
+
+**The tradeoff**: indexes make data loading ~2x slower (every INSERT must update all 13 indexes) but turn specific lookups from seconds to milliseconds. For a read-heavy playground that loads data once and queries many times, this is the right balance.
+
+#### Materialized Views
+
+Three pre-aggregated materialized views compress the full trips table for BigQuery-like response times on analytical queries (see [`02-materialized-views.sql`](postgres/sql-scripts/init-scripts/02-materialized-views.sql)):
+
+| View | Source rows | Materialized rows | Size | Compression |
+|------|-------------|-------------------|------|-------------|
+| `trip_hourly_summary` | ~32M | ~25K | 4 MB | 1,280x |
+| `trip_location_summary` | ~32M | ~121K | 12 MB | 264x |
+| `trip_distance_summary` | ~32M | 6 | 40 KB | 5,300,000x |
+
+**Sample speedups (raw table vs materialized view):**
+
+| Query | Raw table | Materialized view | Speedup |
+|-------|-----------|-------------------|---------|
+| Cross-Borough Analysis | 1.78s | 32ms | 56x |
+| Distance Distribution | 2.22s | 0.07ms | 31,700x |
+| Weekend vs Weekday | 1.5s | 5ms | 300x |
+| Payment Method Analysis | 1.5s | 4ms | 380x |
+
+Views are refreshed automatically after each data load (Step 4 in init pipeline). For ad-hoc refresh:
+```sql
+REFRESH MATERIALIZED VIEW CONCURRENTLY nyc_taxi.trip_hourly_summary;
+REFRESH MATERIALIZED VIEW CONCURRENTLY nyc_taxi.trip_location_summary;
+REFRESH MATERIALIZED VIEW CONCURRENTLY nyc_taxi.trip_distance_summary;
+```
+
+#### PostgreSQL Runtime Tuning
+
+PostgreSQL ships with conservative defaults designed to run on a 512MB shared hosting server from 2005. On a modern machine with 32 CPUs and 31 GB RAM, these defaults leave most of the hardware idle. The container is tuned at startup via command-line flags to fully utilize available resources.
+
+**Memory settings — telling PostgreSQL how much RAM it can use:**
+
+| Setting | PostgreSQL default | Our configuration | What changes |
+|---------|-------------------|-------------------|--------------|
+| `shared_buffers` | 128 MB | **8 GB** | PostgreSQL's own data cache — hot table pages stay in memory instead of being re-read from disk on every query |
+| `effective_cache_size` | 4 GB | **24 GB** | Tells the query planner how much total cache (PostgreSQL + OS) is available — higher values make it prefer index scans over sequential scans |
+| `work_mem` | 4 MB | **256 MB** | Memory for sorts and hash tables per operation — eliminates disk spill (our queries were spilling 267MB-1.4GB to disk at default) |
+| `maintenance_work_mem` | 64 MB | **512 MB** | Memory for `CREATE INDEX`, `VACUUM`, bulk loading — speeds up data initialization |
+
+**Parallelism settings — using all available CPU cores:**
+
+| Setting | PostgreSQL default | Our configuration | What changes |
+|---------|-------------------|-------------------|--------------|
+| `max_worker_processes` | 8 | **24** | Total background workers PostgreSQL can spawn |
+| `max_parallel_workers` | 8 | **20** | Workers available for parallel query execution |
+| `max_parallel_workers_per_gather` | 2 | **16** | Workers per individual query — a full-table scan of 32M rows splits across 16 cores instead of 2 |
+
+**The impact is cumulative.** A query that previously ran with 2 workers sorting 267MB to disk because `work_mem` was 4MB now runs with 16 workers keeping everything in RAM. The theoretical improvement for full-table scans is ~8x from parallelism alone, plus elimination of disk I/O from memory tuning.
+
+**Before tuning (PostgreSQL defaults):**
+```
+Query: Trip volume by hour
+Plan:  2 workers -> seq scan -> 267MB disk sort -> GroupAggregate
+Time:  6.9 seconds
+```
+
+**After tuning (current configuration):**
+```
+Query: Trip volume by hour
+Plan:  16 workers -> parallel seq scan -> in-memory HashAggregate
+Time:  <1 second
+```
+
+#### PostgreSQL vs BigQuery: Architectural Differences
+
+This playground uses PostgreSQL — a traditional row-oriented database designed for transactional workloads. Cloud analytical engines like BigQuery were built from the ground up for a different purpose: scanning terabytes of data across thousands of machines. Understanding these differences explains why certain optimizations are needed here but not there — and what we can borrow from BigQuery's playbook.
+
+| Aspect | PostgreSQL (this project) | BigQuery |
+|--------|--------------------------|----------|
+| **Storage format** | Row-based — reads entire rows even if query needs 2 columns | Columnar — reads only the columns used in the query |
+| **Parallelism** | Up to 16 workers on a single machine | Thousands of workers across a cluster |
+| **Indexes** | Must be manually created; cost storage + write speed (our indexes are 1.6x the data size) | No traditional indexes — relies on partitioning + clustering |
+| **Materialized views** | Must be manually created and refreshed | Has materialized views, plus automatic caching layers |
+| **Memory model** | Shared buffers (8 GB) + OS page cache | Distributed memory across cluster, effectively unlimited |
+| **Cost model** | Fixed infrastructure cost (your Docker container) | Pay-per-query based on bytes scanned |
+| **Best for** | OLTP + moderate analytics, full SQL control | Large-scale analytics, ad-hoc exploration |
+
+**What we replicate from BigQuery's approach:**
+- **Materialized views** — pre-aggregated summaries compress 32M rows to 25K, giving sub-millisecond response times (up to 31,700x speedup)
+- **Aggressive parallelism** — 16 workers instead of the default 2, similar in spirit to BigQuery splitting work across many machines
+- **Memory-first processing** — 8GB shared buffers + 256MB work_mem keeps hot data and intermediate results in RAM, avoiding disk I/O like BigQuery's in-memory processing
+
+**What we can't replicate:**
+- **Columnar storage** — PostgreSQL reads full rows; a query needing just `trip_distance` still reads all 21 columns from disk (BigQuery would read only that one column, ~5% of the data)
+- **Elastic parallelism** — we're capped at one machine's cores; BigQuery can throw 10,000 workers at a query
+- **Separation of storage and compute** — BigQuery scales compute independently per query; our storage and compute share the same Docker container
 
 ## Data Sources & Authenticity
 
@@ -737,82 +871,174 @@ Transform your SQL skills into compelling data stories with Superset's powerful 
 
 ### Sample Analytics Queries
 
+#### 1. Trip Volume by Hour
+
+Counts trips per hour with average distance, average fare, and a list of all boroughs. Optimized with CROSS JOIN LATERAL — aggregates trips first, then attaches the borough list separately instead of joining 11M rows to the lookup table before grouping (~3x faster).
+
 ```sql
--- Trip volume by hour with zone names (uses lowercase column names)
-SELECT EXTRACT(HOUR FROM yt.tpep_pickup_datetime) as hour,
-       COUNT(*) as trips,
-       STRING_AGG(DISTINCT pickup_zone.borough, ', ') as pickup_boroughs
-FROM nyc_taxi.yellow_taxi_trips yt
-JOIN nyc_taxi.taxi_zone_lookup pickup_zone ON yt.pulocationid = pickup_zone.locationid
-GROUP BY hour ORDER BY hour;
+SELECT h.hour, h.trips, h.avg_distance, h.avg_fare, b.pickup_boroughs
+FROM (
+    SELECT EXTRACT(HOUR FROM tpep_pickup_datetime) as hour,
+           COUNT(*) as trips,
+           ROUND(AVG(trip_distance), 2) as avg_distance,
+           ROUND(AVG(total_amount), 2) as avg_fare
+    FROM nyc_taxi.yellow_taxi_trips
+    GROUP BY 1
+) h
+CROSS JOIN LATERAL (
+    SELECT STRING_AGG(DISTINCT tz.borough, ', ') as pickup_boroughs
+    FROM nyc_taxi.taxi_zone_lookup tz
+) b
+ORDER BY h.hour;
+
+-- Original version (slower — joins 11M rows to lookup before grouping, causing 267MB disk sort):
+-- SELECT EXTRACT(HOUR FROM yt.tpep_pickup_datetime) as hour,
+--        COUNT(*) as trips,
+--        STRING_AGG(DISTINCT pickup_zone.borough, ', ') as pickup_boroughs
+-- FROM nyc_taxi.yellow_taxi_trips yt
+-- JOIN nyc_taxi.taxi_zone_lookup pickup_zone ON yt.pulocationid = pickup_zone.locationid
+-- GROUP BY hour ORDER BY hour;
 ```
-![Analytics Query Results 1](docs/pictures/Clipboard_09-25-2025_01.jpg)
+
+![Trip Volume by Hour - Query Results](docs/pictures/query-01-trip-volume-by-hour.png)
+
+#### 2. Largest Taxi Zones by Area (PostGIS)
+
+Uses `ST_Area()` on PostGIS geometries to find the 10 largest taxi zones in acres. Fast by nature — only 263 rows in the shapes table.
+
 ```sql
--- Geospatial: Largest taxi zones by area (PostGIS spatial functions)
 SELECT tzl.zone, tzl.borough,
        ROUND((ST_Area(geometry) / 43560)::numeric, 2) as area_acres
 FROM nyc_taxi.taxi_zone_shapes tzs
 JOIN nyc_taxi.taxi_zone_lookup tzl ON tzs.locationid = tzl.locationid
 ORDER BY ST_Area(geometry) DESC LIMIT 10;
-
--- Cross-borough trip analysis with concatenated boroughs
-SELECT
-       pickup_zone.borough || ' → ' || dropoff_zone.borough AS trip_route,
-       COUNT(*) AS trip_count,
-       AVG(yt.fare_amount) AS avg_fare
-FROM nyc_taxi.yellow_taxi_trips yt
-JOIN nyc_taxi.taxi_zone_lookup pickup_zone
-     ON yt.pulocationid = pickup_zone.locationid
-JOIN nyc_taxi.taxi_zone_lookup dropoff_zone
-     ON yt.dolocationid = dropoff_zone.locationid
-GROUP BY pickup_zone.borough, dropoff_zone.borough
-ORDER BY trip_count DESC;
-
--- Financial analysis: Payment patterns by borough
-SELECT
-       pickup_zone.borough || ' - ' || ptl.payment_type_desc AS borough_payment_type,
-       COUNT(*) AS trips,
-       AVG(yt.total_amount) AS avg_total
-FROM nyc_taxi.yellow_taxi_trips yt
-JOIN nyc_taxi.taxi_zone_lookup pickup_zone
-     ON yt.pulocationid = pickup_zone.locationid
-JOIN nyc_taxi.payment_type_lookup ptl
-     ON yt.payment_type = ptl.payment_type
-GROUP BY pickup_zone.borough, ptl.payment_type_desc
-ORDER BY avg_total DESC;
 ```
-![Analytics Query Results 2](docs/pictures/Clipboard_09-25-2025_02.jpg)
+
+![Largest Taxi Zones - Query Results](docs/pictures/query-02-largest-taxi-zones.png)
+
+#### 3. Cross-Borough Trip Analysis
+
+Shows trip counts and average fares between borough pairs. Optimized by pre-aggregating by location ID pair (~43K groups) before joining to the lookup table, so hash joins operate on 43K rows instead of 11M (~37% faster).
 
 ```sql
--- NYC Yellow Taxi Data Analytics Queries
--- Sample queries to explore the NYC taxi dataset
+SELECT pz.borough || ' -> ' || dz.borough AS trip_route,
+       SUM(agg.trip_count) AS trip_count,
+       SUM(agg.avg_fare * agg.trip_count) / SUM(agg.trip_count) AS avg_fare
+FROM (
+    SELECT pulocationid, dolocationid,
+           COUNT(*) AS trip_count,
+           AVG(fare_amount) AS avg_fare
+    FROM nyc_taxi.yellow_taxi_trips
+    GROUP BY pulocationid, dolocationid
+) agg
+JOIN nyc_taxi.taxi_zone_lookup pz ON agg.pulocationid = pz.locationid
+JOIN nyc_taxi.taxi_zone_lookup dz ON agg.dolocationid = dz.locationid
+GROUP BY pz.borough, dz.borough
+ORDER BY trip_count DESC;
 
--- 1. Basic Data Overview
-SELECT 'Total Trips' as metric, COUNT(*)::text as value
-FROM nyc_taxi.yellow_taxi_trips
+-- Original version (slower — joins 11M rows to lookup twice before grouping by borough):
+-- SELECT
+--        pickup_zone.borough || ' -> ' || dropoff_zone.borough AS trip_route,
+--        COUNT(*) AS trip_count,
+--        AVG(yt.fare_amount) AS avg_fare
+-- FROM nyc_taxi.yellow_taxi_trips yt
+-- JOIN nyc_taxi.taxi_zone_lookup pickup_zone
+--      ON yt.pulocationid = pickup_zone.locationid
+-- JOIN nyc_taxi.taxi_zone_lookup dropoff_zone
+--      ON yt.dolocationid = dropoff_zone.locationid
+-- GROUP BY pickup_zone.borough, dropoff_zone.borough
+-- ORDER BY trip_count DESC;
+```
 
-UNION ALL
+![Cross-Borough Trip Analysis - Query Results](docs/pictures/query-03-cross-borough.png)
 
-SELECT 'Date Range' as metric,
-       MIN(tpep_pickup_datetime)::text || ' to ' || MAX(tpep_pickup_datetime)::text as value
-FROM nyc_taxi.yellow_taxi_trips
+#### 4. Payment Patterns by Borough
 
-UNION ALL
+Financial breakdown of payment types per borough. Same pre-aggregation optimization as query 3 — groups by raw IDs first (~1.2K groups), then joins to lookup tables for display names (~38% faster).
 
-SELECT 'Total Revenue' as metric, '$' || ROUND(SUM(total_amount), 2)::text as value
+```sql
+SELECT pz.borough || ' - ' || ptl.payment_type_desc AS borough_payment_type,
+       SUM(agg.trips) AS trips,
+       SUM(agg.avg_total * agg.trips) / SUM(agg.trips) AS avg_total
+FROM (
+    SELECT pulocationid, payment_type,
+           COUNT(*) AS trips,
+           AVG(total_amount) AS avg_total
+    FROM nyc_taxi.yellow_taxi_trips
+    GROUP BY pulocationid, payment_type
+) agg
+JOIN nyc_taxi.taxi_zone_lookup pz ON agg.pulocationid = pz.locationid
+JOIN nyc_taxi.payment_type_lookup ptl ON agg.payment_type = ptl.payment_type
+GROUP BY pz.borough, ptl.payment_type_desc
+ORDER BY avg_total DESC;
+
+-- Original version (slower — joins 11M rows to two lookups before grouping):
+-- SELECT
+--        pickup_zone.borough || ' - ' || ptl.payment_type_desc AS borough_payment_type,
+--        COUNT(*) AS trips,
+--        AVG(yt.total_amount) AS avg_total
+-- FROM nyc_taxi.yellow_taxi_trips yt
+-- JOIN nyc_taxi.taxi_zone_lookup pickup_zone
+--      ON yt.pulocationid = pickup_zone.locationid
+-- JOIN nyc_taxi.payment_type_lookup ptl
+--      ON yt.payment_type = ptl.payment_type
+-- GROUP BY pickup_zone.borough, ptl.payment_type_desc
+-- ORDER BY avg_total DESC;
+```
+
+![Payment Patterns by Borough - Query Results](docs/pictures/query-04-payment-borough.png)
+
+#### Why Pre-Aggregation Helps: Hash Join Explained
+
+Queries 3 and 4 use the same optimization pattern — **pre-aggregate by raw IDs, then join to lookup tables**. The key to understanding why this is faster lies in how PostgreSQL's hash join works.
+
+**Hash join** is PostgreSQL's strategy when joining a large table to a small one. It works in two phases:
+
+1. **Build phase** — scan the small table (e.g., `taxi_zone_lookup`, 263 rows) and build an in-memory hash table keyed on the join column (`locationid`). This takes ~20KB of memory.
+
+2. **Probe phase** — scan the large table and for each row, hash the join column and look it up in the hash table. Each lookup is O(1).
+
+The hash join itself is fast — the cost per probe is negligible. The problem is **what flows through it**. In the original queries, the full 11M-row trips table is probed against the lookup, producing 11M joined rows that then need to be aggregated by borough. In the optimized version, the trips are first grouped by location ID (~1-43K groups depending on the query), and only those groups are probed — reducing the downstream aggregation work by orders of magnitude.
+
+```
+Original:  11M trips --hash join--> 11M joined rows --GROUP BY borough--> 24-35 results
+Optimized: 11M trips --GROUP BY id--> 1-43K groups --hash join--> 1-43K rows --GROUP BY borough--> 24-35 results
+```
+
+The sequential scan on the 11M-row table is unavoidable either way — but the join and final aggregation operate on dramatically fewer rows.
+
+#### 5. Basic Data Overview
+
+Quick summary of total trips, date range, and total revenue. Optimized to compute all aggregates in a single table scan using `unnest(ARRAY[...])` instead of 3 separate scans with `UNION ALL` (~2.8x faster).
+
+```sql
+SELECT unnest(ARRAY['Total Trips', 'Date Range', 'Total Revenue']) as metric,
+       unnest(ARRAY[
+           COUNT(*)::text,
+           MIN(tpep_pickup_datetime)::text || ' to ' || MAX(tpep_pickup_datetime)::text,
+           '$' || ROUND(SUM(total_amount), 2)::text
+       ]) as value
 FROM nyc_taxi.yellow_taxi_trips;
 
--- 2. Trip Volume by Hour of Day
-SELECT
-    EXTRACT(HOUR FROM tpep_pickup_datetime) as pickup_hour,
-    COUNT(*) as trip_count,
-    ROUND(AVG(trip_distance), 2) as avg_distance,
-    ROUND(AVG(total_amount), 2) as avg_fare
-FROM nyc_taxi.yellow_taxi_trips
-GROUP BY EXTRACT(HOUR FROM tpep_pickup_datetime)
-ORDER BY pickup_hour;
+-- Original version (slower — 3 separate full table scans via UNION ALL):
+-- SELECT 'Total Trips' as metric, COUNT(*)::text as value
+-- FROM nyc_taxi.yellow_taxi_trips
+-- UNION ALL
+-- SELECT 'Date Range' as metric,
+--        MIN(tpep_pickup_datetime)::text || ' to ' || MAX(tpep_pickup_datetime)::text as value
+-- FROM nyc_taxi.yellow_taxi_trips
+-- UNION ALL
+-- SELECT 'Total Revenue' as metric, '$' || ROUND(SUM(total_amount), 2)::text as value
+-- FROM nyc_taxi.yellow_taxi_trips;
+```
 
--- 3. Payment Method Analysis
+![Basic Data Overview - Query Results](docs/pictures/query-05-basic-overview.png)
+
+#### 6. Payment Method Analysis
+
+Breakdown by payment type with trip counts, averages, totals, and percentage share using a window function.
+
+```sql
 SELECT
     CASE payment_type
         WHEN 1 THEN 'Credit Card'
@@ -831,8 +1057,15 @@ SELECT
 FROM nyc_taxi.yellow_taxi_trips
 GROUP BY payment_type
 ORDER BY trip_count DESC;
+```
 
--- 4. Top Revenue Generating Trips - possible erroneous data inputs
+![Payment Method Analysis - Query Results](docs/pictures/query-06-payment-method.png)
+
+#### 7. Top Revenue Generating Trips
+
+Highest-value trips — useful for spotting possible erroneous data inputs (e.g., $900+ fares).
+
+```sql
 SELECT
     tpep_pickup_datetime,
     trip_distance,
@@ -845,8 +1078,15 @@ FROM nyc_taxi.yellow_taxi_trips
 WHERE total_amount > 100
 ORDER BY total_amount DESC
 LIMIT 20;
+```
 
--- 5. Trip Distance Distribution
+![Top Revenue Generating Trips - Query Results](docs/pictures/query-07-top-revenue.png)
+
+#### 8. Trip Distance Distribution
+
+Bucketed distance ranges with trip counts, averages, and percentage distribution. Filters out zero-distance and extreme outliers.
+
+```sql
 SELECT
     CASE
         WHEN trip_distance <= 1 THEN '0-1 miles'
@@ -857,7 +1097,7 @@ SELECT
         ELSE '20+ miles'
     END as distance_range,
     COUNT(*) as trip_count,
-	ROUND(AVG(trip_distance),2) AS avg_distance,
+    ROUND(AVG(trip_distance),2) AS avg_distance,
     ROUND(AVG(total_amount), 2) as avg_fare,
     ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 2) as percentage
 FROM nyc_taxi.yellow_taxi_trips
@@ -872,8 +1112,15 @@ GROUP BY
         ELSE '20+ miles'
     END
 ORDER BY MIN(trip_distance);
+```
 
--- 6. Daily Trip Patterns
+![Trip Distance Distribution - Query Results](docs/pictures/query-08-distance-distribution.png)
+
+#### 9. Daily Trip Patterns
+
+Day-by-day totals with revenue and payment method split — good for time-series visualization in Superset.
+
+```sql
 SELECT
     DATE(tpep_pickup_datetime) as trip_date,
     COUNT(*) as total_trips,
@@ -884,32 +1131,61 @@ SELECT
 FROM nyc_taxi.yellow_taxi_trips
 GROUP BY DATE(tpep_pickup_datetime)
 ORDER BY trip_date;
+```
 
--- 7. Rush Hour Analysis
+![Daily Trip Patterns - Query Results](docs/pictures/query-09-daily-patterns.png)
+
+#### 10. Rush Hour Analysis
+
+Groups trips into four time-of-day buckets (morning rush, evening rush, night, regular) with distance and fare averages. Optimized with two-stage aggregation: groups by hour first (24 groups), then maps to time periods — avoids 1.2GB disk sort caused by grouping on the CASE text expression directly (~18% faster).
+
+```sql
 SELECT
     CASE
-        WHEN EXTRACT(HOUR FROM tpep_pickup_datetime) BETWEEN 7 AND 9 THEN 'Morning Rush (7-9 AM)'
-        WHEN EXTRACT(HOUR FROM tpep_pickup_datetime) BETWEEN 17 AND 19 THEN 'Evening Rush (5-7 PM)'
-        WHEN EXTRACT(HOUR FROM tpep_pickup_datetime) BETWEEN 22 AND 23 OR
-             EXTRACT(HOUR FROM tpep_pickup_datetime) BETWEEN 0 AND 5 THEN 'Night (10 PM - 5 AM)'
+        WHEN h BETWEEN 7 AND 9 THEN 'Morning Rush (7-9 AM)'
+        WHEN h BETWEEN 17 AND 19 THEN 'Evening Rush (5-7 PM)'
+        WHEN h >= 22 OR h <= 5 THEN 'Night (10 PM - 5 AM)'
         ELSE 'Regular Hours'
     END as time_period,
-    COUNT(*) as trip_count,
-    ROUND(AVG(trip_distance), 2) as avg_distance,
-    ROUND(AVG(total_amount), 2) as avg_fare,
-    ROUND(AVG(tip_amount), 2) as avg_tip
-FROM nyc_taxi.yellow_taxi_trips
-GROUP BY
-    CASE
-        WHEN EXTRACT(HOUR FROM tpep_pickup_datetime) BETWEEN 7 AND 9 THEN 'Morning Rush (7-9 AM)'
-        WHEN EXTRACT(HOUR FROM tpep_pickup_datetime) BETWEEN 17 AND 19 THEN 'Evening Rush (5-7 PM)'
-        WHEN EXTRACT(HOUR FROM tpep_pickup_datetime) BETWEEN 22 AND 23 OR
-             EXTRACT(HOUR FROM tpep_pickup_datetime) BETWEEN 0 AND 5 THEN 'Night (10 PM - 5 AM)'
-        ELSE 'Regular Hours'
-    END
+    SUM(cnt) as trip_count,
+    ROUND((SUM(dist) / SUM(cnt))::numeric, 2) as avg_distance,
+    ROUND((SUM(amt) / SUM(cnt))::numeric, 2) as avg_fare,
+    ROUND((SUM(tip) / SUM(cnt))::numeric, 2) as avg_tip
+FROM (
+    SELECT EXTRACT(HOUR FROM tpep_pickup_datetime)::int as h,
+           COUNT(*) as cnt, SUM(trip_distance) as dist,
+           SUM(total_amount) as amt, SUM(tip_amount) as tip
+    FROM nyc_taxi.yellow_taxi_trips
+    GROUP BY 1
+) sub
+GROUP BY 1
 ORDER BY trip_count DESC;
 
--- 8. Tip Analysis by Payment Type
+-- Original version (slower — groups on CASE text expression, causing 1.2GB disk sort):
+-- SELECT
+--     CASE
+--         WHEN EXTRACT(HOUR FROM tpep_pickup_datetime) BETWEEN 7 AND 9 THEN 'Morning Rush (7-9 AM)'
+--         WHEN EXTRACT(HOUR FROM tpep_pickup_datetime) BETWEEN 17 AND 19 THEN 'Evening Rush (5-7 PM)'
+--         WHEN EXTRACT(HOUR FROM tpep_pickup_datetime) BETWEEN 22 AND 23 OR
+--              EXTRACT(HOUR FROM tpep_pickup_datetime) BETWEEN 0 AND 5 THEN 'Night (10 PM - 5 AM)'
+--         ELSE 'Regular Hours'
+--     END as time_period,
+--     COUNT(*) as trip_count,
+--     ROUND(AVG(trip_distance), 2) as avg_distance,
+--     ROUND(AVG(total_amount), 2) as avg_fare,
+--     ROUND(AVG(tip_amount), 2) as avg_tip
+-- FROM nyc_taxi.yellow_taxi_trips
+-- GROUP BY 1
+-- ORDER BY trip_count DESC;
+```
+
+![Rush Hour Analysis - Query Results](docs/pictures/query-10-rush-hour.png)
+
+#### 11. Tip Analysis by Payment Type
+
+Compares tipping behavior between credit card and cash payments — tip percentage, average tip, and how many trips include a tip.
+
+```sql
 SELECT
     CASE payment_type
         WHEN 1 THEN 'Credit Card'
@@ -925,26 +1201,57 @@ FROM nyc_taxi.yellow_taxi_trips
 WHERE fare_amount > 0 AND payment_type IN (1, 2)
 GROUP BY payment_type
 ORDER BY avg_tip DESC;
+```
 
--- 9. Weekend vs Weekday Analysis
+![Tip Analysis - Query Results](docs/pictures/query-11-tip-analysis.png)
+
+#### 12. Weekend vs Weekday Analysis
+
+Compares trip volume, distance, fare, and revenue between weekdays and weekends. Optimized with two-stage aggregation: groups by day-of-week first (7 groups), then maps to weekend/weekday — avoids planner overestimating CASE expression cardinality.
+
+```sql
 SELECT
-    CASE
-        WHEN EXTRACT(DOW FROM tpep_pickup_datetime) IN (0, 6) THEN 'Weekend'
-        ELSE 'Weekday'
-    END as day_type,
-    COUNT(*) as trip_count,
-    ROUND(AVG(trip_distance), 2) as avg_distance,
-    ROUND(AVG(total_amount), 2) as avg_fare,
-    ROUND(SUM(total_amount), 2) as total_revenue
-FROM nyc_taxi.yellow_taxi_trips
-GROUP BY
-    CASE
-        WHEN EXTRACT(DOW FROM tpep_pickup_datetime) IN (0, 6) THEN 'Weekend'
-        ELSE 'Weekday'
-    END
+    CASE WHEN dow IN (0, 6) THEN 'Weekend' ELSE 'Weekday' END as day_type,
+    SUM(cnt) as trip_count,
+    ROUND((SUM(dist) / SUM(cnt))::numeric, 2) as avg_distance,
+    ROUND((SUM(amt) / SUM(cnt))::numeric, 2) as avg_fare,
+    ROUND(SUM(amt)::numeric, 2) as total_revenue
+FROM (
+    SELECT EXTRACT(DOW FROM tpep_pickup_datetime)::int as dow,
+           COUNT(*) as cnt, SUM(trip_distance) as dist,
+           SUM(total_amount) as amt
+    FROM nyc_taxi.yellow_taxi_trips
+    GROUP BY 1
+) sub
+GROUP BY 1
 ORDER BY trip_count DESC;
 
--- 10. Long Distance Trips (Over 20 miles) - possible erroneous data inputs
+-- Original version (slower — groups on CASE text expression, planner loses parallelism):
+-- SELECT
+--     CASE
+--         WHEN EXTRACT(DOW FROM tpep_pickup_datetime) IN (0, 6) THEN 'Weekend'
+--         ELSE 'Weekday'
+--     END as day_type,
+--     COUNT(*) as trip_count,
+--     ROUND(AVG(trip_distance), 2) as avg_distance,
+--     ROUND(AVG(total_amount), 2) as avg_fare,
+--     ROUND(SUM(total_amount), 2) as total_revenue
+-- FROM nyc_taxi.yellow_taxi_trips
+-- GROUP BY
+--     CASE
+--         WHEN EXTRACT(DOW FROM tpep_pickup_datetime) IN (0, 6) THEN 'Weekend'
+--         ELSE 'Weekday'
+--     END
+-- ORDER BY trip_count DESC;
+```
+
+![Weekend vs Weekday - Query Results](docs/pictures/query-12-weekend-weekday.png)
+
+#### 13. Long Distance Trips (Over 20 Miles)
+
+Identifies unusually long trips with fare-per-mile calculation — useful for spotting possible erroneous data inputs or airport runs.
+
+```sql
 SELECT
     tpep_pickup_datetime,
     trip_distance,
@@ -958,4 +1265,230 @@ WHERE trip_distance > 20
 ORDER BY trip_distance DESC
 LIMIT 4000;
 ```
+
+![Long Distance Trips - Query Results](docs/pictures/query-13-long-distance.png)
+
+### Sample Analytics Queries — Materialized View Versions
+
+The queries below produce the same results as the Sample Analytics Queries above but run against pre-aggregated materialized views instead of scanning the full 19M-row trips table. Response times drop from seconds to single-digit milliseconds.
+
+Three materialized views are created automatically during initialization (see [`02-materialized-views.sql`](postgres/sql-scripts/init-scripts/02-materialized-views.sql)):
+
+| View | Rows | Covers queries |
+|------|------|----------------|
+| `nyc_taxi.trip_hourly_summary` | ~25K | 1, 5, 6, 9, 10, 11, 12 |
+| `nyc_taxi.trip_location_summary` | ~121K | 3, 4 |
+| `nyc_taxi.trip_distance_summary` | 6 | 8 |
+
+Queries 2 (PostGIS zones), 7 (top revenue trips), and 13 (long distance trips) are already fast and don't benefit from materialized views — they either operate on small tables or use index scans.
+
+Refresh all views after loading new data:
+```sql
+REFRESH MATERIALIZED VIEW CONCURRENTLY nyc_taxi.trip_hourly_summary;
+REFRESH MATERIALIZED VIEW CONCURRENTLY nyc_taxi.trip_location_summary;
+REFRESH MATERIALIZED VIEW CONCURRENTLY nyc_taxi.trip_distance_summary;
+```
+
+#### MV-1. Trip Volume by Hour
+
+Uses `trip_hourly_summary`. Boroughs are still attached via CROSS JOIN LATERAL from the lookup table. **~6ms** (vs ~2.3s on raw table).
+
+```sql
+SELECT h.pickup_hour as hour,
+       SUM(h.trip_count) as trips,
+       ROUND((SUM(h.total_distance) / SUM(h.trip_count))::numeric, 2) as avg_distance,
+       ROUND((SUM(h.total_amount) / SUM(h.trip_count))::numeric, 2) as avg_fare,
+       b.pickup_boroughs
+FROM nyc_taxi.trip_hourly_summary h
+CROSS JOIN LATERAL (
+    SELECT STRING_AGG(DISTINCT tz.borough, ', ') as pickup_boroughs
+    FROM nyc_taxi.taxi_zone_lookup tz
+) b
+GROUP BY h.pickup_hour, b.pickup_boroughs
+ORDER BY h.pickup_hour;
+```
+
+![MV Trip Volume by Hour - Query Results](docs/pictures/mv-01-trip-volume.png)
+
+#### MV-3. Cross-Borough Trip Analysis
+
+Uses `trip_location_summary`. Joins 121K pre-aggregated rows to lookup tables instead of 19M. **~22ms** (vs ~1.1s on raw table).
+
+```sql
+SELECT pz.borough || ' -> ' || dz.borough AS trip_route,
+       SUM(ls.trip_count) AS trip_count,
+       ROUND((SUM(ls.total_fare) / SUM(ls.trip_count))::numeric, 2) AS avg_fare
+FROM nyc_taxi.trip_location_summary ls
+JOIN nyc_taxi.taxi_zone_lookup pz ON ls.pulocationid = pz.locationid
+JOIN nyc_taxi.taxi_zone_lookup dz ON ls.dolocationid = dz.locationid
+GROUP BY pz.borough, dz.borough
+ORDER BY trip_count DESC;
+```
+
+![MV Cross-Borough - Query Results](docs/pictures/mv-03-cross-borough.png)
+
+#### MV-4. Payment Patterns by Borough
+
+Uses `trip_location_summary`. Joins to both zone lookup and payment type lookup. **~20ms** (vs ~1.2s on raw table).
+
+```sql
+SELECT pz.borough || ' - ' || ptl.payment_type_desc AS borough_payment_type,
+       SUM(ls.trip_count) AS trips,
+       ROUND((SUM(ls.total_amount) / SUM(ls.trip_count))::numeric, 2) AS avg_total
+FROM nyc_taxi.trip_location_summary ls
+JOIN nyc_taxi.taxi_zone_lookup pz ON ls.pulocationid = pz.locationid
+JOIN nyc_taxi.payment_type_lookup ptl ON ls.payment_type = ptl.payment_type
+GROUP BY pz.borough, ptl.payment_type_desc
+ORDER BY avg_total DESC;
+```
+
+![MV Payment Patterns - Query Results](docs/pictures/mv-04-payment-borough.png)
+
+#### MV-5. Basic Data Overview
+
+Uses `trip_hourly_summary`. Single scan of 25K rows instead of 19M. **~3ms** (vs ~0.9s on raw table).
+
+```sql
+SELECT unnest(ARRAY['Total Trips', 'Date Range', 'Total Revenue']) as metric,
+       unnest(ARRAY[
+           SUM(trip_count)::text,
+           MIN(min_pickup)::text || ' to ' || MAX(max_pickup)::text,
+           '$' || ROUND(SUM(total_amount)::numeric, 2)::text
+       ]) as value
+FROM nyc_taxi.trip_hourly_summary;
+```
+
+![MV Basic Overview - Query Results](docs/pictures/mv-05-basic-overview.png)
+
+#### MV-6. Payment Method Analysis
+
+Uses `trip_hourly_summary`. Aggregates 25K rows by payment type instead of 19M. **~4ms** (vs ~1.6s on raw table).
+
+```sql
+SELECT
+    CASE payment_type
+        WHEN 1 THEN 'Credit Card'
+        WHEN 2 THEN 'Cash'
+        WHEN 3 THEN 'No Charge'
+        WHEN 4 THEN 'Dispute'
+        WHEN 5 THEN 'Unknown'
+        WHEN 6 THEN 'Voided'
+        ELSE 'Other'
+    END as payment_method,
+    SUM(trip_count) as trip_count,
+    ROUND((SUM(total_amount) / SUM(trip_count))::numeric, 2) as avg_fare,
+    ROUND((SUM(total_tip) / SUM(trip_count))::numeric, 2) as avg_tip,
+    ROUND(SUM(total_amount)::numeric, 2) as total_revenue,
+    ROUND(100.0 * SUM(trip_count) / SUM(SUM(trip_count)) OVER(), 2) as percentage
+FROM nyc_taxi.trip_hourly_summary
+GROUP BY payment_type
+ORDER BY trip_count DESC;
+```
+
+![MV Payment Method - Query Results](docs/pictures/mv-06-payment-method.png)
+
+#### MV-8. Trip Distance Distribution
+
+Uses `trip_distance_summary`. Reads 6 pre-computed rows — effectively instant. **~0.06ms** (vs ~2.2s on raw table).
+
+```sql
+SELECT distance_range,
+       trip_count,
+       ROUND((total_distance / trip_count)::numeric, 2) as avg_distance,
+       ROUND((total_amount / trip_count)::numeric, 2) as avg_fare,
+       ROUND(100.0 * trip_count / SUM(trip_count) OVER(), 2) as percentage
+FROM nyc_taxi.trip_distance_summary
+ORDER BY distance_bucket;
+```
+
+![MV Distance Distribution - Query Results](docs/pictures/mv-08-distance-distribution.png)
+
+#### MV-9. Daily Trip Patterns
+
+Uses `trip_hourly_summary`. Groups by date across 25K rows instead of 19M. **~5ms** (vs ~1s on raw table).
+
+```sql
+SELECT trip_date,
+       SUM(trip_count) as total_trips,
+       ROUND((SUM(total_amount) / SUM(trip_count))::numeric, 2) as avg_fare,
+       ROUND(SUM(total_amount)::numeric, 2) as daily_revenue,
+       SUM(CASE WHEN payment_type = 1 THEN trip_count ELSE 0 END) as credit_card_trips,
+       SUM(CASE WHEN payment_type = 2 THEN trip_count ELSE 0 END) as cash_trips
+FROM nyc_taxi.trip_hourly_summary
+GROUP BY trip_date
+ORDER BY trip_date;
+```
+
+![MV Daily Patterns - Query Results](docs/pictures/mv-09-daily-patterns.png)
+
+#### MV-10. Rush Hour Analysis
+
+Uses `trip_hourly_summary`. Groups by hour bucket across 25K rows instead of 19M. **~6ms** (vs ~7.1s on raw table).
+
+```sql
+SELECT
+    CASE
+        WHEN pickup_hour BETWEEN 7 AND 9 THEN 'Morning Rush (7-9 AM)'
+        WHEN pickup_hour BETWEEN 17 AND 19 THEN 'Evening Rush (5-7 PM)'
+        WHEN pickup_hour >= 22 OR pickup_hour <= 5 THEN 'Night (10 PM - 5 AM)'
+        ELSE 'Regular Hours'
+    END as time_period,
+    SUM(trip_count) as trip_count,
+    ROUND((SUM(total_distance) / SUM(trip_count))::numeric, 2) as avg_distance,
+    ROUND((SUM(total_amount) / SUM(trip_count))::numeric, 2) as avg_fare,
+    ROUND((SUM(total_tip) / SUM(trip_count))::numeric, 2) as avg_tip
+FROM nyc_taxi.trip_hourly_summary
+GROUP BY
+    CASE
+        WHEN pickup_hour BETWEEN 7 AND 9 THEN 'Morning Rush (7-9 AM)'
+        WHEN pickup_hour BETWEEN 17 AND 19 THEN 'Evening Rush (5-7 PM)'
+        WHEN pickup_hour >= 22 OR pickup_hour <= 5 THEN 'Night (10 PM - 5 AM)'
+        ELSE 'Regular Hours'
+    END
+ORDER BY trip_count DESC;
+```
+
+![MV Rush Hour - Query Results](docs/pictures/mv-10-rush-hour.png)
+
+#### MV-11. Tip Analysis by Payment Type
+
+Uses `trip_hourly_summary`. **~3ms** (vs ~1.8s on raw table). Note: `avg_tip_percentage` is approximated as the ratio of total tip to total fare (not the average of per-row percentages), which is more statistically meaningful for large datasets.
+
+```sql
+SELECT
+    CASE payment_type
+        WHEN 1 THEN 'Credit Card'
+        WHEN 2 THEN 'Cash'
+        ELSE 'Other'
+    END as payment_method,
+    SUM(trip_count) as trip_count,
+    ROUND((SUM(total_tip) / SUM(trip_count))::numeric, 2) as avg_tip,
+    ROUND((SUM(total_fare) / SUM(trip_count))::numeric, 2) as avg_fare,
+    ROUND((SUM(total_tip) / NULLIF(SUM(total_fare), 0) * 100)::numeric, 2) as avg_tip_percentage,
+    SUM(trips_with_tips) as trips_with_tips
+FROM nyc_taxi.trip_hourly_summary
+WHERE total_fare > 0 AND payment_type IN (1, 2)
+GROUP BY payment_type
+ORDER BY avg_tip DESC;
+```
+
+![MV Tip Analysis - Query Results](docs/pictures/mv-11-tip-analysis.png)
+
+#### MV-12. Weekend vs Weekday Analysis
+
+Uses `trip_hourly_summary`. Groups by pre-computed `day_of_week` column across 25K rows. **~5ms** (vs ~7.1s on raw table).
+
+```sql
+SELECT
+    CASE WHEN day_of_week IN (0, 6) THEN 'Weekend' ELSE 'Weekday' END as day_type,
+    SUM(trip_count) as trip_count,
+    ROUND((SUM(total_distance) / SUM(trip_count))::numeric, 2) as avg_distance,
+    ROUND((SUM(total_amount) / SUM(trip_count))::numeric, 2) as avg_fare,
+    ROUND(SUM(total_amount)::numeric, 2) as total_revenue
+FROM nyc_taxi.trip_hourly_summary
+GROUP BY CASE WHEN day_of_week IN (0, 6) THEN 'Weekend' ELSE 'Weekday' END
+ORDER BY trip_count DESC;
+```
+
+![MV Weekend vs Weekday - Query Results](docs/pictures/mv-12-weekend-weekday.png)
 

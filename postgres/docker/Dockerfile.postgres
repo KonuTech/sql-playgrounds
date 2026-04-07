@@ -44,7 +44,7 @@ RUN echo '#!/bin/bash' > /usr/local/bin/custom-entrypoint.sh && \
     echo 'set -e' >> /usr/local/bin/custom-entrypoint.sh && \
     echo '' >> /usr/local/bin/custom-entrypoint.sh && \
     echo '# Start PostgreSQL normally' >> /usr/local/bin/custom-entrypoint.sh && \
-    echo '/usr/local/bin/docker-entrypoint.sh postgres &' >> /usr/local/bin/custom-entrypoint.sh && \
+    echo '/usr/local/bin/docker-entrypoint.sh postgres -c work_mem=256MB -c maintenance_work_mem=512MB -c shared_buffers=8GB -c effective_cache_size=24GB -c max_worker_processes=24 -c max_parallel_workers=20 -c max_parallel_workers_per_gather=16 &' >> /usr/local/bin/custom-entrypoint.sh && \
     echo 'POSTGRES_PID=$!' >> /usr/local/bin/custom-entrypoint.sh && \
     echo '' >> /usr/local/bin/custom-entrypoint.sh && \
     echo '# Wait for PostgreSQL to be ready and then run initialization' >> /usr/local/bin/custom-entrypoint.sh && \
