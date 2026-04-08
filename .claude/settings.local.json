@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git pull:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(./start.sh)",
+      "Bash(docker-compose down:*)",
+      "Bash(docker exec sql-playground-postgres:*)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_snapshot",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "mcp__plugin_playwright_playwright__browser_press_key",
+      "mcp__plugin_playwright_playwright__browser_type",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "mcp__plugin_playwright_playwright__browser_evaluate",
+      "Bash(ls /mnt/c/Users/borow/VSC/projects/sql-playgrounds/docs/pictures/query-*.png /mnt/c/Users/borow/VSC/projects/sql-playgrounds/docs/pictures/mv-*.png)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(sudo lsof:*)",
+      "Bash(bash:*)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "context7",
+    "googlesheets",
+    "superset-mcp"
+  ]
+}

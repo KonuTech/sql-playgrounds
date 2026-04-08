@@ -41,7 +41,7 @@
 ### Question 1: Schema Analysis
 **Question:** Looking at this NYC taxi schema, identify potential issues and suggest improvements:
 ```sql
-CREATE TABLE yellow_taxi_trips (
+CREATE TABLE nyc_taxi.yellow_taxi_trips (
     vendorid INTEGER,
     tpep_pickup_datetime TIMESTAMP,
     tpep_dropoff_datetime TIMESTAMP,
@@ -56,12 +56,17 @@ CREATE TABLE yellow_taxi_trips (
 1. **Missing Primary Key**: No explicit PK leads to potential issues with replication, referential integrity
 2. **Normalization Opportunities**: `vendorid` should reference `vendor_lookup` table with proper FK constraints
 3. **Partitioning Strategy**: 3.4M+ records/month suggests monthly/yearly partitioning by `tpep_pickup_datetime`
-4. **Index Strategy**: Missing composite indexes for common query patterns
+4. **Index Strategy**: Missing composite indexes for common query patterns. For example, analytical queries that filter trips by pickup location within a date range benefit from a composite index that leads with location and includes the timestamp:
+   ```sql
+   CREATE INDEX idx_yellow_taxi_location_datetime
+       ON yellow_taxi_trips (pulocationid, tpep_pickup_datetime);
+   ```
+   This lets PostgreSQL satisfy `WHERE pulocationid = 132 AND tpep_pickup_datetime BETWEEN '2024-01-01' AND '2024-01-31'` with a single index range scan instead of scanning the full table or intersecting two separate single-column indexes
 5. **Data Types**: Consider if `DECIMAL(4,1)` for passenger_count is appropriate vs INTEGER
 
 **Improved Design:**
 ```sql
-CREATE TABLE yellow_taxi_trips (
+CREATE TABLE nyc_taxi.yellow_taxi_trips (
     trip_id BIGSERIAL PRIMARY KEY,
     vendorid INTEGER REFERENCES vendor_lookup(vendorid),
     tpep_pickup_datetime TIMESTAMP NOT NULL,
@@ -70,7 +75,25 @@ CREATE TABLE yellow_taxi_trips (
     row_hash VARCHAR(64) UNIQUE NOT NULL,
     CONSTRAINT valid_trip_duration CHECK (tpep_dropoff_datetime > tpep_pickup_datetime)
 ) PARTITION BY RANGE (tpep_pickup_datetime);
+
+-- The PARTITION BY clause only declares the strategy.
+-- You must create child partitions — without them, INSERTs will fail
+-- with "no partition of relation found for row".
+
+-- Create monthly partitions:
+CREATE TABLE yellow_taxi_trips_2024_01
+    PARTITION OF nyc_taxi.yellow_taxi_trips
+    FOR VALUES FROM ('2024-01-01') TO ('2024-02-01');
+
+CREATE TABLE yellow_taxi_trips_2024_02
+    PARTITION OF nyc_taxi.yellow_taxi_trips
+    FOR VALUES FROM ('2024-02-01') TO ('2024-03-01');
+
+-- In production, automate partition creation with a maintenance function
+-- or pg_partman extension rather than creating them manually.
 ```
+
+> **Our implementation:** Schema definition in [01-nyc-taxi-schema.sql (L18–L58)](../../postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql#L18-L58) — main table with `row_hash` primary key and composite indexes [(L388–L390)](../../postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql#L388-L390). Automated partition management in [02-phase2-partitioning.sql](../../postgres/sql-scripts/model-scripts/02-phase2-partitioning.sql) — `create_monthly_partition()` [(L79)](../../postgres/sql-scripts/model-scripts/02-phase2-partitioning.sql#L79), `maintain_partitions()` [(L176)](../../postgres/sql-scripts/model-scripts/02-phase2-partitioning.sql#L176), and `daily_partition_maintenance()` [(L351)](../../postgres/sql-scripts/model-scripts/02-phase2-partitioning.sql#L351).
 
 ### Question 2: Dimensional Modeling
 **Question:** Design a star schema for taxi trip analytics. What would be your fact table and dimension tables?
@@ -78,7 +101,7 @@ CREATE TABLE yellow_taxi_trips (
 **Answer:**
 ```sql
 -- Fact Table
-CREATE TABLE fact_taxi_trips (
+CREATE TABLE nyc_taxi.fact_taxi_trips (
     trip_id BIGSERIAL PRIMARY KEY,
     pickup_location_key INTEGER REFERENCES dim_locations(location_key),
     dropoff_location_key INTEGER REFERENCES dim_locations(location_key),
@@ -97,7 +120,7 @@ CREATE TABLE fact_taxi_trips (
 );
 
 -- Dimension Tables
-CREATE TABLE dim_locations (
+CREATE TABLE nyc_taxi.dim_locations (
     location_key SERIAL PRIMARY KEY,
     locationid INTEGER,
     zone VARCHAR(100),
@@ -106,7 +129,7 @@ CREATE TABLE dim_locations (
     geometry GEOMETRY(MULTIPOLYGON, 2263)
 );
 
-CREATE TABLE dim_date (
+CREATE TABLE nyc_taxi.dim_date (
     date_key INTEGER PRIMARY KEY,
     full_date DATE,
     year INTEGER,
@@ -117,6 +140,8 @@ CREATE TABLE dim_date (
     is_holiday BOOLEAN
 );
 ```
+
+> **Our implementation:** [01-phase1-star-schema.sql](../../postgres/sql-scripts/model-scripts/01-phase1-star-schema.sql) — `fact_taxi_trips` [(L103)](../../postgres/sql-scripts/model-scripts/01-phase1-star-schema.sql#L103) with 6 dimension tables: `dim_date` [(L15)](../../postgres/sql-scripts/model-scripts/01-phase1-star-schema.sql#L15), `dim_time` [(L35)](../../postgres/sql-scripts/model-scripts/01-phase1-star-schema.sql#L35), `dim_locations` [(L48)](../../postgres/sql-scripts/model-scripts/01-phase1-star-schema.sql#L48), `dim_vendor` [(L64)](../../postgres/sql-scripts/model-scripts/01-phase1-star-schema.sql#L64), `dim_payment_type` [(L76)](../../postgres/sql-scripts/model-scripts/01-phase1-star-schema.sql#L76), `dim_rate_code` [(L87)](../../postgres/sql-scripts/model-scripts/01-phase1-star-schema.sql#L87). Data migration in [04-data-migration.sql — `migrate_taxi_data_to_star_schema()` (L38)](../../postgres/sql-scripts/model-scripts/04-data-migration.sql#L38).
 
 ---
 
@@ -146,7 +171,7 @@ def calculate_row_hash(row):
 
 2. **Processing State Tracking**:
 ```sql
-CREATE TABLE data_processing_log (
+CREATE TABLE nyc_taxi.data_processing_log (
     data_year INTEGER,
     data_month INTEGER,
     status VARCHAR(20) CHECK (status IN ('in_progress', 'completed', 'failed')),
@@ -157,10 +182,12 @@ CREATE TABLE data_processing_log (
 
 3. **Upsert Pattern**:
 ```sql
-INSERT INTO yellow_taxi_trips (...)
+INSERT INTO nyc_taxi.yellow_taxi_trips (...)
 VALUES (...)
 ON CONFLICT (row_hash) UPDATE;
 ```
+
+> **Our implementation:** [init-data.py](../../postgres/docker/init-data.py) — `calculate_row_hash()` [(L627)](../../postgres/docker/init-data.py#L627) with SHA-256 hashing, `add_row_hash_column()` [(L661)](../../postgres/docker/init-data.py#L661) for batch hash generation, and hash collision detection [(L668–L675)](../../postgres/docker/init-data.py#L668-L675). Processing log tracked in [01-nyc-taxi-schema.sql — `data_processing_log` (L333)](../../postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql#L333).
 
 ### Question 4: ETL Pipeline Design
 **Question:** Design an ETL pipeline to process monthly taxi data files. Consider error handling, monitoring, and recovery.
@@ -207,6 +234,8 @@ class TaxiDataETLPipeline:
         return df
 ```
 
+> **Our implementation:** [init-data.py](../../postgres/docker/init-data.py) — `load_trip_data()` [(L1360)](../../postgres/docker/init-data.py#L1360) with chunked loading [(L722, L765–L778)](../../postgres/docker/init-data.py#L722), `download_taxi_data()` [(L496)](../../postgres/docker/init-data.py#L496) with retry logic, and `verify_data_load()` [(L1476)](../../postgres/docker/init-data.py#L1476) for post-load validation.
+
 ---
 
 ## Performance & Optimization
@@ -244,6 +273,8 @@ CREATE INDEX idx_valid_trips ON yellow_taxi_trips (tpep_pickup_datetime)
 WHERE trip_distance > 0 AND total_amount > 0;
 ```
 
+> **Our implementation:** Composite indexes in [01-nyc-taxi-schema.sql (L388–L390)](../../postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql#L388-L390) — `idx_yellow_taxi_datetime_vendor`, `idx_yellow_taxi_location_datetime`, `idx_yellow_taxi_date_payment`. Advanced indexing with covering indexes (INCLUDE), partial indexes (WHERE), and expression indexes in [03-phase3-performance-indexing.sql (L46–L127)](../../postgres/sql-scripts/model-scripts/03-phase3-performance-indexing.sql#L46-L127).
+
 ### Question 6: Query Optimization
 **Question:** Optimize this slow query that finds peak hour revenue by borough:
 
@@ -253,8 +284,8 @@ SELECT
     b.borough,
     EXTRACT(HOUR FROM yt.tpep_pickup_datetime) as hour,
     SUM(yt.total_amount) as revenue
-FROM yellow_taxi_trips yt
-JOIN taxi_zone_lookup b ON yt.pulocationid = b.locationid
+FROM nyc_taxi.yellow_taxi_trips yt
+JOIN nyc_taxi.taxi_zone_lookup b ON yt.pulocationid = b.locationid
 GROUP BY b.borough, EXTRACT(HOUR FROM yt.tpep_pickup_datetime)
 ORDER BY revenue DESC;
 ```
@@ -268,7 +299,7 @@ WITH hourly_stats AS (
         EXTRACT(HOUR FROM yt.tpep_pickup_datetime) as pickup_hour,
         SUM(yt.total_amount) as total_revenue,
         COUNT(*) as trip_count
-    FROM yellow_taxi_trips yt
+    FROM nyc_taxi.yellow_taxi_trips yt
     WHERE yt.tpep_pickup_datetime >= CURRENT_DATE - INTERVAL '30 days'  -- Limit time range
       AND yt.total_amount > 0  -- Filter invalid records
     GROUP BY yt.pulocationid, EXTRACT(HOUR FROM yt.tpep_pickup_datetime)
@@ -279,7 +310,7 @@ SELECT
     SUM(h.total_revenue) as revenue,
     SUM(h.trip_count) as trips
 FROM hourly_stats h
-JOIN taxi_zone_lookup tzl ON h.pulocationid = tzl.locationid
+JOIN nyc_taxi.taxi_zone_lookup tzl ON h.pulocationid = tzl.locationid
 GROUP BY tzl.borough, h.pickup_hour
 ORDER BY revenue DESC;
 
@@ -290,6 +321,8 @@ WHERE
 -- tpep_pickup_datetime >= CURRENT_DATE - INTERVAL '30 days'AND
 total_amount > 0;
 ```
+
+> **Our implementation:** Analytical queries using these optimization patterns in [nyc-taxi-analytics.sql](../../postgres/sql-scripts/report-scripts/nyc-taxi-analytics.sql) — borough-level revenue analysis with CTE pre-aggregation and zone lookups. Star schema optimized queries in [sample-queries.sql](../../postgres/sql-scripts/report-scripts/sample-queries.sql) demonstrating partition pruning and dimension join performance.
 
 ---
 
@@ -308,8 +341,8 @@ WITH zone_revenue AS (
         SUM(yt.total_amount) as total_revenue,
         COUNT(*) as trip_count,
         AVG(yt.total_amount) as avg_trip_value
-    FROM yellow_taxi_trips yt
-    JOIN taxi_zone_lookup tzl ON yt.pulocationid = tzl.locationid
+    FROM nyc_taxi.yellow_taxi_trips yt
+    JOIN nyc_taxi.taxi_zone_lookup tzl ON yt.pulocationid = tzl.locationid
     WHERE yt.total_amount > 0
     GROUP BY tzl.borough, tzl.zone, tzl.locationid
 ),
@@ -342,6 +375,8 @@ WHERE revenue_rank <= 3
 ORDER BY borough, revenue_rank;
 ```
 
+> **Our implementation:** Zone revenue ranking queries in [nyc-taxi-analytics.sql](../../postgres/sql-scripts/report-scripts/nyc-taxi-analytics.sql) — borough-level aggregations joining `yellow_taxi_trips` with `taxi_zone_lookup` [(schema at L290)](../../postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql#L290). Star schema version with pre-joined dimensions in [sample-queries.sql](../../postgres/sql-scripts/report-scripts/sample-queries.sql).
+
 ### Question 8: Time Series Analysis
 **Question:** Identify unusual patterns in daily taxi usage. Flag days where trip volume is more than 2 standard deviations from the 30-day rolling average.
 
@@ -353,7 +388,7 @@ WITH daily_trips AS (
         COUNT(*) as daily_trips,
         SUM(total_amount) as daily_revenue,
         EXTRACT(DOW FROM tpep_pickup_datetime) as day_of_week
-    FROM yellow_taxi_trips
+    FROM nyc_taxi.yellow_taxi_trips
     WHERE tpep_pickup_datetime >= CURRENT_DATE - INTERVAL '90 days'
     GROUP BY DATE(tpep_pickup_datetime),
     EXTRACT(DOW FROM tpep_pickup_datetime)
@@ -397,6 +432,8 @@ WHERE rolling_stddev_30d IS NOT NULL
 ORDER BY trip_date DESC;
 ```
 
+> **Our implementation:** Time-series pickup datetime index in [01-nyc-taxi-schema.sql — `idx_yellow_taxi_pickup_datetime` (L378)](../../postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql#L378) supports rolling window queries. Date-based expression index `idx_yellow_taxi_date_payment` [(L390)](../../postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql#L390) optimizes `DATE()` grouping.
+
 ---
 
 ## Geospatial & PostGIS
@@ -408,8 +445,8 @@ ORDER BY trip_date DESC;
 ```sql
 WITH airport_zones AS (
     SELECT locationid, zone, geometry
-    FROM taxi_zone_shapes tzs
-    JOIN taxi_zone_lookup tzl USING (locationid)
+    FROM nyc_taxi.taxi_zone_shapes tzs
+    JOIN nyc_taxi.taxi_zone_lookup tzl USING (locationid)
     WHERE tzl.zone ILIKE '%airport%'
        OR tzl.service_zone = 'EWR'
 ),
@@ -419,8 +456,8 @@ nearby_zones AS (
         tzl.zone,
         tzl.borough,
         MIN(ST_Distance(tzs.geometry, az.geometry)) as min_distance_to_airport
-    FROM taxi_zone_shapes tzs
-    JOIN taxi_zone_lookup tzl ON tzs.locationid = tzl.locationid
+    FROM nyc_taxi.taxi_zone_shapes tzs
+    JOIN nyc_taxi.taxi_zone_lookup tzl ON tzs.locationid = tzl.locationid
     CROSS JOIN airport_zones az
     WHERE ST_DWithin(tzs.geometry, az.geometry, 5280)  -- 5280 feet = 1 mile
     GROUP BY tzs.locationid, tzl.zone, tzl.borough
@@ -433,11 +470,13 @@ SELECT
     ROUND(AVG(yt.trip_distance), 2) as avg_trip_distance,
     ROUND(AVG(yt.total_amount), 2) as avg_fare
 FROM nearby_zones nz
-JOIN yellow_taxi_trips yt ON nz.locationid = yt.pulocationid
+JOIN nyc_taxi.yellow_taxi_trips yt ON nz.locationid = yt.pulocationid
 WHERE yt.trip_distance > 0
 GROUP BY nz.locationid, nz.zone, nz.borough, nz.min_distance_to_airport
 ORDER BY min_distance_to_airport_feet;
 ```
+
+> **Our implementation:** Spatial data loaded by `load_taxi_zones()` in [init-data.py (L183)](../../postgres/docker/init-data.py#L183) — downloads shapefiles and converts to PostGIS geometries. `taxi_zone_shapes` table with GIST spatial index in [01-nyc-taxi-schema.sql (L299, L311)](../../postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql#L299). Geospatial analytical queries in [geospatial-taxi-analytics.sql](../../postgres/sql-scripts/report-scripts/geospatial-taxi-analytics.sql).
 
 ### Question 10: Complex Geospatial Query
 **Question:** Create a "heat map" query that identifies 500m x 500m grid cells with the highest concentration of taxi pickups.
@@ -459,7 +498,7 @@ WITH grid AS (
         ) as y
     FROM (
         SELECT ST_Envelope(ST_Union(geometry)) as envelope
-        FROM taxi_zone_shapes
+        FROM nyc_taxi.taxi_zone_shapes
         WHERE borough = 'Manhattan'  -- Focus on Manhattan for performance
     ) bounds
 ),
@@ -477,8 +516,8 @@ pickup_counts AS (
         COUNT(*) as pickup_count,
         COUNT(DISTINCT DATE(yt.tpep_pickup_datetime)) as active_days
     FROM grid_cells gc
-    JOIN taxi_zone_shapes tzs ON ST_Intersects(gc.cell_geom, tzs.geometry)
-    JOIN yellow_taxi_trips yt ON tzs.locationid = yt.pulocationid
+    JOIN nyc_taxi.taxi_zone_shapes tzs ON ST_Intersects(gc.cell_geom, tzs.geometry)
+    JOIN nyc_taxi.yellow_taxi_trips yt ON tzs.locationid = yt.pulocationid
     WHERE yt.tpep_pickup_datetime >= CURRENT_DATE - INTERVAL '7 days'
     GROUP BY gc.grid_id, gc.x, gc.y
     HAVING COUNT(*) > 50  -- Filter low-activity cells
@@ -494,6 +533,8 @@ FROM pickup_counts
 ORDER BY pickup_count DESC
 LIMIT 20;
 ```
+
+> **Our implementation:** Same spatial infrastructure as Q9. PostGIS setup with EPSG:2263 (NYC State Plane, feet-based) coordinate system in [00-postgis-setup.sql](../../postgres/sql-scripts/init-scripts/00-postgis-setup.sql). Grid-based geospatial queries in [geospatial-taxi-analytics.sql](../../postgres/sql-scripts/report-scripts/geospatial-taxi-analytics.sql).
 
 ---
 
@@ -537,7 +578,7 @@ WITH quality_metrics AS (
         -- Payment anomalies
         COUNT(CASE WHEN payment_type = 2 AND tip_amount > 0 THEN 1 END) as cash_trips_with_tips
 
-    FROM yellow_taxi_trips
+    FROM nyc_taxi.yellow_taxi_trips
     WHERE tpep_pickup_datetime >= CURRENT_DATE - INTERVAL '30 days'
 ),
 location_quality AS (
@@ -546,9 +587,9 @@ location_quality AS (
         COUNT(DISTINCT yt.dolocationid) as distinct_dropoff_zones,
         COUNT(CASE WHEN pz.locationid IS NULL THEN 1 END) as invalid_pickup_zones,
         COUNT(CASE WHEN dz.locationid IS NULL THEN 1 END) as invalid_dropoff_zones
-    FROM yellow_taxi_trips yt
-    LEFT JOIN taxi_zone_lookup pz ON yt.pulocationid = pz.locationid
-    LEFT JOIN taxi_zone_lookup dz ON yt.dolocationid = dz.locationid
+    FROM nyc_taxi.yellow_taxi_trips yt
+    LEFT JOIN nyc_taxi.taxi_zone_lookup pz ON yt.pulocationid = pz.locationid
+    LEFT JOIN nyc_taxi.taxi_zone_lookup dz ON yt.dolocationid = dz.locationid
     WHERE yt.tpep_pickup_datetime >= CURRENT_DATE - INTERVAL '30 days'
 )
 SELECT
@@ -575,13 +616,15 @@ SELECT 'Invalid Pickup Zones', lq.invalid_pickup_zones::text, '0',
 FROM location_quality lq;
 ```
 
+> **Our implementation:** `data_quality_monitor` table in [01-nyc-taxi-schema.sql (L105)](../../postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql#L105) with severity tracking, quality scores, and batch correlation. Invalid rows captured in `yellow_taxi_trips_invalid` [(L60)](../../postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql#L60) with error classification indexes [(L98–L101)](../../postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql#L98-L101).
+
 ### Question 12: Data Cleaning Strategy
 **Question:** Design a data cleaning process that handles common taxi data issues while preserving data integrity.
 
 **Answer:**
 ```sql
 -- Create cleaned view with business rules applied
-CREATE OR REPLACE VIEW yellow_taxi_trips_clean AS
+CREATE OR REPLACE VIEW nyc_taxi.yellow_taxi_trips_clean AS
 SELECT
     *,
     -- Flag records for different types of cleaning
@@ -590,7 +633,7 @@ SELECT
         WHEN trip_distance = 0 AND total_amount > 10 THEN 'ZERO_DISTANCE_HIGH_FARE'
         WHEN total_amount <= 0 THEN 'INVALID_FARE'
         WHEN passenger_count = 0 THEN 'NO_PASSENGERS'
-        WHEN pulocationid NOT IN (SELECT locationid FROM taxi_zone_lookup) THEN 'INVALID_PICKUP_ZONE'
+        WHEN pulocationid NOT IN (SELECT locationid FROM nyc_taxi.taxi_zone_lookup) THEN 'INVALID_PICKUP_ZONE'
         ELSE 'VALID'
     END as data_quality_flag,
 
@@ -624,7 +667,7 @@ SELECT
         ELSE NULL
     END as avg_speed_mph
 
-FROM yellow_taxi_trips
+FROM nyc_taxi.yellow_taxi_trips
 WHERE tpep_pickup_datetime IS NOT NULL
   AND tpep_dropoff_datetime IS NOT NULL
   AND tpep_pickup_datetime <= tpep_dropoff_datetime
@@ -639,10 +682,12 @@ SELECT
     ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 2) as percentage,
     MIN(tpep_pickup_datetime) as earliest_date,
     MAX(tpep_pickup_datetime) as latest_date
-FROM yellow_taxi_trips_clean
+FROM nyc_taxi.yellow_taxi_trips_clean
 GROUP BY data_quality_flag
 ORDER BY record_count DESC;
 ```
+
+> **Our implementation:** Data cleaning during ETL in [init-data.py](../../postgres/docker/init-data.py) — NULL handling, column case normalization (`df.columns.str.lower()`), and invalid record filtering. Invalid rows routed to `yellow_taxi_trips_invalid` table [(schema at L60)](../../postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql#L60) with error type classification for post-load analysis.
 
 ---
 
@@ -654,7 +699,7 @@ ORDER BY record_count DESC;
 **Answer:**
 ```sql
 -- Monthly range partitioning with automatic partition creation
-CREATE TABLE yellow_taxi_trips_partitioned (
+CREATE TABLE nyc_taxi.yellow_taxi_trips_partitioned (
     trip_id BIGSERIAL,
     vendorid INTEGER,
     tpep_pickup_datetime TIMESTAMP NOT NULL,
@@ -664,10 +709,10 @@ CREATE TABLE yellow_taxi_trips_partitioned (
 ) PARTITION BY RANGE (tpep_pickup_datetime);
 
 -- Create partitions for current and future months
-CREATE TABLE yellow_taxi_trips_2024_01 PARTITION OF yellow_taxi_trips_partitioned
+CREATE TABLE yellow_taxi_trips_2024_01 PARTITION OF nyc_taxi.yellow_taxi_trips_partitioned
 FOR VALUES FROM ('2024-01-01') TO ('2024-02-01');
 
-CREATE TABLE yellow_taxi_trips_2024_02 PARTITION OF yellow_taxi_trips_partitioned
+CREATE TABLE yellow_taxi_trips_2024_02 PARTITION OF nyc_taxi.yellow_taxi_trips_partitioned
 FOR VALUES FROM ('2024-02-01') TO ('2024-03-01');
 
 -- Indexes on each partition
@@ -686,7 +731,7 @@ BEGIN
     end_date := start_date + interval '1 month';
     partition_name := 'yellow_taxi_trips_' || to_char(start_date, 'YYYY_MM');
 
-    EXECUTE format('CREATE TABLE %I PARTITION OF yellow_taxi_trips_partitioned
+    EXECUTE format('CREATE TABLE %I PARTITION OF nyc_taxi.yellow_taxi_trips_partitioned
                    FOR VALUES FROM (%L) TO (%L)',
                    partition_name, start_date, end_date);
 
@@ -712,6 +757,8 @@ END;
 $$ LANGUAGE plpgsql;
 ```
 
+> **Our implementation:** Full partitioning system in [02-phase2-partitioning.sql](../../postgres/sql-scripts/model-scripts/02-phase2-partitioning.sql) — `create_monthly_partition()` [(L79)](../../postgres/sql-scripts/model-scripts/02-phase2-partitioning.sql#L79), `create_partitions_for_range()` [(L124)](../../postgres/sql-scripts/model-scripts/02-phase2-partitioning.sql#L124), `drop_old_partitions()` [(L147)](../../postgres/sql-scripts/model-scripts/02-phase2-partitioning.sql#L147), `maintain_partitions()` [(L176)](../../postgres/sql-scripts/model-scripts/02-phase2-partitioning.sql#L176), partition stats tracking with `update_partition_stats()` [(L219)](../../postgres/sql-scripts/model-scripts/02-phase2-partitioning.sql#L219), and `explain_partition_pruning()` [(L326)](../../postgres/sql-scripts/model-scripts/02-phase2-partitioning.sql#L326) for verifying partition elimination.
+
 ### Question 14: High Availability Architecture
 **Question:** Design a database architecture for handling 100M+ taxi records with high availability requirements and read-heavy workload.
 
@@ -732,7 +779,7 @@ GRANT USAGE ON SCHEMA nyc_taxi TO analytics_reader;
 GRANT SELECT ON ALL TABLES IN SCHEMA nyc_taxi TO analytics_reader;
 
 -- 3. Materialized views for common aggregations
-CREATE MATERIALIZED VIEW mv_daily_trip_summary AS
+CREATE MATERIALIZED VIEW nyc_taxi.mv_daily_trip_summary AS
 SELECT
     DATE(tpep_pickup_datetime) as trip_date,
     pulocationid,
@@ -740,7 +787,7 @@ SELECT
     SUM(total_amount) as total_revenue,
     AVG(trip_distance) as avg_distance,
     AVG(total_amount) as avg_fare
-FROM yellow_taxi_trips
+FROM nyc_taxi.yellow_taxi_trips
 GROUP BY DATE(tpep_pickup_datetime), pulocationid;
 
 CREATE UNIQUE INDEX idx_mv_daily_summary_unique
@@ -753,7 +800,7 @@ BEGIN
     REFRESH MATERIALIZED VIEW CONCURRENTLY mv_daily_trip_summary;
     REFRESH MATERIALIZED VIEW CONCURRENTLY mv_hourly_zone_stats;
     -- Update statistics
-    ANALYZE yellow_taxi_trips;
+    ANALYZE nyc_taxi.yellow_taxi_trips;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -779,13 +826,15 @@ class DatabaseRouter:
 */
 ```
 
+> **Our implementation:** Connection pooling configured in [superset_config.py](../../superset/config/superset_config.py) — 20 core + 30 overflow connections. Materialized views for pre-aggregated analytics in [sample-queries.sql](../../postgres/sql-scripts/report-scripts/sample-queries.sql). PostgreSQL tuning parameters (shared_buffers, work_mem, parallel workers) set in [Dockerfile.postgres](../../postgres/docker/Dockerfile.postgres).
+
 ### Question 15: Monitoring and Alerting
 **Question:** Create a monitoring system for the taxi database that tracks data quality, performance, and operational metrics.
 
 **Answer:**
 ```sql
 -- 1. Performance monitoring table
-CREATE TABLE database_metrics (
+CREATE TABLE nyc_taxi.database_metrics (
     metric_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     metric_name VARCHAR(100),
     metric_value NUMERIC,
@@ -811,7 +860,7 @@ BEGIN
             50000::numeric as threshold_value,
             CASE WHEN COUNT(*) < 50000 THEN 'LOW_VOLUME' ELSE 'OK' END as status,
             CASE WHEN COUNT(*) < 50000 THEN 'WARNING' ELSE 'INFO' END as severity
-        FROM yellow_taxi_trips
+        FROM nyc_taxi.yellow_taxi_trips
         WHERE DATE(tpep_pickup_datetime) = CURRENT_DATE - 1
 
         UNION ALL
@@ -824,7 +873,7 @@ BEGIN
                  THEN 'QUALITY_DEGRADED' ELSE 'OK' END,
             CASE WHEN (100.0 * COUNT(CASE WHEN data_quality_flag = 'VALID' THEN 1 END) / COUNT(*)) < 95
                  THEN 'ERROR' ELSE 'INFO' END
-        FROM yellow_taxi_trips_clean
+        FROM nyc_taxi.yellow_taxi_trips_clean
         WHERE DATE(tpep_pickup_datetime) = CURRENT_DATE - 1
 
         UNION ALL
@@ -862,7 +911,7 @@ BEGIN
             alert_record.threshold_value);
 
         -- Log alert
-        INSERT INTO database_metrics (metric_name, metric_value, metric_unit, additional_info)
+        INSERT INTO nyc_taxi.database_metrics (metric_name, metric_value, metric_unit, additional_info)
         VALUES ('alert', 1, 'count',
                 jsonb_build_object('message', alert_message, 'severity', alert_record.severity));
 
@@ -880,16 +929,16 @@ CREATE OR REPLACE FUNCTION collect_performance_metrics()
 RETURNS void AS $$
 BEGIN
     -- Table sizes
-    INSERT INTO database_metrics (metric_name, metric_value, metric_unit)
+    INSERT INTO nyc_taxi.database_metrics (metric_name, metric_value, metric_unit)
     SELECT 'table_size_mb', pg_total_relation_size('nyc_taxi.yellow_taxi_trips')/1024/1024, 'MB';
 
     -- Active connections
-    INSERT INTO database_metrics (metric_name, metric_value, metric_unit)
+    INSERT INTO nyc_taxi.database_metrics (metric_name, metric_value, metric_unit)
     SELECT 'active_connections', COUNT(*), 'connections'
     FROM pg_stat_activity WHERE state = 'active';
 
     -- Index usage
-    INSERT INTO database_metrics (metric_name, metric_value, metric_unit, additional_info)
+    INSERT INTO nyc_taxi.database_metrics (metric_name, metric_value, metric_unit, additional_info)
     SELECT 'index_usage', ROUND(100.0 * idx_scan / (seq_scan + idx_scan), 2), 'percent',
            jsonb_build_object('table_name', schemaname||'.'||tablename)
     FROM pg_stat_user_tables
@@ -897,6 +946,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 ```
+
+> **Our implementation:** `data_quality_monitor` table in [01-nyc-taxi-schema.sql (L105)](../../postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql#L105) — tracks operations with severity levels, quality scores, batch IDs, and critical error flags. Quality summary aggregation in `data_quality_summary` [(L248–L250)](../../postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql#L248-L250) with period-based indexes. Dual logging (console + file) in [init-data.py](../../postgres/docker/init-data.py) with organized log directories per backfill configuration.
 
 ---
 
@@ -926,11 +977,11 @@ BEGIN
     -- 2. Process normalized data in chunks
     WITH new_trips AS (
         SELECT *
-        FROM yellow_taxi_trips
+        FROM nyc_taxi.yellow_taxi_trips
         WHERE DATE(tpep_pickup_datetime) BETWEEN start_date AND end_date
           AND row_hash NOT IN (
               SELECT DISTINCT source_trip_hash
-              FROM fact_taxi_trips
+              FROM nyc_taxi.fact_taxi_trips
               WHERE pickup_date BETWEEN start_date AND end_date
           )
     ),
@@ -955,13 +1006,13 @@ BEGIN
                 ELSE 0
             END as avg_speed_mph
         FROM new_trips nt
-        LEFT JOIN dim_locations dl_pickup ON nt.pulocationid = dl_pickup.locationid
-        LEFT JOIN dim_locations dl_dropoff ON nt.dolocationid = dl_dropoff.locationid
-        LEFT JOIN dim_vendor dv ON nt.vendorid = dv.vendorid
-        LEFT JOIN dim_payment_type dpt ON nt.payment_type = dpt.payment_type
-        LEFT JOIN dim_rate_code drc ON nt.ratecodeid = drc.ratecodeid
+        LEFT JOIN nyc_taxi.dim_locations dl_pickup ON nt.pulocationid = dl_pickup.locationid
+        LEFT JOIN nyc_taxi.dim_locations dl_dropoff ON nt.dolocationid = dl_dropoff.locationid
+        LEFT JOIN nyc_taxi.dim_vendor dv ON nt.vendorid = dv.vendorid
+        LEFT JOIN nyc_taxi.dim_payment_type dpt ON nt.payment_type = dpt.payment_type
+        LEFT JOIN nyc_taxi.dim_rate_code drc ON nt.ratecodeid = drc.ratecodeid
     )
-    INSERT INTO fact_taxi_trips (
+    INSERT INTO nyc_taxi.fact_taxi_trips (
         pickup_date_key, pickup_time_key, pickup_location_key, dropoff_location_key,
         vendor_key, payment_type_key, rate_code_key,
         trip_distance, trip_duration_minutes, passenger_count,
@@ -980,7 +1031,7 @@ BEGIN
     GET DIAGNOSTICS star_count = ROW_COUNT;
 
     SELECT COUNT(*) INTO processed_count
-    FROM yellow_taxi_trips
+    FROM nyc_taxi.yellow_taxi_trips
     WHERE DATE(tpep_pickup_datetime) BETWEEN start_date AND end_date;
 
     RETURN QUERY SELECT processed_count, star_count, dim_updates;
@@ -995,7 +1046,7 @@ WITH normalized_summary AS (
         SUM(total_amount) as norm_total_revenue,
         MIN(tpep_pickup_datetime) as norm_min_date,
         MAX(tpep_pickup_datetime) as norm_max_date
-    FROM yellow_taxi_trips
+    FROM nyc_taxi.yellow_taxi_trips
     WHERE tpep_pickup_datetime >= CURRENT_DATE - INTERVAL '30 days'
 ),
 star_summary AS (
@@ -1004,8 +1055,8 @@ star_summary AS (
         SUM(total_amount) as star_total_revenue,
         MIN(dd.full_date) as star_min_date,
         MAX(dd.full_date) as star_max_date
-    FROM fact_taxi_trips ft
-    JOIN dim_date dd ON ft.pickup_date_key = dd.date_key
+    FROM nyc_taxi.fact_taxi_trips ft
+    JOIN nyc_taxi.dim_date dd ON ft.pickup_date_key = dd.date_key
     WHERE dd.full_date >= CURRENT_DATE - INTERVAL '30 days'
 )
 SELECT
@@ -1021,6 +1072,8 @@ SELECT
     END as consistency_status
 FROM normalized_summary ns, star_summary ss;
 ```
+
+> **Our implementation:** `migrate_taxi_data_to_star_schema()` in [04-data-migration.sql (L38)](../../postgres/sql-scripts/model-scripts/04-data-migration.sql#L38) — bulk migration with dimension key lookups. Incremental migration via `incremental_migrate_taxi_data()` [(L201)](../../postgres/sql-scripts/model-scripts/04-data-migration.sql#L201). Rollback capability with `rollback_migration()` [(L300)](../../postgres/sql-scripts/model-scripts/04-data-migration.sql#L300). Star schema definition in [01-phase1-star-schema.sql](../../postgres/sql-scripts/model-scripts/01-phase1-star-schema.sql) with fact table [(L103)](../../postgres/sql-scripts/model-scripts/01-phase1-star-schema.sql#L103) and 6 dimension tables.
 
 ### Question 17: Hash-Based Duplicate Prevention at Scale
 **Question:** Explain the trade-offs of using SHA-256 row hashing for duplicate prevention in a high-volume ETL pipeline. How would you optimize hash generation for 3.4M records per month?
@@ -1106,7 +1159,7 @@ class OptimizedHashGenerator:
         return final_hashes, results
 
 # Database-level duplicate prevention strategy
-CREATE TABLE data_quality_monitor (
+CREATE TABLE nyc_taxi.data_quality_monitor (
     monitor_id BIGSERIAL PRIMARY KEY,
     monitored_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     operation_type VARCHAR(50),
@@ -1128,12 +1181,14 @@ SELECT
     SUM(hash_collisions) as total_hash_collisions,
     ROUND(100.0 * SUM(rows_duplicates) / SUM(rows_attempted), 2) as duplicate_rate_percent,
     AVG(processing_duration_ms) as avg_processing_time_ms
-FROM data_quality_monitor
+FROM nyc_taxi.data_quality_monitor
 WHERE operation_type = 'chunk_insert'
   AND monitored_at >= CURRENT_DATE - INTERVAL '7 days'
 GROUP BY DATE(monitored_at)
 ORDER BY monitoring_date DESC;
 ```
+
+> **Our implementation:** `calculate_row_hash()` in [init-data.py (L627)](../../postgres/docker/init-data.py#L627) — SHA-256 with deterministic JSON serialization and consistent float precision. `add_row_hash_column()` [(L661)](../../postgres/docker/init-data.py#L661) for batch generation with within-chunk collision detection [(L668–L675)](../../postgres/docker/init-data.py#L668-L675). `row_hash` UNIQUE constraint in [01-nyc-taxi-schema.sql (L52)](../../postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql#L52). Monitoring via `data_quality_monitor` [(L105)](../../postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql#L105) tracking duplicate counts and hash collisions per batch.
 
 ### Question 18: Advanced Dimensional Analytics
 **Question:** Using the star schema, write a query to identify the most profitable pickup-dropoff location pairs by time of day, including their rank within each borough combination and seasonal trends.
@@ -1155,11 +1210,11 @@ WITH location_pairs AS (
         AVG(ft.total_amount) as avg_trip_value,
         AVG(ft.trip_distance) as avg_trip_distance,
         SUM(ft.tip_amount) as total_tips
-    FROM fact_taxi_trips ft
-    JOIN dim_locations dl_pickup ON ft.pickup_location_key = dl_pickup.location_key
-    JOIN dim_locations dl_dropoff ON ft.dropoff_location_key = dl_dropoff.location_key
-    JOIN dim_time dt ON ft.pickup_time_key = dt.time_key
-    JOIN dim_date dd ON ft.pickup_date_key = dd.date_key
+    FROM nyc_taxi.fact_taxi_trips ft
+    JOIN nyc_taxi.dim_locations dl_pickup ON ft.pickup_location_key = dl_pickup.location_key
+    JOIN nyc_taxi.dim_locations dl_dropoff ON ft.dropoff_location_key = dl_dropoff.location_key
+    JOIN nyc_taxi.dim_time dt ON ft.pickup_time_key = dt.time_key
+    JOIN nyc_taxi.dim_date dd ON ft.pickup_date_key = dd.date_key
     WHERE dd.full_date >= CURRENT_DATE - INTERVAL '365 days'
     GROUP BY
         dl_pickup.borough, dl_dropoff.borough, dl_pickup.zone, dl_dropoff.zone,
@@ -1252,7 +1307,7 @@ ORDER BY
     pickup_borough, dropoff_borough, time_category, total_revenue DESC;
 
 -- Supporting materialized view for faster queries
-CREATE MATERIALIZED VIEW mv_location_pair_metrics AS
+CREATE MATERIALIZED VIEW nyc_taxi.mv_location_pair_metrics AS
 SELECT
     ft.pickup_location_key,
     ft.dropoff_location_key,
@@ -1264,10 +1319,10 @@ SELECT
     AVG(ft.trip_duration_minutes) as avg_duration,
     MIN(dd.full_date) as first_trip_date,
     MAX(dd.full_date) as last_trip_date
-FROM fact_taxi_trips ft
-JOIN dim_locations dl_pickup ON ft.pickup_location_key = dl_pickup.location_key
-JOIN dim_locations dl_dropoff ON ft.dropoff_location_key = dl_dropoff.location_key
-JOIN dim_date dd ON ft.pickup_date_key = dd.date_key
+FROM nyc_taxi.fact_taxi_trips ft
+JOIN nyc_taxi.dim_locations dl_pickup ON ft.pickup_location_key = dl_pickup.location_key
+JOIN nyc_taxi.dim_locations dl_dropoff ON ft.dropoff_location_key = dl_dropoff.location_key
+JOIN nyc_taxi.dim_date dd ON ft.pickup_date_key = dd.date_key
 GROUP BY
     ft.pickup_location_key, ft.dropoff_location_key,
     dl_pickup.borough, dl_dropoff.borough;
@@ -1275,6 +1330,8 @@ GROUP BY
 CREATE UNIQUE INDEX idx_mv_location_pairs
 ON mv_location_pair_metrics (pickup_location_key, dropoff_location_key);
 ```
+
+> **Our implementation:** Star schema queries with dimension joins in [sample-queries.sql](../../postgres/sql-scripts/report-scripts/sample-queries.sql) — location pair analysis, time-of-day breakdowns, and borough-level aggregations. Covering indexes for index-only scans on location+payment dimensions in [03-phase3-performance-indexing.sql (L46, L159–L176)](../../postgres/sql-scripts/model-scripts/03-phase3-performance-indexing.sql#L46). `dim_locations` with PostGIS geometry [(L48)](../../postgres/sql-scripts/model-scripts/01-phase1-star-schema.sql#L48) enables spatial joins within the star schema.
 
 ### Question 19: ETL Pipeline Error Recovery and Data Quality Assurance
 **Question:** Design an ETL error recovery system that can handle partial failures, data quality issues, and ensure consistent state between normalized and star schemas during high-volume processing.
@@ -1284,7 +1341,7 @@ ON mv_location_pair_metrics (pickup_location_key, dropoff_location_key);
 -- 1. ETL State Management System
 CREATE TYPE etl_status AS ENUM ('pending', 'in_progress', 'completed', 'failed', 'recovering');
 
-CREATE TABLE etl_batch_control (
+CREATE TABLE nyc_taxi.etl_batch_control (
     batch_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     batch_type VARCHAR(50) NOT NULL, -- 'monthly_load', 'incremental', 'recovery'
     source_identifier VARCHAR(200) NOT NULL, -- file path, date range, etc.
@@ -1321,7 +1378,7 @@ DECLARE
     v_max_recovery_attempts INTEGER := 3;
 BEGIN
     -- Create batch record
-    INSERT INTO etl_batch_control (batch_type, source_identifier, batch_status, started_at)
+    INSERT INTO nyc_taxi.etl_batch_control (batch_type, source_identifier, batch_status, started_at)
     VALUES (p_batch_type, p_source_identifier, 'in_progress', CURRENT_TIMESTAMP)
     RETURNING etl_batch_control.batch_id INTO v_batch_id;
 
@@ -1337,7 +1394,7 @@ BEGIN
             PERFORM validate_data_consistency(v_batch_id);
 
             -- Success - update batch status
-            UPDATE etl_batch_control
+            UPDATE nyc_taxi.etl_batch_control
             SET batch_status = 'completed',
                 completed_at = CURRENT_TIMESTAMP,
                 checksum_normalized = calculate_batch_checksum('normalized', v_batch_id),
@@ -1346,7 +1403,7 @@ BEGIN
 
             RETURN QUERY
             SELECT v_batch_id, 'completed'::etl_status,
-                   (SELECT rows_processed FROM etl_batch_control WHERE batch_id = v_batch_id),
+                   (SELECT rows_processed FROM nyc_taxi.etl_batch_control WHERE batch_id = v_batch_id),
                    'Success'::TEXT;
             RETURN;
 
@@ -1356,7 +1413,7 @@ BEGIN
                 v_recovery_attempt := v_recovery_attempt + 1;
 
                 -- Log the error
-                UPDATE etl_batch_control
+                UPDATE nyc_taxi.etl_batch_control
                 SET error_details = COALESCE(error_details, '[]'::jsonb) ||
                     jsonb_build_object(
                         'attempt', v_recovery_attempt,
@@ -1372,7 +1429,7 @@ BEGIN
                 -- Check if we should retry
                 IF v_recovery_attempt >= v_max_recovery_attempts THEN
                     -- Mark as failed
-                    UPDATE etl_batch_control
+                    UPDATE nyc_taxi.etl_batch_control
                     SET batch_status = 'failed', completed_at = CURRENT_TIMESTAMP
                     WHERE batch_id = v_batch_id;
 
@@ -1404,18 +1461,18 @@ BEGIN
         MIN(DATE(tpep_pickup_datetime)),
         MAX(DATE(tpep_pickup_datetime)), '[]'
     ) INTO v_batch_date_range
-    FROM yellow_taxi_trips yt
-    JOIN etl_batch_control ebc ON ebc.batch_id = p_batch_id
+    FROM nyc_taxi.yellow_taxi_trips yt
+    JOIN nyc_taxi.etl_batch_control ebc ON ebc.batch_id = p_batch_id
     WHERE yt.created_at >= ebc.started_at;
 
     -- Validate record counts
     SELECT COUNT(*), SUM(total_amount) INTO v_norm_count, v_norm_revenue
-    FROM yellow_taxi_trips
+    FROM nyc_taxi.yellow_taxi_trips
     WHERE DATE(tpep_pickup_datetime) <@ v_batch_date_range;
 
     SELECT COUNT(*), SUM(total_amount) INTO v_star_count, v_star_revenue
-    FROM fact_taxi_trips ft
-    JOIN dim_date dd ON ft.pickup_date_key = dd.date_key
+    FROM nyc_taxi.fact_taxi_trips ft
+    JOIN nyc_taxi.dim_date dd ON ft.pickup_date_key = dd.date_key
     WHERE dd.full_date <@ v_batch_date_range;
 
     -- Check variance
@@ -1432,7 +1489,7 @@ BEGIN
     END IF;
 
     -- Log validation success
-    INSERT INTO data_quality_monitor (
+    INSERT INTO nyc_taxi.data_quality_monitor (
         operation_type, target_table, rows_attempted, rows_inserted,
         additional_info
     ) VALUES (
@@ -1463,11 +1520,13 @@ SELECT
     ROUND(100.0 * COUNT(*) FILTER (WHERE batch_status = 'completed') / COUNT(*), 2) as success_rate,
     MAX(completed_at - started_at) as max_processing_duration,
     AVG(completed_at - started_at) FILTER (WHERE batch_status = 'completed') as avg_processing_duration
-FROM etl_batch_control
+FROM nyc_taxi.etl_batch_control
 WHERE started_at >= CURRENT_DATE - INTERVAL '30 days'
 GROUP BY DATE(started_at), batch_type
 ORDER BY processing_date DESC, batch_type;
 ```
+
+> **Our implementation:** ETL state tracking via `data_processing_log` in [01-nyc-taxi-schema.sql (L333)](../../postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql#L333) — tracks status (`in_progress`, `completed`, `failed`) per month. Error recovery with chunked loading in [init-data.py — `load_trip_data()` (L1360)](../../postgres/docker/init-data.py#L1360) — individual chunk failures are logged as warnings without aborting the batch [(L851–L898)](../../postgres/docker/init-data.py#L851-L898). Post-load validation via `verify_data_load()` [(L1476)](../../postgres/docker/init-data.py#L1476). Quality monitoring in `data_quality_monitor` [(L105)](../../postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql#L105) with `data_quality_summary` [(L248)](../../postgres/sql-scripts/init-scripts/01-nyc-taxi-schema.sql#L248) for period-based aggregation.
 
 ---
 

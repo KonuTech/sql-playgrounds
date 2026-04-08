@@ -900,7 +900,7 @@ ORDER BY h.hour;
 -- GROUP BY hour ORDER BY hour;
 ```
 
-![Trip Volume by Hour - Query Results](docs/pictures/query-01-trip-volume-by-hour.png)
+<!-- ![Trip Volume by Hour - Query Results](docs/pictures/query-01-trip-volume-by-hour.png) -->
 
 #### 2. Largest Taxi Zones by Area (PostGIS)
 
@@ -914,7 +914,7 @@ JOIN nyc_taxi.taxi_zone_lookup tzl ON tzs.locationid = tzl.locationid
 ORDER BY ST_Area(geometry) DESC LIMIT 10;
 ```
 
-![Largest Taxi Zones - Query Results](docs/pictures/query-02-largest-taxi-zones.png)
+<!-- ![Largest Taxi Zones - Query Results](docs/pictures/query-02-largest-taxi-zones.png) -->
 
 #### 3. Cross-Borough Trip Analysis
 
@@ -950,7 +950,7 @@ ORDER BY trip_count DESC;
 -- ORDER BY trip_count DESC;
 ```
 
-![Cross-Borough Trip Analysis - Query Results](docs/pictures/query-03-cross-borough.png)
+<!-- ![Cross-Borough Trip Analysis - Query Results](docs/pictures/query-03-cross-borough.png) -->
 
 #### 4. Payment Patterns by Borough
 
@@ -986,7 +986,7 @@ ORDER BY avg_total DESC;
 -- ORDER BY avg_total DESC;
 ```
 
-![Payment Patterns by Borough - Query Results](docs/pictures/query-04-payment-borough.png)
+<!-- ![Payment Patterns by Borough - Query Results](docs/pictures/query-04-payment-borough.png) -->
 
 #### Why Pre-Aggregation Helps: Hash Join Explained
 
@@ -1032,7 +1032,7 @@ FROM nyc_taxi.yellow_taxi_trips;
 -- FROM nyc_taxi.yellow_taxi_trips;
 ```
 
-![Basic Data Overview - Query Results](docs/pictures/query-05-basic-overview.png)
+<!-- ![Basic Data Overview - Query Results](docs/pictures/query-05-basic-overview.png) -->
 
 #### 6. Payment Method Analysis
 
@@ -1059,7 +1059,7 @@ GROUP BY payment_type
 ORDER BY trip_count DESC;
 ```
 
-![Payment Method Analysis - Query Results](docs/pictures/query-06-payment-method.png)
+<!-- ![Payment Method Analysis - Query Results](docs/pictures/query-06-payment-method.png) -->
 
 #### 7. Top Revenue Generating Trips
 
@@ -1080,7 +1080,7 @@ ORDER BY total_amount DESC
 LIMIT 20;
 ```
 
-![Top Revenue Generating Trips - Query Results](docs/pictures/query-07-top-revenue.png)
+<!-- ![Top Revenue Generating Trips - Query Results](docs/pictures/query-07-top-revenue.png) -->
 
 #### 8. Trip Distance Distribution
 
@@ -1114,7 +1114,7 @@ GROUP BY
 ORDER BY MIN(trip_distance);
 ```
 
-![Trip Distance Distribution - Query Results](docs/pictures/query-08-distance-distribution.png)
+<!-- ![Trip Distance Distribution - Query Results](docs/pictures/query-08-distance-distribution.png) -->
 
 #### 9. Daily Trip Patterns
 
@@ -1133,7 +1133,7 @@ GROUP BY DATE(tpep_pickup_datetime)
 ORDER BY trip_date;
 ```
 
-![Daily Trip Patterns - Query Results](docs/pictures/query-09-daily-patterns.png)
+<!-- ![Daily Trip Patterns - Query Results](docs/pictures/query-09-daily-patterns.png) -->
 
 #### 10. Rush Hour Analysis
 
@@ -1179,7 +1179,7 @@ ORDER BY trip_count DESC;
 -- ORDER BY trip_count DESC;
 ```
 
-![Rush Hour Analysis - Query Results](docs/pictures/query-10-rush-hour.png)
+<!-- ![Rush Hour Analysis - Query Results](docs/pictures/query-10-rush-hour.png) -->
 
 #### 11. Tip Analysis by Payment Type
 
@@ -1203,7 +1203,7 @@ GROUP BY payment_type
 ORDER BY avg_tip DESC;
 ```
 
-![Tip Analysis - Query Results](docs/pictures/query-11-tip-analysis.png)
+<!-- ![Tip Analysis - Query Results](docs/pictures/query-11-tip-analysis.png) -->
 
 #### 12. Weekend vs Weekday Analysis
 
@@ -1245,7 +1245,7 @@ ORDER BY trip_count DESC;
 -- ORDER BY trip_count DESC;
 ```
 
-![Weekend vs Weekday - Query Results](docs/pictures/query-12-weekend-weekday.png)
+<!-- ![Weekend vs Weekday - Query Results](docs/pictures/query-12-weekend-weekday.png) -->
 
 #### 13. Long Distance Trips (Over 20 Miles)
 
@@ -1266,7 +1266,7 @@ ORDER BY trip_distance DESC
 LIMIT 4000;
 ```
 
-![Long Distance Trips - Query Results](docs/pictures/query-13-long-distance.png)
+<!-- ![Long Distance Trips - Query Results](docs/pictures/query-13-long-distance.png) -->
 
 ### Sample Analytics Queries — Materialized View Versions
 
