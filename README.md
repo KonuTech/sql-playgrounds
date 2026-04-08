@@ -108,8 +108,7 @@ A production-ready Docker-based SQL playground featuring PostgreSQL 17 + PostGIS
 
 ## 📝 SQL Technical Interview Questions
 
-> [!WARNING]
-> **SQL Technical Interview Questions** — 19 questions with answers and implementation references
+**SQL Technical Interview Questions** — 19 questions with answers and implementation references
 
 <details>
 <summary><strong>Click to expand full interview questions guide</strong></summary>
@@ -1665,6 +1664,10 @@ The NYC Taxi dataset provides an excellent foundation because it represents real
 
 ## Quick Start
 
+<details>
+<summary><strong>Click to expand</strong></summary>
+
+
 1. **Copy environment configuration:**
    ```bash
    cp env .env
@@ -1736,7 +1739,14 @@ The NYC Taxi dataset provides an excellent foundation because it represents real
    - **Persistent**: All dashboards and charts saved in SQLite backend
    - **Connection string**: postgresql+pg8000://admin:admin123@postgres:5432/playground
 
+
+</details>
+
 ## Data Pipeline Architecture
+
+<details>
+<summary><strong>Click to expand</strong></summary>
+
 
 ```mermaid
 flowchart TD
@@ -1950,7 +1960,14 @@ flowchart TD
 - **Star Schema**: Dimensional model with `fact_taxi_trips` as central fact table
 - **Data Quality**: Comprehensive monitoring with invalid row tracking and metrics
 
+
+</details>
+
 ## Architecture & Data Loading
+
+<details>
+<summary><strong>Click to expand</strong></summary>
+
 
 ### Automated Backfill System
 The system features a **flexible backfill system** that automatically downloads and loads data from official NYC TLC sources:
@@ -1997,7 +2014,14 @@ The `postgres/docker/init-data.py` script orchestrates the entire process:
 - **Resumable Processing**: Safe pause/resume capability with automatic continuation from interruption point
 - **High-Performance Processing**: 67-100x faster data loading with optimized algorithms
 
+
+</details>
+
 ## Project Structure
+
+<details>
+<summary><strong>Click to expand</strong></summary>
+
 
 ```
 sql-playgrounds/
@@ -2033,7 +2057,14 @@ sql-playgrounds/
 # Note: Python dependencies embedded in Docker containers - no local setup required
 ```
 
+
+</details>
+
 ## Container Architecture
+
+<details>
+<summary><strong>Click to expand</strong></summary>
+
 
 ### Custom PostgreSQL Container
 - **Base**: `postgis/postgis:17-3.5` (PostgreSQL 17 + PostGIS 3.5)
@@ -2068,7 +2099,14 @@ sql-playgrounds/
 - **Ultimate Duplicate Prevention**: SHA-256 hash-based system prevents any duplicate rows across backfills
 - **Enhanced Error Handling**: Bulk validation with comprehensive error classification and invalid row storage
 
+
+</details>
+
 ## Pause and Resume Capability
+
+<details>
+<summary><strong>Click to expand</strong></summary>
+
 
 ### Safe Interruption and Continuation
 The system is designed to handle interruptions gracefully with automatic resume capability:
@@ -2114,7 +2152,14 @@ From logs (`logs/last_12_months/log_20250924_215426.log`):
 
 The hash-based duplicate prevention ensures that even if processing was interrupted mid-file, no duplicate records are inserted when resuming.
 
+
+</details>
+
 ## Configuration & Development
+
+<details>
+<summary><strong>Click to expand</strong></summary>
+
 
 ### Environment Variables (`.env`)
 ```env
@@ -2185,7 +2230,14 @@ uv add package-name
 
 **Note**: Python environment is embedded in Docker container. Local Python setup only needed for custom script development.
 
+
+</details>
+
 ## Database Schema & Analytics
+
+<details>
+<summary><strong>Click to expand</strong></summary>
+
 
 ### NYC Taxi Data Structure
 
@@ -2350,7 +2402,14 @@ This playground uses PostgreSQL — a traditional row-oriented database designed
 - **Elastic parallelism** — we're capped at one machine's cores; BigQuery can throw 10,000 workers at a query
 - **Separation of storage and compute** — BigQuery scales compute independently per query; our storage and compute share the same Docker container
 
+
+</details>
+
 ## Data Sources & Authenticity
+
+<details>
+<summary><strong>Click to expand</strong></summary>
+
 
 ### NYC Yellow Taxi Trip Records
 **Source**: [NYC TLC Trip Record Data](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
@@ -2377,7 +2436,14 @@ This is **production-scale real-world data** from New York City's official trans
 
 Perfect for learning advanced SQL, big data analytics, and geospatial analysis with realistic datasets that mirror production database challenges. The flexible backfill system allows you to work with datasets ranging from a single month to 16+ years of historical data (2009-2025).
 
+
+</details>
+
 ## 🚀 Apache Superset Business Intelligence Features
+
+<details>
+<summary><strong>Click to expand</strong></summary>
+
 
 ### Transform Raw Data into Visual Stories
 The playground includes a fully configured Apache Superset instance that transforms your NYC taxi data analysis into professional business intelligence:
@@ -2426,6 +2492,9 @@ Get started with these dashboard concepts using your NYC taxi data:
 5. **🏙️ Borough Comparison**: Cross-borough analytics and performance benchmarks
 
 Transform your SQL skills into compelling data stories with Superset's powerful visualization engine!
+
+
+</details>
 
 ## 📊 Sample Analytics Queries
 
