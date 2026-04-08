@@ -2427,8 +2427,10 @@ Get started with these dashboard concepts using your NYC taxi data:
 
 Transform your SQL skills into compelling data stories with Superset's powerful visualization engine!
 
+## 📊 Sample Analytics Queries
+
 <details>
-<summary><strong>📊 Click to expand Sample Analytics Queries (13 queries + materialized view versions)</strong></summary>
+<summary><strong>Click to expand Sample Analytics Queries (13 queries + materialized view versions)</strong></summary>
 
 ### Sample Analytics Queries
 
