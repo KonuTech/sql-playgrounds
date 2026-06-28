@@ -104,6 +104,10 @@ A production-ready Docker-based SQL playground featuring PostgreSQL 17 + PostGIS
   - [11. Tip Analysis by Payment Type](#11-tip-analysis-by-payment-type)
   - [12. Weekend vs Weekday Analysis](#12-weekend-vs-weekday-analysis)
   - [13. Long Distance Trips (Over 20 Miles)](#13-long-distance-trips-over-20-miles)
+  - [14. Hourly Revenue with Cumulative Total and Share of Day](#14-hourly-revenue-with-cumulative-total-and-share-of-day)
+  - [15. Top 3 Pickup Zones per Borough (RANK)](#15-top-3-pickup-zones-per-borough-rank)
+  - [16. Detecting Duplicate Trips with ROW_NUMBER](#16-detecting-duplicate-trips-with-row_number)
+  - [17. Daily Revenue Trend (LAG + 7-Day Moving Average)](#17-daily-revenue-trend-lag--7-day-moving-average)
 - [📊 Materialized View Queries](#sample-analytics-queries--materialized-view-versions)
 
 ## 📝 SQL Technical Interview Questions
@@ -2499,7 +2503,7 @@ Transform your SQL skills into compelling data stories with Superset's powerful 
 ## 📊 Sample Analytics Queries
 
 <details>
-<summary><strong>Click to expand Sample Analytics Queries (13 queries + materialized view versions)</strong></summary>
+<summary><strong>Click to expand Sample Analytics Queries (17 queries + materialized view versions)</strong></summary>
 
 ### Sample Analytics Queries
 
@@ -2900,6 +2904,142 @@ LIMIT 4000;
 
 <!-- ![Long Distance Trips - Query Results](docs/pictures/query-13-long-distance.png) -->
 
+#### 14. Hourly Revenue with Cumulative Total and Share of Day
+
+A window-function showcase using **aggregates as window functions over each row**. After grouping revenue by hour, three windowed aggregates run over the result set without collapsing it: `SUM() OVER (ORDER BY hour)` builds a **running cumulative total**, while `SUM() OVER ()` (empty window = whole result) gives the grand total used to express each hour as a **share of the day**. This is the canonical pattern for "value, running total, and percent-of-total in one pass."
+
+```sql
+SELECT
+    hour,
+    trips,
+    revenue,
+    SUM(revenue) OVER (ORDER BY hour) AS cumulative_revenue,
+    ROUND(100.0 * revenue / SUM(revenue) OVER (), 2) AS pct_of_daily_revenue,
+    ROUND(100.0 * SUM(revenue) OVER (ORDER BY hour) / SUM(revenue) OVER (), 2) AS cumulative_pct
+FROM (
+    SELECT EXTRACT(HOUR FROM tpep_pickup_datetime)::int AS hour,
+           COUNT(*) AS trips,
+           ROUND(SUM(total_amount), 2) AS revenue
+    FROM nyc_taxi.yellow_taxi_trips
+    GROUP BY 1
+) h
+ORDER BY hour;
+```
+
+Sample output (first hours): the `cumulative_pct` column climbs monotonically toward 100% as the day fills in, making it easy to see how much of daily revenue has accrued by any given hour.
+
+| hour | trips  | revenue     | cumulative_revenue | pct_of_daily_revenue | cumulative_pct |
+|------|--------|-------------|--------------------|----------------------|----------------|
+| 0    | 423327 | 11645154.74 | 11645154.74        | 2.84                 | 2.84           |
+| 1    | 272768 | 6739686.20  | 18384840.94        | 1.64                 | 4.49           |
+| 2    | 174119 | 4001497.84  | 22386338.78        | 0.98                 | 5.46           |
+
+<!-- ![Hourly Revenue Cumulative - Query Results](docs/pictures/query-14-hourly-cumulative.png) -->
+
+#### 15. Top 3 Pickup Zones per Borough (RANK)
+
+Demonstrates **ranking within partitions** — a top-N-per-group problem that plain `GROUP BY` cannot solve. `RANK() OVER (PARTITION BY borough ORDER BY COUNT(*) DESC)` numbers each zone within its borough by trip volume; filtering to `borough_rank <= 3` in an outer query keeps only the leaders. Note that `RANK()` (rather than `ROW_NUMBER()`) is used deliberately so genuine ties share a rank — swap in `DENSE_RANK()` if you'd rather not skip numbers after a tie.
+
+```sql
+SELECT borough, zone, trips, borough_rank
+FROM (
+    SELECT pz.borough, pz.zone,
+           COUNT(*) AS trips,
+           RANK() OVER (PARTITION BY pz.borough ORDER BY COUNT(*) DESC) AS borough_rank
+    FROM nyc_taxi.yellow_taxi_trips t
+    JOIN nyc_taxi.taxi_zone_lookup pz ON t.pulocationid = pz.locationid
+    GROUP BY pz.borough, pz.zone
+) ranked
+WHERE borough_rank <= 3
+ORDER BY borough, borough_rank;
+```
+
+Sample output (Manhattan and Queens leaders — note the airport zones dominate Queens):
+
+| borough   | zone                  | trips  | borough_rank |
+|-----------|-----------------------|--------|--------------|
+| Manhattan | Upper East Side South | 714406 | 1            |
+| Manhattan | Midtown Center        | 656871 | 2            |
+| Manhattan | Upper East Side North | 632351 | 3            |
+| Queens    | JFK Airport           | 707546 | 1            |
+| Queens    | LaGuardia Airport     | 450265 | 2            |
+
+<!-- ![Top Zones per Borough - Query Results](docs/pictures/query-15-top-zones-borough.png) -->
+
+#### 16. Detecting Duplicate Trips with ROW_NUMBER
+
+A practical **deduplication** pattern. The table already blocks byte-for-byte duplicates via the `row_hash` primary key, but *business duplicates* — two records describing the same physical trip (same vendor, pickup/dropoff timestamps, locations, and total) — can still slip through. `ROW_NUMBER()` partitioned by those business keys assigns `rn = 1` to the row to keep and `rn > 1` to redundant copies. Selecting `rn > 1` surfaces the duplicates; in a cleanup job you would `DELETE` those ids (or `SELECT ... WHERE rn = 1` to materialize a de-duplicated set).
+
+```sql
+WITH ranked AS (
+    SELECT id, vendorid, tpep_pickup_datetime, pulocationid, dolocationid, total_amount,
+           ROW_NUMBER() OVER (
+               PARTITION BY vendorid, tpep_pickup_datetime, tpep_dropoff_datetime,
+                            pulocationid, dolocationid, total_amount
+               ORDER BY id
+           ) AS rn
+    FROM nyc_taxi.yellow_taxi_trips
+)
+SELECT id, vendorid, tpep_pickup_datetime, pulocationid, dolocationid, total_amount, rn
+FROM ranked
+WHERE rn > 1
+ORDER BY tpep_pickup_datetime;
+
+-- Count how many rows would be removed by a de-duplication pass:
+-- WITH ranked AS (
+--     SELECT ROW_NUMBER() OVER (
+--                PARTITION BY vendorid, tpep_pickup_datetime, tpep_dropoff_datetime,
+--                             pulocationid, dolocationid, total_amount
+--                ORDER BY id
+--            ) AS rn
+--     FROM nyc_taxi.yellow_taxi_trips
+-- )
+-- SELECT COUNT(*) AS duplicate_rows FROM ranked WHERE rn > 1;
+```
+
+Sample output — the hash-based safeguards keep the table remarkably clean, so only a handful of true business duplicates surface across millions of rows:
+
+| id       | vendorid | tpep_pickup_datetime | pulocationid | dolocationid | total_amount | rn |
+|----------|----------|----------------------|--------------|--------------|--------------|----|
+| 3508459  | 2        | 2024-09-22 14:44:00  | 144          | 170          | 28.88        | 2  |
+| 9085693  | 2        | 2024-11-15 14:37:09  | 238          | 239          | 13.44        | 2  |
+
+<!-- ![Duplicate Detection - Query Results](docs/pictures/query-16-dedup-rownumber.png) -->
+
+#### 17. Daily Revenue Trend (LAG + 7-Day Moving Average)
+
+Combines two time-series window techniques over a daily revenue series. `LAG(daily_revenue) OVER (ORDER BY trip_date)` reaches back one row to compute a **day-over-day change**, and `AVG(...) OVER (ORDER BY trip_date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW)` defines an explicit **sliding window frame** for a trailing **7-day moving average** that smooths weekday/weekend swings. (Scoped to one month so the moving average reads cleanly.)
+
+```sql
+SELECT
+    trip_date,
+    daily_revenue,
+    LAG(daily_revenue) OVER (ORDER BY trip_date) AS prev_day_revenue,
+    ROUND(daily_revenue - LAG(daily_revenue) OVER (ORDER BY trip_date), 2) AS dod_change,
+    ROUND(AVG(daily_revenue) OVER (ORDER BY trip_date
+                                   ROWS BETWEEN 6 PRECEDING AND CURRENT ROW), 2) AS moving_avg_7d
+FROM (
+    SELECT DATE(tpep_pickup_datetime) AS trip_date,
+           ROUND(SUM(total_amount), 2) AS daily_revenue
+    FROM nyc_taxi.yellow_taxi_trips
+    WHERE tpep_pickup_datetime >= DATE '2024-11-01'
+      AND tpep_pickup_datetime <  DATE '2024-12-01'
+    GROUP BY 1
+) d
+ORDER BY trip_date;
+```
+
+Sample output — `dod_change` is `NULL` on the first day (no prior row), and `moving_avg_7d` stabilizes once the 7-day frame fills:
+
+| trip_date  | daily_revenue | prev_day_revenue | dod_change | moving_avg_7d |
+|------------|---------------|------------------|------------|---------------|
+| 2024-11-01 | 4100741.27    |                  |            | 4100741.27    |
+| 2024-11-02 | 3480818.18    | 4100741.27       | -619923.09 | 3790779.73    |
+| 2024-11-06 | 3215330.70    | 2527858.71       | 687471.99  | 3266819.06    |
+| 2024-11-07 | 3685265.79    | 3215330.70       | 469935.09  | 3326597.16    |
+
+<!-- ![Daily Revenue Trend - Query Results](docs/pictures/query-17-daily-trend-lag.png) -->
+
 ### Sample Analytics Queries — Materialized View Versions
 
 The queries below produce the same results as the Sample Analytics Queries above but run against pre-aggregated materialized views instead of scanning the full 19M-row trips table. Response times drop from seconds to single-digit milliseconds.
@@ -2912,7 +3052,7 @@ Three materialized views are created automatically during initialization (see [`
 | `nyc_taxi.trip_location_summary` | ~121K | 3, 4 |
 | `nyc_taxi.trip_distance_summary` | 6 | 8 |
 
-Queries 2 (PostGIS zones), 7 (top revenue trips), and 13 (long distance trips) are already fast and don't benefit from materialized views — they either operate on small tables or use index scans.
+Queries 2 (PostGIS zones), 7 (top revenue trips), and 13 (long distance trips) are already fast and don't benefit from materialized views — they either operate on small tables or use index scans. Queries 14–17 are window-function teaching examples (cumulative totals, ranking, deduplication, moving averages) run directly against the trips table to keep the windowing logic explicit, so they have no materialized-view equivalents.
 
 Refresh all views after loading new data:
 ```sql
